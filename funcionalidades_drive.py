@@ -1,5 +1,6 @@
 from service_drive import obtener_servicio as service
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+
 import os
 
 
@@ -119,25 +120,17 @@ def consultar_archivos():
     
     elementos_ids = listar_elementos(query)
     
-    print(elementos_ids)
-    
     return elementos_ids
 
 
+def descargar_archivos():
+    """
+    PRE:
+    POST: No devuelve nada. Permite descargar el archivo seleccionado en drive por el usuario. 
+    """
+    elementos_ids = consultar_archivos()
+    #print(elementos_ids)
+
+    print(file_ids)
 
 
-
-
-#print(file_ids)
-
-
-# file_metadata = {'name': 'prueba_1.txt'}
-# media = MediaFileUpload('C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/testing/prueba_0_api/apuntes_tp2.txt', mimetype= 'text/plain')
-
-# file = service().files().create(body=file_metadata,
-#                                     media_body=media,
-#                                     fields='id').execute()
-# print ('File ID: %s' % file.get('id'))
-# #print('file name %:' % file.get('name'))
-
-# #print('ok')
