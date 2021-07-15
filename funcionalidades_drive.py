@@ -36,7 +36,6 @@ def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
         #file_ids[ carpeta['id'] ] = carpeta['name']
 
 #LISTAR ELEMENTOS EL REMOTO
-
 def listar_elementos(query: str) -> dict:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive
@@ -111,10 +110,11 @@ def armado_de_sentencia_consulta() -> str:
     
     return query
 
+
 def consultar_archivos():
     """
     PRE:
-    
+
     POST: Redirige a otras funciones de filtro y busqueda de archivos
     """
     print('CONSULTAR ARCHIVOS DE DRIVE\n')
@@ -129,6 +129,7 @@ def consultar_archivos():
     #print(file_ids)
         
 consultar_archivos()
+
 
 #print(file_ids)
 
