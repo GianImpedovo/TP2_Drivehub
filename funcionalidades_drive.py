@@ -17,8 +17,8 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     
     return opc
 
+
 def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
-    
     #voy a facilitar la funcion suponiendo q no hay 2 carpetas o archivos con el mismo nomrbe, 
     #asi puedo buscar las carpeta directamente por el nombre q me indica el usuario
 
@@ -27,50 +27,7 @@ def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
         elementos_ids[ elemento['name'] ] = elemento['id']        
         #file_ids[ carpeta['id'] ] = carpeta['name']
 
-#LISTAR TODAS LAS CARPETAS EN EL REMOTO
-
-def listar_todas_carpetas() -> None:
-    """
-    PRE: 
-    POST: Muestra por pantalla todas las carpetas disponibles en drive y devuelve un 
-    diccionario con todos los nombres de las carpetas y sus respectivos 'ids'
-    """
-    
-    page_token = None
-    cortar = False
-    resultados_tot = 0
-    elementos_ids = dict() #elementos pueden ser carpetas o archivos
-    while not cortar:
-        #traigo resultados
-        #ACLARACIONES IMPORTANTES QUIZA OBVIAS PERO ME COSTARON:
-        #.list() DEVUELVE UN DICCIONARIO DE DICCIONARIOS, DONDE UNA DE LAS CLAVES ES files(), 
-        #q a su vez es un diccionario.
-        resultados = service().files().list(q="mimeType= 'application/vnd.google-apps.folder'",
-                                            spaces='drive',
-                                            fields='nextPageToken, files(id, name)',
-                                            pageToken=page_token).execute()
-        #print(resultados)
-        #en el dict files, accedo a la clave 'name'
-
-        carpetas = resultados['files']
-        guardar_ids_de_elementos(elementos_ids, carpetas)
-        
-        for carpeta in carpetas:
-            print (carpeta['name'])
-            resultados_tot += 1
-
-        #chequeo si hay mas resultados
-        page_token = resultados.get('nextPageToken', None)
-        if page_token is None:
-            cortar = True
-    
-    print(f'\nResultados totales: {resultados_tot}')
-    
-    return folder_ids
-
-#file_ids = listar_todas_carpetas()
-# print(file_ids)
-
+#LISTAR ELEMENTOS EL REMOTO
 
 def listar_elementos(query: str) -> dict:
     """
