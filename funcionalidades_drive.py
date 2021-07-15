@@ -18,6 +18,12 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     
     return opc
 
+def mostrar_elementos(elementos):
+    resultados_tot = 0
+    for elemento in elementos:
+        print (elemento['name'])
+        resultados_tot += 1
+
 
 def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
     """
@@ -27,7 +33,6 @@ def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
     POST: No devuelve nada. Modifica por parametro el diccionario "elementos_ids" colocando
     como clave los nombres de los elementos y sus id's como valores
     """
-
     #voy a facilitar la funcion suponiendo q no hay 2 carpetas o archivos con el mismo nomrbe, 
     #asi puedo buscar las carpeta directamente por el nombre q me indica el usuario
 
@@ -36,9 +41,6 @@ def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
         elementos_ids[ elemento['name'] ] = elemento['id']        
         #file_ids[ carpeta['id'] ] = carpeta['name']
 
-def seleccionar_elemento():
-    print('Eliga la carpeta a la que desea subir el archivo')
-    
 
 #LISTAR ELEMENTOS EL REMOTO
 def listar_elementos(query: str) -> dict:
@@ -65,19 +67,15 @@ def listar_elementos(query: str) -> dict:
         #en el dict files, accedo a la clave 'name'
 
         elementos = resultados['files']
-        print(elementos)
+        #print(elementos)
         guardar_ids_de_elementos(elementos_ids, elementos)
-        
-        for elemento in elementos:
-            print (elemento['name'])
-            resultados_tot += 1
 
         #chequeo si hay mas resultados
         page_token = resultados.get('nextPageToken', None)
         if page_token is None:
             cortar = True
     
-    print(f'\nSe encontraron {resultados_tot} elementos')
+    #print(f'\nSe encontraron {resultados_tot} elementos')
     
     return elementos_ids
 
@@ -112,7 +110,11 @@ def armado_de_sentencia_consulta() -> str:
     return query
 
 
-def consultar_archivos():
+def seleccionar_elementos(elementos_ids: dict) -> :
+    mostar_elementos()
+
+
+def consultar_elementos():
     """
     PRE:
 
@@ -125,6 +127,8 @@ def consultar_archivos():
     
     elementos_ids = listar_elementos(query)
     
+    seleccionar_elementos(elementos_ids)
+
     return elementos_ids
 
 
@@ -133,7 +137,7 @@ def descargar_archivos():
     PRE:
     POST: No devuelve nada. Permite descargar el archivo seleccionado en drive por el usuario. 
     """
-    elementos_ids = consultar_archivos()
+    elementos_ids = consultar_elementos()
     #print(elementos_ids)
 
     #print(file_ids)
