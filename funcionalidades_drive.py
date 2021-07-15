@@ -72,12 +72,12 @@ def listar_todas_carpetas() -> None:
 # print(file_ids)
 
 
-def listar_elementos(query):
+def listar_elementos(query: str) -> dict:
     """
-    PRE: 
-    POST: 
+    PRE: Recibe el string "query" con la consulta a enviar a la API de drive
+    POST: Lista los elementos pedidos y devuelve un diccionario con los nombre e id's de los 
+    mismos
     """
-    print('BUSCADOR DE ARCHIVOS DE DRIVE\n')
     #searchFile(5,"name contains 'prueba' and fullText contains 'prueba' and mimeType = 'text/plain'")
     #searchFile(3,"name contains 'prueba' and mimeType = 'text/plain' ")
     # palabra = input ('ingerse palabra de busqueda clave: ')
@@ -111,7 +111,7 @@ def listar_elementos(query):
         if page_token is None:
             cortar = True
     
-    print(f'\nResultados totales: {resultados_tot}')
+    print(f'\nSe encontraron {resultados_tot} elementos')
     
     return elementos_ids
 
@@ -124,15 +124,22 @@ def armado_de_sentencia_consulta() -> str:
     print('1-Busqueda manual (lista carpetas disponibles)\n2-Busqueda personalizada')
     opc = int(validar_opcion(1,2))
     if opc == 1:
+        print('CARPETAS DISPONIBLES EN DRIVE\n')
         query ="mimeType= 'application/vnd.google-apps.folder'" #para buscar carpetas
     else:
-        print('Que desea buscar?\n 1-Carpetas\n2-Archivos')
+        print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
         opc = int(validar_opcion(1,2))
+
+        palabra = input('ingerse palabra clave de busqueda: ')  #contains solo busca palabras completas no letras!
         if opc == 1:
-            palabra = input ('ingerse palabra clave de busqueda: ')
-            query = f"name contains '{palabra}' and mimeType = 'application/vnd.google-apps.folder'"
-        # else:
-        #     query = 
+            print('CARPETAS SEGUN LO SOLICITADO\n')
+            query = f"mimeType = 'application/vnd.google-apps.folder' and fullText contains '{palabra}'"
+
+        else:
+            print('ARCHIVOS SEGUN LO SOLICITADO\n')
+            query = f" mimeType != 'application/vnd.google-apps.folder' and fullText contains '{palabra}'"
+        
+        print(query) #testing
     
     return query
 
