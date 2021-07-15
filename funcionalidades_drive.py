@@ -43,11 +43,6 @@ def listar_elementos(query: str) -> dict:
     POST: Lista los elementos pedidos y devuelve el diccionario "elementos_ids" con los 
     nombres de los elementos como clave y sus id's como valores
     """
-    #searchFile(5,"name contains 'prueba' and fullText contains 'prueba' and mimeType = 'text/plain'")
-    #searchFile(3,"name contains 'prueba' and mimeType = 'text/plain' ")
-    # palabra = input ('ingerse palabra de busqueda clave: ')
-    # query = f"name contains '{palabra}'"
-
     page_token = None
     cortar = False
     resultados_tot = 0
@@ -115,20 +110,22 @@ def consultar_archivos():
     """
     PRE:
 
-    POST: Redirige a otras funciones de filtro y busqueda de archivos
+    POST: Redirige a otras funciones de filtro y busqueda de archivos  y devuelve el diccionario
+    "elementos_ids" con los nombres de los archivos y sus ids como valores
     """
     print('CONSULTAR ARCHIVOS DE DRIVE\n')
     
     query= armado_de_sentencia_consulta()
-    #print('CARPETAS DISPONIBLES EN EL REMOTO\n')
     
     elementos_ids = listar_elementos(query)
+    
     print(elementos_ids)
     
-    #file_ids = busqueda_personalizada()
-    #print(file_ids)
-        
-consultar_archivos()
+    return elementos_ids
+
+
+
+
 
 
 #print(file_ids)
