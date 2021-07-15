@@ -36,12 +36,16 @@ def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
         elementos_ids[ elemento['name'] ] = elemento['id']        
         #file_ids[ carpeta['id'] ] = carpeta['name']
 
+def seleccionar_elemento():
+    print('Eliga la carpeta a la que desea subir el archivo')
+    
+
 #LISTAR ELEMENTOS EL REMOTO
 def listar_elementos(query: str) -> dict:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive
     
-    POST: Lista los elementos pedidos y devuelve el diccionario "elementos_ids" con los 
+    POST: Lista los elementos pedidos (carpetas o archivos) y devuelve el diccionario "elementos_ids" con los 
     nombres de los elementos como clave y sus id's como valores
     """
     page_token = None
@@ -84,7 +88,8 @@ def armado_de_sentencia_consulta() -> str:
     
     POST: devuelve el string "query" con la consulta a bucar en drive
     """
-    print('1-Busqueda manual (lista carpetas disponibles)\n2-Busqueda personalizada')
+    print('BUSCADOR DE DRIVE')
+    print('1-Busqueda manual (lista todas las carpetas disponibles)\n2-Busqueda personalizada')
     opc = int(validar_opcion(1,2))
     if opc == 1:
         print('CARPETAS DISPONIBLES EN DRIVE\n')
@@ -131,7 +136,37 @@ def descargar_archivos():
     elementos_ids = consultar_archivos()
     #print(elementos_ids)
 
-    print(file_ids)
+    #print(file_ids)
+    pass
+
+def seleccionar_archivo_subida():
+    print('Seleccione el archivo o carpeta de su computadora que desea subir')
+    pass
+
 
 def subir_archivos():
-    pass
+    
+    ruta_archivo = seleccionar_archivo_subida()
+    ruta_archivo = 'prueba_upload_1.txt'
+    
+    carpeta_id = seleccionar_elemento()
+    carpeta_id = '1_qDcJ2I4xpNgrvYyqXtWv1w0ELP0N27m'
+    
+    file_metadata = {
+                    'name': 'prueba_upload.txt',
+                    'parents': [carpeta_id]
+                }
+ 
+    media = MediaFileUpload(ruta_archivo)
+
+    file = service().files().create(body = file_metadata,
+                                        media_body = media,
+                                        fields = 'id').execute()
+    
+    print ('File ID: %s' % file.get('id'))
+
+subir_archivos()
+
+    #print('file name %:' % file.get('name'))
+
+    # #print('ok')
