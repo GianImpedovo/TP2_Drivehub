@@ -18,12 +18,20 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     
     return opc
 
-def mostrar_elementos(elementos):
+def mostrar_elementos(elementos_ids: dict):
+    """
+    PRE: "elementos_ids" es un diccionario con los nombres de los elementos como clave y sus 
+    respectivos ids como valores
+    
+    POST: No devuelve nada solo muestra por panatalla los elementos solicitados
+    """
     resultados_tot = 0
-    for elemento in elementos:
-        print (elemento['name'])
+    
+    for elemento in elementos_ids.keys():
+        print (elemento)
         resultados_tot += 1
-
+    
+    print(f'\nSe encontraron {resultados_tot} elementos')
 
 def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
     """
@@ -47,12 +55,11 @@ def listar_elementos(query: str) -> dict:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive
     
-    POST: Lista los elementos pedidos (carpetas o archivos) y devuelve el diccionario "elementos_ids" con los 
-    nombres de los elementos como clave y sus id's como valores
+    POST: Devuelve el diccionario "elementos_ids" con los nombres de los elementos como clave 
+    y sus id's como valores
     """
     page_token = None
     cortar = False
-    resultados_tot = 0
     elementos_ids = dict()
     while not cortar:
         #traigo resultados
@@ -65,8 +72,8 @@ def listar_elementos(query: str) -> dict:
                                             pageToken=page_token).execute()
         #print(resultados)
         #en el dict files, accedo a la clave 'name'
-
         elementos = resultados['files']
+
         #print(elementos)
         guardar_ids_de_elementos(elementos_ids, elementos)
 
@@ -74,9 +81,7 @@ def listar_elementos(query: str) -> dict:
         page_token = resultados.get('nextPageToken', None)
         if page_token is None:
             cortar = True
-    
-    #print(f'\nSe encontraron {resultados_tot} elementos')
-    
+
     return elementos_ids
 
 
@@ -110,8 +115,11 @@ def armado_de_sentencia_consulta() -> str:
     return query
 
 
-def seleccionar_elementos(elementos_ids: dict) -> :
-    mostar_elementos()
+def seleccionar_elementos(elementos_ids: dict) -> list:
+    
+    elementos_seleccionados = elementos_ids
+    
+    return elementos_seleccionados
 
 
 def consultar_elementos():
@@ -126,10 +134,14 @@ def consultar_elementos():
     query= armado_de_sentencia_consulta()
     
     elementos_ids = listar_elementos(query)
-    
-    seleccionar_elementos(elementos_ids)
 
-    return elementos_ids
+    mostrar_elementos(elementos_ids)
+
+    elementos_seleccionados = seleccionar_elementos(elementos_ids)
+    
+    print (elementos_seleccionados)
+    
+    return elementos_seleccionados
 
 
 def descargar_archivos():
@@ -153,21 +165,21 @@ def subir_archivos():
     ruta_archivo = seleccionar_archivo_subida()
     ruta_archivo = 'prueba_upload_1.txt'
     
-    carpeta_id = seleccionar_elemento()
-    carpeta_id = '1_qDcJ2I4xpNgrvYyqXtWv1w0ELP0N27m'
+    carpeta_id = consultar_elementos()
+    # carpeta_id = '1_qDcJ2I4xpNgrvYyqXtWv1w0ELP0N27m'
     
-    file_metadata = {
-                    'name': 'prueba_upload.txt',
-                    'parents': [carpeta_id]
-                }
+    # file_metadata = {
+    #                 'name': 'prueba_upload.txt',
+    #                 'parents': [carpeta_id]
+    #             }
  
-    media = MediaFileUpload(ruta_archivo)
+    # media = MediaFileUpload(ruta_archivo)
 
-    file = service().files().create(body = file_metadata,
-                                        media_body = media,
-                                        fields = 'id').execute()
+    # file = service().files().create(body = file_metadata,
+    #                                     media_body = media,
+    #                                     fields = 'id').execute()
     
-    print ('File ID: %s' % file.get('id'))
+    # print ('File ID: %s' % file.get('id'))
 
 subir_archivos()
 
