@@ -19,6 +19,14 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
 
 
 def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
+    """
+    PRE: recibe los diccionarios "elementos_ids" {nombre de los elemento: id del elemento}
+    y "elementos" [{id: id_elemento, name:''nombre del elemento}]
+    
+    POST: No devuelve nada. Modifica por parametro el diccionario "elementos_ids" colocando
+    como clave los nombres de los elementos y sus id's como valores
+    """
+
     #voy a facilitar la funcion suponiendo q no hay 2 carpetas o archivos con el mismo nomrbe, 
     #asi puedo buscar las carpeta directamente por el nombre q me indica el usuario
 
@@ -32,8 +40,9 @@ def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
 def listar_elementos(query: str) -> dict:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive
-    POST: Lista los elementos pedidos y devuelve un diccionario con los nombre e id's de los 
-    mismos
+    
+    POST: Lista los elementos pedidos y devuelve el diccionario "elementos_ids" con los 
+    nombres de los elementos como clave y sus id's como valores
     """
     #searchFile(5,"name contains 'prueba' and fullText contains 'prueba' and mimeType = 'text/plain'")
     #searchFile(3,"name contains 'prueba' and mimeType = 'text/plain' ")
@@ -57,6 +66,7 @@ def listar_elementos(query: str) -> dict:
         #en el dict files, accedo a la clave 'name'
 
         elementos = resultados['files']
+        print(elementos)
         guardar_ids_de_elementos(elementos_ids, elementos)
         
         for elemento in elementos:
@@ -76,7 +86,8 @@ def listar_elementos(query: str) -> dict:
 def armado_de_sentencia_consulta() -> str:
     """
     PRE:
-    POST: devuelve el string 'query' con la consulta a bucar en drive
+    
+    POST: devuelve el string "query" con la consulta a bucar en drive
     """
     print('1-Busqueda manual (lista carpetas disponibles)\n2-Busqueda personalizada')
     opc = int(validar_opcion(1,2))
@@ -101,6 +112,11 @@ def armado_de_sentencia_consulta() -> str:
     return query
 
 def consultar_archivos():
+    """
+    PRE:
+    
+    POST: Redirige a otras funciones de filtro y busqueda de archivos
+    """
     print('CONSULTAR ARCHIVOS DE DRIVE\n')
     
     query= armado_de_sentencia_consulta()
