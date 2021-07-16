@@ -18,7 +18,7 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     
     return opc
 
-def mostrar_elementos(elementos_ids: dict):
+def mostrar_elementos(info_carpetas: dict, info_archivos: dict):
     """
     PRE: "elementos_ids" es un diccionario con los nombres de los elementos como clave y sus 
     respectivos ids como valores
@@ -33,7 +33,7 @@ def mostrar_elementos(elementos_ids: dict):
     
     print(f'\nSe encontraron {resultados_tot} elementos')
 
-def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
+def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
     PRE: recibe los diccionarios "elementos_ids" {nombre de los elemento: id del elemento}
     y "elementos" [{id: id_elemento, name:''nombre del elemento}]
@@ -45,9 +45,10 @@ def guardar_ids_de_elementos(elementos_ids: dict, elementos:dict):
     #asi puedo buscar las carpeta directamente por el nombre q me indica el usuario
 
     for elemento in elementos:
-        
-        elementos_ids[ elemento['name'] ] = elemento['id']        
-        #file_ids[ carpeta['id'] ] = carpeta['name']
+        if elemento['mimeType'] == 'application/vnd.google-apps.folder':
+            info_carpetas[ elemento['name'] ] = elemento['id']        
+        else:
+            info_archivos[ elemento['name'] ] = elementos['id']
 
 
 #LISTAR ELEMENTOS EL REMOTO
@@ -60,43 +61,46 @@ def listar_elementos(query: str) -> dict:
     """
     page_token = None
     cortar = False
-    elementos_ids = dict()
+    info_carpetas = dict()
+    info_archivos = dict()
     while not cortar:
-        #traigo resultados
-        #ACLARACIONES IMPORTANTES QUIZA OBVIAS PERO ME COSTARON:
-        #.list() DEVUELVE UN DICCIONARIO DE DICCIONARIOS, DONDE UNA DE LAS CLAVES ES files(), 
-        #q a su vez es un diccionario.
+        #.list() devuelve un diccionario de diccionarios, q guardo en "resultados"
         resultados = service().files().list(q= query,
                                             spaces='drive',
-                                            fields='nextPageToken, files(id, name)',
+                                            fields='nextPageToken, files(id, name, mimeType)',
                                             pageToken=page_token).execute()
         #print(resultados)
-        #en el dict files, accedo a la clave 'name'
+        #en el dict resultados, una clave es files que es una lista de diccionarios donde cada 
+        #diccionario es un elemento. Lo guardo en elementos.
+        
         elementos = resultados['files']
 
         #print(elementos)
-        guardar_ids_de_elementos(elementos_ids, elementos)
+        guardar_info_elementos(elementos, info_carpetas, info_archivos)
 
         #chequeo si hay mas resultados
-        page_token = resultados.get('nextPageToken', None)
+        page_token = resultados.get('nextPageToken')
         if page_token is None:
             cortar = True
 
-    return elementos_ids
+    return info_carpetas, info_archivos
 
 
-def armado_de_sentencia_consulta() -> str:
+def armado_de_consulta() -> str:
     """
     PRE:
     
     POST: devuelve el string "query" con la consulta a bucar en drive
     """
     print('BUSCADOR DE DRIVE')
-    print('1-Busqueda manual (lista todas las carpetas disponibles)\n2-Busqueda personalizada')
+    print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)\n2-Busqueda personalizada')
     opc = int(validar_opcion(1,2))
-    if opc == 1:
-        print('CARPETAS DISPONIBLES EN DRIVE\n')
-        query ="mimeType= 'application/vnd.google-apps.folder'" #para buscar carpetas
+    if opc == 1:    #para buscar carpetas
+        print('CARPETAS DISPONIBLES EN DIRECTORIO PRINCIPAL\n')
+        query ="mimeType= 'application/vnd.google-apps.folder' and 'root' in parents" 
+        
+        print('\nARCHIVOS EN DIRECTORIO PRINCIPAL ')
+        query = "'root' in parents"
     else:
         print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
         opc = int(validar_opcion(1,2))
@@ -131,18 +135,19 @@ def consultar_elementos():
     """
     print('CONSULTAR ARCHIVOS DE DRIVE\n')
     
-    query= armado_de_sentencia_consulta()
+    query= armado_de_consulta()
     
-    elementos_ids = listar_elementos(query)
+    info_carpetas, info_archivos = listar_elementos(query)
 
-    mostrar_elementos(elementos_ids)
+    mostrar_elementos(info_carpetas, info_archivos)
 
-    elementos_seleccionados = seleccionar_elementos(elementos_ids)
+    #elementos_seleccionados = seleccionar_elementos(elementos_ids)
     
-    print (elementos_seleccionados)
+    #print (elementos_seleccionados)
     
-    return elementos_seleccionados
+    #return elementos_seleccionados
 
+consultar_elementos()
 
 def descargar_archivos():
     """
@@ -181,7 +186,7 @@ def subir_archivos():
     
     # print ('File ID: %s' % file.get('id'))
 
-subir_archivos()
+#subir_archivos()
 
     #print('file name %:' % file.get('name'))
 
