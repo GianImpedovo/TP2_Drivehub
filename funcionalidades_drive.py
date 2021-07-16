@@ -19,6 +19,69 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     
     return opc
 
+
+def retroceder(paths: dict):
+    """
+    PRE:
+
+    POST:
+    """
+    for carpeta in paths.keys():
+        print(carpeta)
+
+    carpeta = input('Seleccione la carpeta a la que desea retroceder: ')
+    
+    while carpeta not in paths.keys():
+        carpeta = input('Por favor elija una carpeta de las listadas: ')
+
+    id_carpeta = paths[carpeta]
+
+    return id_carpeta, carpeta
+
+
+def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
+    """
+    PRE: "info_elementos"  es un dict con los datos de las carpetas o archivos segun 
+    corresponda
+    
+    POST: devuelve el string "id_elemento" con id del elemento y el str "nomrbe_elemento" 
+    con su nombre
+    """
+    if info_elementos:
+        print(texto)
+                        #info_elementos.keys() es {1,2,3... correspondiente a cada ele
+        num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ) ) )
+        
+        id_elemento =  info_elementos[num_ele][1]
+        nombre_elemento = info_elementos[num_ele][0] 
+
+    else:
+        print('Esta vacio ves? No hay monstruos aqui. Seleccione volver atras.')
+        id_elemento = 'root'
+
+    return id_elemento, nombre_elemento
+
+
+
+
+
+def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
+    """
+    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta]} ) es un diccionario y 
+    paths ({nombre_carpeta: id_carpeta } )
+    
+    POST: No devuelve nada. Modifica por parametro el diccionario paths cargandole los datos 
+    de info_carpetas, colocando como clave el nombre de la carpeta y como valor su 
+    respectivo id
+    """
+    for info_carpeta in info_carpetas.values():
+        nombre_carpeta = info_carpeta[0]
+        id_carpeta = info_carpeta[1]
+
+        if nombre_carpeta not in paths.keys():
+            paths[nombre_carpeta] = id_carpeta
+
+
 def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     """
     PRE: "info_elementos" es un diccionario con numeros de elemento como clave, y con
@@ -32,6 +95,7 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     
     if info_elementos: #debo preguntarlo porque si esta vacio, tira error
         print(f'Se encontraron {num_ele} {tipo_ele}\n')
+
 
 def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
@@ -54,6 +118,7 @@ def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
             num_arch += 1
             info_archivos[num_arch] =  [elemento['name'], elemento['id'] ] 
             #print(elemento['parents']) #testing
+
 
 #LISTAR ELEMENTOS EL REMOTO
 def listar_elementos(query: str) -> tuple:
@@ -90,7 +155,6 @@ def listar_elementos(query: str) -> tuple:
 
     return info_carpetas, info_archivos
 
-
 def armado_de_consulta(id_elemento: str) -> str:
     """
     PRE: "id_elemento" es el id de la carpeta o archivo que selecciono el usurario
@@ -124,58 +188,6 @@ def armado_de_consulta(id_elemento: str) -> str:
     return query
 
 
-def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
-    """
-    """
-    if info_elementos:
-        print(texto)
-                        #info_elementos.keys() es {1,2,3... correspondiente a cada ele
-        num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ) ) )
-        
-        id_elemento =  info_elementos[num_ele][1]
-        carpeta_actual = info_elementos[num_ele][0] 
-
-    else:
-        print('Esta vacio ves? No hay monstruos aqui. Seleccione volver atras.')
-        id_elemento = 'root'
-
-    return id_elemento, carpeta_actual
-
-
-def retroceder(paths: dict):
-    """
-    PRE:
-
-    POST:
-    """
-    for carpeta in paths.keys():
-        print(carpeta)
-
-    carpeta = input('Seleccione la carpeta a la que desea retroceder: ')
-    
-    while carpeta not in paths.keys():
-        carpeta = input('Por favor elija una carpeta de las listadas: ')
-
-    id_carpeta = paths[carpeta]
-
-    return id_carpeta, carpeta
-
-def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
-    """
-    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta]} ) es un diccionario y 
-    paths ({nombre_carpeta: id_carpeta } )
-    
-    POST: No devuelve nada. Modifica por parametro el diccionario paths cargandole los datos 
-    de info_carpetas, colocando como clave el nombre de la carpeta y como valor su 
-    respectivo id
-    """
-    for info_carpeta in info_carpetas.values():
-        nombre_carpeta = info_carpeta[0]
-        id_carpeta = info_carpeta[1]
-
-        if nombre_carpeta not in paths.keys():
-            paths[nombre_carpeta] = id_carpeta
-
 def consultar_elementos():
     """
     PRE:
@@ -201,22 +213,24 @@ def consultar_elementos():
 
         guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
                                 #xa q el usario pueda volver hacia atras al navegar entre carpetas
-        print('1-Abrir una carpeta\n2-Descargar un archivo\n3-Atras')
+        generador_de_id_()
+        
+        print('1-Abrir una carpeta\n2-Descargar un archivo o carpeta\n3-Atras')
         opc = int( validar_opcion(1,3) )
         if opc == 1:     
             texto ='seleccione la carpeta que desea abrir'
-            info_elementos = info_carpetas
+            id_elemento, nombre_elemento = seleccionar_elementos(info_carpetas, texto)
         elif opc == 2:
-            texto ='seleccione el archivo que desea descargar'
-            info_elementos = info_archivos
+            texto ='seleccione el archivo o carpeta que desea descargar'
+            id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto)
         
         if opc in (1,2):    
-            id_elemento, carpeta_actual = seleccionar_elementos(info_elementos, texto)
+            
 
         else:      
-            id_elemento, carpeta_actual = retroceder(paths)
+            id_elemento, nombre_elemento = retroceder(paths)
          
-        print(f'--- {carpeta_actual} ---')
+        print(f'--- {nombre_elemento} ---')
         
 
 consultar_elementos()
