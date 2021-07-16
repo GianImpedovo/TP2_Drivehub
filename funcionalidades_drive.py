@@ -20,10 +20,10 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
 
 def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     """
-    PRE: "elementos_ids" es un diccionario con los nombres de los elementos como clave y sus 
-    respectivos ids como valores
+    PRE: "info_elementos" es un diccionario con los nombres de los elementos como clave y sus 
+    respectivos ids como valores.
     
-    POST: No devuelve nada solo muestra por panatalla los elementos solicitados
+    POST: No devuelve nada solo muestra por panatalla los elementos solicitados.
     """
 
     resultados_tot = 0
@@ -36,11 +36,13 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
 
 def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
-    PRE: recibe los diccionarios "elementos_ids" {nombre de los elemento: id del elemento}
-    y "elementos" [{id: id_elemento, name:''nombre del elemento}]
+    PRE: recibe los diccionarios "elementos":
+    [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
+    "info_carpetas" [{id: id_carpeta, name:'nombre carpeta}] y
+    "info_archivos" [{id: id_archivo, name:'nombre archivo}].
     
-    POST: No devuelve nada. Modifica por parametro el diccionario "elementos_ids" colocando
-    como clave los nombres de los elementos y sus id's como valores
+    POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
+    "info_archivos" colocando como clave los nombres de los elementos y sus id's como valores.
     """
     #voy a facilitar la funcion suponiendo q no hay 2 carpetas o archivos con el mismo nomrbe, 
     #asi puedo buscar las carpeta directamente por el nombre q me indica el usuario
@@ -55,28 +57,29 @@ def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
 #LISTAR ELEMENTOS EL REMOTO
 def listar_elementos(query: str) -> dict:
     """
-    PRE: Recibe el string "query" con la consulta a enviar a la API de drive
+    PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
     
-    POST: Devuelve el diccionario "elementos_ids" con los nombres de los elementos como clave 
-    y sus id's como valores
+    POST: Devuelve los diccionarios "info_carpetas" e "info_archivos" con los nombres de los 
+    elementos como clave y sus id's como valores.
     """
     page_token = None
     cortar = False
+
     info_carpetas = dict()
     info_archivos = dict()
     while not cortar:
-        #.list() devuelve un diccionario de diccionarios, q guardo en "resultados"
+        #files().list() devuelve un diccionario de diccionarios, q guardo en "resultados"
         resultados = service().files().list(q= query,
                                             spaces='drive',
                                             fields='nextPageToken, files(id, name, mimeType)',
                                             pageToken=page_token).execute()
-        #print(resultados)
-        #en el dict resultados, una clave es files que es una lista de diccionarios donde cada 
-        #diccionario es un elemento. Lo guardo en elementos.
+        #print(resultados)  #testing
+        #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
+        #cada diccionario es un elemento de dicha lista. Lo guardo en elementos.
         
         elementos = resultados['files']
 
-        #print(elementos)
+        #print(elementos) #testing
         guardar_info_elementos(elementos, info_carpetas, info_archivos)
 
         #chequeo si hay mas resultados
@@ -89,15 +92,16 @@ def listar_elementos(query: str) -> dict:
 
 def armado_de_consulta(id_elemento: str) -> str:
     """
-    PRE:
+    PRE: "id_elemento" es el id de la carpeta o archivo que selecciono el usurario
     
-    POST: devuelve el string "query" con la consulta a bucar en drive
+    POST: devuelve el string "query" con la consulta a buscar en el drive
     """
 
     print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)\n2-Busqueda personalizada')
     opc = int(validar_opcion(1,2)) 
     if opc == 1:
         query = f" '{id_elemento}' in parents" 
+    
     else:
         #print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
         #opc = int(validar_opcion(1,2))
@@ -129,8 +133,7 @@ def consultar_elementos():
     """
     PRE:
 
-    POST: Redirige a otras funciones de filtro y busqueda de archivos  y devuelve el diccionario
-    "elementos_ids" con los nombres de los archivos y sus ids como valores
+    POST: Redirige a otras funciones de filtro y busqueda de archivos.
     """
     # print('BUSCADOR DE DRIVE')
     # print('Seleccione el archivo o carpeta q desea abrir')
