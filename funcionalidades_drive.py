@@ -1,3 +1,4 @@
+from typing import Text
 from service_drive import obtener_servicio as service
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
@@ -25,7 +26,7 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     
     POST: No devuelve nada solo muestra por panatalla los elementos solicitados.
     """
-    
+
     for  num_ele, elemento in info_elementos.items():
         print (f'{num_ele}-{elemento[0]}')
     
@@ -124,11 +125,16 @@ def armado_de_consulta(id_elemento: str) -> str:
     return query
 
 
-def seleccionar_elementos(elementos_ids: dict) -> list:
+def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
+    """
+    """
+    print(texto)
+                    #info_elementos.keys() es {1,2,3... correspondiente a cada ele
+    num_ele = int(validar_opcion( min( info_elementos.keys() ), max (info_elementos.keys) ) )
     
-    elementos_seleccionados = elementos_ids
+    id_elemento =  num_ele[num_ele][1]
     
-    return elementos_seleccionados
+    return id_elemento
 
 
 def consultar_elementos():
@@ -146,24 +152,26 @@ def consultar_elementos():
         query = armado_de_consulta(id_elemento)
         info_carpetas, info_archivos = listar_elementos(query)
         
-        print('Seleccione el archivo o carpeta q desea abrir')
-        id_elemento = input('')
-
-        
-        #aca posiblemente mande a una funcion para traer el id del diccionario
-
-        
         print('CARPETAS')
         mostrar_elementos(info_carpetas, 'carpetas')
 
         print('ARCHIVOS')
         mostrar_elementos(info_archivos,'archivos')
 
-        #elementos_seleccionados = seleccionar_elementos(elementos_ids)
+        print('\n1-Descargar un archivo\n2-Abrir una carpeta?\n3-Atras')
+        opc = int( validar_opcion(1,2,3) )
+        if opc == 1:     
+            texto ='seleccione la carpeta que desea abrir'
+            info_elementos = info_carpetas
+        elif opc == 2:
+            texto ='seleccione el archivo que desea descargar'
+            info_elementos = info_archivos
         
-        #print (elementos_seleccionados)
-        
-        #return elementos_seleccionados
+        if opc in (1,2):    
+            id_elemento = seleccionar_elementos(info_elementos, texto)
+        print('')
+        continuar = input('')
+
 
 consultar_elementos()
 
