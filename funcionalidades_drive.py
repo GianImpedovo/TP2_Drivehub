@@ -18,20 +18,21 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     
     return opc
 
-def mostrar_elementos(info_carpetas: dict, info_archivos: dict):
+def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     """
     PRE: "elementos_ids" es un diccionario con los nombres de los elementos como clave y sus 
     respectivos ids como valores
     
     POST: No devuelve nada solo muestra por panatalla los elementos solicitados
     """
+
     resultados_tot = 0
-    
-    for elemento in elementos_ids.keys():
+
+    for elemento in info_elementos.keys():
         print (elemento)
         resultados_tot += 1
     
-    print(f'\nSe encontraron {resultados_tot} elementos')
+    print(f'\nSe encontraron {resultados_tot} {tipo_ele}')
 
 def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
@@ -96,8 +97,10 @@ def armado_de_consulta() -> str:
     print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)\n2-Busqueda personalizada')
     opc = int(validar_opcion(1,2))
     if opc == 1:    #para buscar carpetas
+        mimeType = 'application/vnd.google-apps.folder'
+        id_elemento = 'root'
         print('CARPETAS DISPONIBLES EN DIRECTORIO PRINCIPAL\n')
-        query ="mimeType= 'application/vnd.google-apps.folder' and 'root' in parents" 
+        query ="mimeType=  and 'root' in parents" 
         
         print('\nARCHIVOS EN DIRECTORIO PRINCIPAL ')
         query = "'root' in parents"
@@ -138,8 +141,12 @@ def consultar_elementos():
     query= armado_de_consulta()
     
     info_carpetas, info_archivos = listar_elementos(query)
+    
+    print('CARPETAS')
+    mostrar_elementos(info_carpetas, 'carpetas')
 
-    mostrar_elementos(info_carpetas, info_archivos)
+    print('ARCHIVOS')
+    mostrar_elementos(info_archivos,'archivos')
 
     #elementos_seleccionados = seleccionar_elementos(elementos_ids)
     
