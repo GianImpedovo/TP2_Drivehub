@@ -32,7 +32,7 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
         print (elemento)
         resultados_tot += 1
     
-    print(f'\nSe encontraron {resultados_tot} {tipo_ele}')
+    print(f'Se encontraron {resultados_tot} {tipo_ele}\n')
 
 def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
@@ -49,7 +49,7 @@ def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
             info_carpetas[ elemento['name'] ] = elemento['id']        
         else:
-            info_archivos[ elemento['name'] ] = elementos['id']
+            info_archivos[ elemento['name'] ] = elemento['id']
 
 
 #LISTAR ELEMENTOS EL REMOTO
@@ -87,35 +87,31 @@ def listar_elementos(query: str) -> dict:
     return info_carpetas, info_archivos
 
 
-def armado_de_consulta() -> str:
+def armado_de_consulta(id_elemento: str) -> str:
     """
     PRE:
     
     POST: devuelve el string "query" con la consulta a bucar en drive
     """
-    print('BUSCADOR DE DRIVE')
+
     print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)\n2-Busqueda personalizada')
-    opc = int(validar_opcion(1,2))
-    if opc == 1:    #para buscar carpetas
-        mimeType = 'application/vnd.google-apps.folder'
-        id_elemento = 'root'
-        print('CARPETAS DISPONIBLES EN DIRECTORIO PRINCIPAL\n')
-        query ="mimeType=  and 'root' in parents" 
-        
-        print('\nARCHIVOS EN DIRECTORIO PRINCIPAL ')
-        query = "'root' in parents"
+    opc = int(validar_opcion(1,2)) 
+    if opc == 1:
+        query = f" '{id_elemento}' in parents" 
     else:
-        print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
-        opc = int(validar_opcion(1,2))
+        #print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
+        #opc = int(validar_opcion(1,2))
+        palabra = input('ingerse palabra clave COMPLETA: ')  #contains solo busca palabras completas no letras!
+        query = f" '{id_elemento}' in parents and fullText contains '{palabra}' " 
 
-        palabra = input('ingerse palabra clave de busqueda: ')  #contains solo busca palabras completas no letras!
-        if opc == 1:
-            print('CARPETAS SEGUN LO SOLICITADO\n')
-            query = f"mimeType = 'application/vnd.google-apps.folder' and fullText contains '{palabra}'"
+        # if opc == 1:
+        #     mimeType = 'application/vnd.google-apps.folder'
+        #     print('CARPETAS SEGUN LO SOLICITADO\n')
+        #     query = f"mimeType = 'application/vnd.google-apps.folder' and fullText contains '{palabra}'"
 
-        else:
-            print('ARCHIVOS SEGUN LO SOLICITADO\n')
-            query = f" mimeType != 'application/vnd.google-apps.folder' and fullText contains '{palabra}'"
+        # else:
+        #     print('ARCHIVOS SEGUN LO SOLICITADO\n')
+        #     query = f" mimeType != 'application/vnd.google-apps.folder' and fullText contains '{palabra}'"
         
         print(query) #testing
     
@@ -136,9 +132,13 @@ def consultar_elementos():
     POST: Redirige a otras funciones de filtro y busqueda de archivos  y devuelve el diccionario
     "elementos_ids" con los nombres de los archivos y sus ids como valores
     """
-    print('CONSULTAR ARCHIVOS DE DRIVE\n')
-    
-    query= armado_de_consulta()
+    # print('BUSCADOR DE DRIVE')
+    # print('Seleccione el archivo o carpeta q desea abrir')
+    # id_elemento = input('Ingrese el nombre')
+    #aca posiblemente mande a una funcion para traer el id del diccionario
+
+    id_elemento = 'root'
+    query = armado_de_consulta(id_elemento)
     
     info_carpetas, info_archivos = listar_elementos(query)
     
