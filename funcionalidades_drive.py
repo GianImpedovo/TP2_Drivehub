@@ -43,23 +43,20 @@ def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
     "info_archivos" colocando como clave los nombres de los elementos y sus id's como valores.
     """
-    #voy a facilitar la funcion suponiendo q no hay 2 carpetas o archivos con el mismo nomrbe, 
-    #asi puedo buscar las carpeta directamente por el nombre q me indica el usuario
     num_arch = 0
     num_carp = 0
     for elemento in elementos:
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
             num_carp += 1
-            #info_carpetas[ elemento['name'] ] = elemento['id']
-            info_carpetas[num_carp] =   [ elemento['name'], elemento['id'] ] 
+            info_carpetas[num_carp] =   [ elemento['name'], elemento['id'] ]
+            #print(elemento['parents']) #testing
         else:
             num_arch += 1
-            #info_archivos[ elemento['name'] ] = elemento['id']
             info_archivos[num_arch] =  [elemento['name'], elemento['id'] ] 
-
+            #print(elemento['parents']) #testing
 
 #LISTAR ELEMENTOS EL REMOTO
-def listar_elementos(query: str) -> dict:
+def listar_elementos(query: str) -> tuple:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
     
@@ -75,7 +72,7 @@ def listar_elementos(query: str) -> dict:
         #files().list() devuelve un diccionario de diccionarios, q guardo en "resultados"
         resultados = service().files().list(q= query,
                                             spaces='drive',
-                                            fields='nextPageToken, files(id, name, mimeType)',
+                                            fields='nextPageToken, files(id, name, mimeType, parents)',
                                             pageToken=page_token).execute()
         #print(resultados)  #testing
         #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
@@ -101,7 +98,8 @@ def armado_de_consulta(id_elemento: str) -> str:
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
 
-    print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)\n2-Busqueda personalizada')
+    print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)')
+    print('2-Busqueda personalizada (busqueda con palara clave)')
     opc = int(validar_opcion(1,2)) 
     if opc == 1:
         query = f" '{id_elemento}' in parents" 
@@ -135,12 +133,48 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
         num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ) ) )
         
         id_elemento =  info_elementos[num_ele][1]
+        carpeta_actual = info_elementos[num_ele][0] 
+
     else:
         print('Esta vacio ves? No hay monstruos aqui. Seleccione volver atras.')
         id_elemento = 'root'
-        
-    return id_elemento
 
+    return id_elemento, carpeta_actual
+
+
+def retroceder(paths: dict):
+    """
+    PRE:
+
+    POST:
+    """
+    for carpeta in paths.keys():
+        print(carpeta)
+
+    carpeta = input('Seleccione la carpeta a la que desea retroceder: ')
+    
+    while carpeta not in paths.keys():
+        carpeta = input('Por favor elija una carpeta de las listadas: ')
+
+    id_carpeta = paths[carpeta]
+
+    return id_carpeta, carpeta
+
+def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
+    """
+    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta]} ) es un diccionario y 
+    paths ({nombre_carpeta: id_carpeta } )
+    
+    POST: No devuelve nada. Modifica por parametro el diccionario paths cargandole los datos 
+    de info_carpetas, colocando como clave el nombre de la carpeta y como valor su 
+    respectivo id
+    """
+    for info_carpeta in info_carpetas.values():
+        nombre_carpeta = info_carpeta[0]
+        id_carpeta = info_carpeta[1]
+
+        if nombre_carpeta not in paths.keys():
+            paths[nombre_carpeta] = id_carpeta
 
 def consultar_elementos():
     """
@@ -150,19 +184,23 @@ def consultar_elementos():
     """
     
     print('BUSCADOR DE DRIVE')
+    print('--root/Directorio principal--')
     cortar = False
     id_elemento = 'root'
+    paths = {'root':'root'}
     while not cortar:
 
         query = armado_de_consulta(id_elemento)
         info_carpetas, info_archivos = listar_elementos(query)
-        
+
         print('CARPETAS')
         mostrar_elementos(info_carpetas, 'carpetas')
 
         print('ARCHIVOS')
         mostrar_elementos(info_archivos,'archivos')
 
+        guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
+                                #xa q el usario pueda volver hacia atras al navegar entre carpetas
         print('1-Abrir una carpeta\n2-Descargar un archivo\n3-Atras')
         opc = int( validar_opcion(1,3) )
         if opc == 1:     
@@ -173,12 +211,13 @@ def consultar_elementos():
             info_elementos = info_archivos
         
         if opc in (1,2):    
-            id_elemento = seleccionar_elementos(info_elementos, texto)
-        
-        print(id_elemento)
-        #print('1-continuar buscand?')
-        #continuar = input('')
+            id_elemento, carpeta_actual = seleccionar_elementos(info_elementos, texto)
 
+        else:      
+            id_elemento, carpeta_actual = retroceder(paths)
+         
+        print(f'--- {carpeta_actual} ---')
+        
 
 consultar_elementos()
 
