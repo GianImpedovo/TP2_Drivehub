@@ -62,7 +62,57 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     return id_elemento, nombre_elemento
 
 
+def descargar_elemento():
+    """
+    PRE:
+    POST: No devuelve nada. Permite descargar el archivo seleccionado en drive por el usuario. 
+    """
+    print('1-Carpeta\n2-Archivo')
+    opc = int( validar_opcion(1,2))        
+    if opc == 1:
+        texto = 'seleccione la carpeta que desea descargar'
+        info_elementos = info_carpetas
+    else:
+        texto = 'seleccione el archivo que desea descargar'
+        info_elementos = info_archivos
+    
+    id_elemento = seleccionar_elementos(info_elementos, texto) 
+    
+    #print(elementos_ids)
 
+    #print(file_ids)
+    pass
+
+
+def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> str:
+    """
+    PRE:
+    POST: Devuelve el str "id_elemento" con el id del elemento con el q se desea realizar 
+    una operacion
+    """
+    print('1-Abrir una carpeta\n2-Descargar un archivo o carpeta\n3-Atras')
+    opc = int( validar_opcion(1,3) )
+    if opc == 1:     
+        texto ='Seleccione la carpeta que desea abrir'
+        info_elementos = info_carpetas
+        id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
+        print(f'\n--- {nombre_elemento} ---')    
+    
+    elif opc == 2:
+        id_elemento, nombre_elemento = descargar_elemento()
+        print('se ha descargado tal')
+
+    else: #retroceder
+        info_elementos = info_carpetas #solo para poder printear el nombre de la carpeta      
+        id_elemento, nombre_elemento = retroceder(paths)
+        
+    if opc in (1,2):
+        id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto)  
+    
+    if info_elementos == info_carpetas: #es decir si se eligio una carpeta y no un archivo
+        print(f'\n--- {nombre_elemento} ---')
+    
+    return id_elemento
 
 
 def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
@@ -194,7 +244,6 @@ def consultar_elementos():
 
     POST: Redirige a otras funciones de filtro y busqueda de archivos.
     """
-    
     print('BUSCADOR DE DRIVE')
     print('--root/Directorio principal--')
     cortar = False
@@ -212,39 +261,12 @@ def consultar_elementos():
         mostrar_elementos(info_archivos,'archivos')
 
         guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
-                                #xa q el usario pueda volver hacia atras al navegar entre carpetas
-        generador_de_id_()
+                            #xa q el usario pueda volver hacia atras al navegar entre carpetas
         
-        print('1-Abrir una carpeta\n2-Descargar un archivo o carpeta\n3-Atras')
-        opc = int( validar_opcion(1,3) )
-        if opc == 1:     
-            texto ='seleccione la carpeta que desea abrir'
-            id_elemento, nombre_elemento = seleccionar_elementos(info_carpetas, texto)
-        elif opc == 2:
-            texto ='seleccione el archivo o carpeta que desea descargar'
-            id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto)
-        
-        if opc in (1,2):    
-            
-
-        else:      
-            id_elemento, nombre_elemento = retroceder(paths)
-         
-        print(f'--- {nombre_elemento} ---')
-        
+        id_elemento = generador_de_id_elemento(info_carpetas, info_archivos, paths)       
 
 consultar_elementos()
 
-def descargar_archivos():
-    """
-    PRE:
-    POST: No devuelve nada. Permite descargar el archivo seleccionado en drive por el usuario. 
-    """
-    elementos_ids = consultar_elementos()
-    #print(elementos_ids)
-
-    #print(file_ids)
-    pass
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
