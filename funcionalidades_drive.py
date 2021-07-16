@@ -26,13 +26,13 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     POST: No devuelve nada solo muestra por panatalla los elementos solicitados.
     """
 
-    resultados_tot = 0
+    cont = 0
 
     for elemento in info_elementos.keys():
-        print (elemento)
-        resultados_tot += 1
+        print (f'{cont}-{elemento}')
+        cont += 1
     
-    print(f'Se encontraron {resultados_tot} {tipo_ele}\n')
+    print(f'Se encontraron {cont} {tipo_ele}\n')
 
 def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
@@ -135,27 +135,32 @@ def consultar_elementos():
 
     POST: Redirige a otras funciones de filtro y busqueda de archivos.
     """
-    # print('BUSCADOR DE DRIVE')
-    # print('Seleccione el archivo o carpeta q desea abrir')
-    # id_elemento = input('Ingrese el nombre')
-    #aca posiblemente mande a una funcion para traer el id del diccionario
-
+    
+    print('BUSCADOR DE DRIVE')
+    cortar = False
     id_elemento = 'root'
-    query = armado_de_consulta(id_elemento)
-    
-    info_carpetas, info_archivos = listar_elementos(query)
-    
-    print('CARPETAS')
-    mostrar_elementos(info_carpetas, 'carpetas')
+    while not cortar:
 
-    print('ARCHIVOS')
-    mostrar_elementos(info_archivos,'archivos')
+        query = armado_de_consulta(id_elemento)
+        info_carpetas, info_archivos = listar_elementos(query)
+        
+        print('Seleccione el archivo o carpeta q desea abrir')
+        id_elemento = input('')
+        
+        #aca posiblemente mande a una funcion para traer el id del diccionario
 
-    #elementos_seleccionados = seleccionar_elementos(elementos_ids)
-    
-    #print (elementos_seleccionados)
-    
-    #return elementos_seleccionados
+        
+        print('CARPETAS')
+        mostrar_elementos(info_carpetas, 'carpetas')
+
+        print('ARCHIVOS')
+        mostrar_elementos(info_archivos,'archivos')
+
+        #elementos_seleccionados = seleccionar_elementos(elementos_ids)
+        
+        #print (elementos_seleccionados)
+        
+        #return elementos_seleccionados
 
 consultar_elementos()
 
