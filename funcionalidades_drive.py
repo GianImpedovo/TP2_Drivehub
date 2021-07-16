@@ -29,7 +29,7 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     cont = 0
 
     for elemento in info_elementos.keys():
-        print (f'{cont}-{elemento}')
+        print (f'{cont+1}-{elemento}')
         cont += 1
     
     print(f'Se encontraron {cont} {tipo_ele}\n')
@@ -38,20 +38,25 @@ def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
     PRE: recibe los diccionarios "elementos":
     [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
-    "info_carpetas" [{id: id_carpeta, name:'nombre carpeta}] y
-    "info_archivos" [{id: id_archivo, name:'nombre archivo}].
+    "info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
+    "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}.
     
     POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
     "info_archivos" colocando como clave los nombres de los elementos y sus id's como valores.
     """
     #voy a facilitar la funcion suponiendo q no hay 2 carpetas o archivos con el mismo nomrbe, 
     #asi puedo buscar las carpeta directamente por el nombre q me indica el usuario
-
+    num_arch = 0
+    num_carp = 0
     for elemento in elementos:
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
-            info_carpetas[ elemento['name'] ] = elemento['id']        
+            num_carp += 1
+            #info_carpetas[ elemento['name'] ] = elemento['id']
+            info_carpetas[num_carp] =   [ elemento['name'], elemento['id'] ] 
         else:
-            info_archivos[ elemento['name'] ] = elemento['id']
+            num_arch += 1
+            #info_archivos[ elemento['name'] ] = elemento['id']
+            info_archivos[num_arch] =  [elemento['name'], elemento['id'] ] 
 
 
 #LISTAR ELEMENTOS EL REMOTO
@@ -146,6 +151,7 @@ def consultar_elementos():
         
         print('Seleccione el archivo o carpeta q desea abrir')
         id_elemento = input('')
+
         
         #aca posiblemente mande a una funcion para traer el id del diccionario
 
