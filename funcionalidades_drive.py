@@ -25,14 +25,11 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     
     POST: No devuelve nada solo muestra por panatalla los elementos solicitados.
     """
-
-    cont = 0
-
-    for elemento in info_elementos.keys():
-        print (f'{cont+1}-{elemento}')
-        cont += 1
     
-    print(f'Se encontraron {cont} {tipo_ele}\n')
+    for  num_ele, elemento in info_elementos.items():
+        print (f'{num_ele}-{elemento[0]}')
+    
+    print(f'Se encontraron {num_ele} {tipo_ele}\n')
 
 def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
