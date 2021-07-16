@@ -21,16 +21,17 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
 
 def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     """
-    PRE: "info_elementos" es un diccionario con los nombres de los elementos como clave y sus 
-    respectivos ids como valores.
+    PRE: "info_elementos" es un diccionario con numeros de elemento como clave, y con
+    listas como valores que contienen en la primera posicion los nombres de los elementos
+    y en las segunda, sus respectivos.
     
     POST: No devuelve nada solo muestra por panatalla los elementos solicitados.
     """
-
-    for  num_ele, elemento in info_elementos.items():
+    for num_ele, elemento in info_elementos.items():
         print (f'{num_ele}-{elemento[0]}')
     
-    print(f'Se encontraron {num_ele} {tipo_ele}\n')
+    if info_elementos: #debo preguntarlo porque si esta vacio, tira error
+        print(f'Se encontraron {num_ele} {tipo_ele}\n')
 
 def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     """
@@ -104,7 +105,7 @@ def armado_de_consulta(id_elemento: str) -> str:
     opc = int(validar_opcion(1,2)) 
     if opc == 1:
         query = f" '{id_elemento}' in parents" 
-    
+
     else:
         #print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
         #opc = int(validar_opcion(1,2))
@@ -128,12 +129,16 @@ def armado_de_consulta(id_elemento: str) -> str:
 def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     """
     """
-    print(texto)
-                    #info_elementos.keys() es {1,2,3... correspondiente a cada ele
-    num_ele = int(validar_opcion( min( info_elementos.keys() ), max (info_elementos.keys) ) )
-    
-    id_elemento =  num_ele[num_ele][1]
-    
+    if info_elementos:
+        print(texto)
+                        #info_elementos.keys() es {1,2,3... correspondiente a cada ele
+        num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ) ) )
+        
+        id_elemento =  info_elementos[num_ele][1]
+    else:
+        print('Esta vacio ves? No hay monstruos aqui. Seleccione volver atras.')
+        id_elemento = 'root'
+        
     return id_elemento
 
 
@@ -158,8 +163,8 @@ def consultar_elementos():
         print('ARCHIVOS')
         mostrar_elementos(info_archivos,'archivos')
 
-        print('\n1-Descargar un archivo\n2-Abrir una carpeta?\n3-Atras')
-        opc = int( validar_opcion(1,2,3) )
+        print('1-Abrir una carpeta\n2-Descargar un archivo\n3-Atras')
+        opc = int( validar_opcion(1,3) )
         if opc == 1:     
             texto ='seleccione la carpeta que desea abrir'
             info_elementos = info_carpetas
@@ -169,8 +174,10 @@ def consultar_elementos():
         
         if opc in (1,2):    
             id_elemento = seleccionar_elementos(info_elementos, texto)
-        print('')
-        continuar = input('')
+        
+        print(id_elemento)
+        #print('1-continuar buscand?')
+        #continuar = input('')
 
 
 consultar_elementos()
