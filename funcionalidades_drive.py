@@ -60,7 +60,7 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     else:
         print('Esta vacio ves? No hay monstruos aqui. Seleccione volver atras.')
         id_elemento = 'root'
-
+    
     return id_elemento, nombre_elemento
 
 
@@ -99,10 +99,8 @@ def descargar_carpeta(id_elemento):
         page_token = resultados.get('nextPageToken')
         if page_token is None:
             cortar = True
-    
     #request = service().files().export_media(fileId = id_elemento,
     #                                        mimeType = mimeType)
-  
     return fh
 
 def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
@@ -313,37 +311,35 @@ def consultar_elementos():
         
         id_elemento = generador_de_id_elemento(info_carpetas, info_archivos, paths)       
 
-consultar_elementos()
-
+    return id_elemento
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
+    #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL
     pass
 
 
 def subir_archivos():
     
     ruta_archivo = seleccionar_archivo_subida()
-    ruta_archivo = 'prueba_upload_1.txt'
-    
+    ruta_archivo = 'prueba_3_anidada.txt'
+        
+    print('Selccione la carpeta q la que desea subir el archivo')
     carpeta_id = consultar_elementos()
-    # carpeta_id = '1_qDcJ2I4xpNgrvYyqXtWv1w0ELP0N27m'
     
-    # file_metadata = {
-    #                 'name': 'prueba_upload.txt',
-    #                 'parents': [carpeta_id]
-    #             }
+    
+    file_metadata = {
+                    'name': ruta_archivo,
+                    'parents': [carpeta_id]
+                }
  
-    # media = MediaFileUpload(ruta_archivo)
+    media = MediaFileUpload(ruta_archivo)
 
-    # file = service().files().create(body = file_metadata,
-    #                                     media_body = media,
-    #                                     fields = 'id').execute()
+    file = service().files().create(body = file_metadata,
+                                        media_body = media,
+                                        fields = 'id').execute()
     
-    # print ('File ID: %s' % file.get('id'))
+    print ('Se subio correctamente: %s' % file.get('name'))
 
-#subir_archivos()
 
-    #print('file name %:' % file.get('name'))
-
-    # #print('ok')
+subir_archivos()
