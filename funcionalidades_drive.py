@@ -49,18 +49,13 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     POST: devuelve el string "id_elemento" con id del elemento y el str "nomrbe_elemento" 
     con su nombre
     """
-    if info_elementos:
-        print(texto)
-                        #info_elementos.keys() es {1,2,3... correspondiente a cada ele
-        num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ) ) )
-        
-        id_elemento =  info_elementos[num_ele][1]
-        nombre_elemento = info_elementos[num_ele][0] 
-
-    else:
-        print('Esta vacio ves? No hay monstruos aqui. Seleccione volver atras.')
-        id_elemento = 'root'
+    print(texto)
+                    #info_elementos.keys() es {1,2,3... correspondiente a cada ele
+    num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ) ) )
     
+    id_elemento =  info_elementos[num_ele][1]
+    nombre_elemento = info_elementos[num_ele][0] 
+
     return id_elemento, nombre_elemento
 
 
@@ -143,7 +138,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     """
     print('1-Abrir una carpeta\n2-Descargar un archivo o carpeta\n3-Atras')
     opc = int( validar_opcion(1,3) )
-    if opc == 1:     
+    if opc == 1 and info_carpetas:      #si la carpeta no esta vacia
         texto ='Seleccione la carpeta que desea abrir'
         info_elementos = info_carpetas
         id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
@@ -154,7 +149,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
         print('se ha descargado tal')
 
     else: #retroceder
-        info_elementos = info_carpetas #solo para poder printear el nombre de la carpeta      
+        print('Esta vacio ves? No hay monstruos aqui')
         id_elemento, nombre_elemento = retroceder(paths)
            
     return id_elemento
