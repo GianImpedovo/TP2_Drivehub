@@ -1,8 +1,9 @@
+import os
+import io
 from typing import Text
 from service_drive import obtener_servicio as service
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
-import os
 
 
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
@@ -62,7 +63,7 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     return id_elemento, nombre_elemento
 
 
-def descargar_elemento():
+def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
     """
     PRE:
     POST: No devuelve nada. Permite descargar el archivo seleccionado en drive por el usuario. 
@@ -76,12 +77,24 @@ def descargar_elemento():
         texto = 'seleccione el archivo que desea descargar'
         info_elementos = info_archivos
     
-    id_elemento = seleccionar_elementos(info_elementos, texto) 
-    
-    #print(elementos_ids)
+    id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
 
-    #print(file_ids)
-    pass
+    #file_id = '0BwwA4oUTeiV1UVNwOHItT0xfa2M'
+
+    request = service().files().get_media(fileId = id_elemento)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    
+    done = False
+    while not done:
+        status, done = downloader.next_chunk()
+        print(status.progress())
+        print ("Download %d%%." % int(status.progress() * 1000))
+    
+    with open(os.path.join(nombre_elemento), 'wb') as arch:
+        arch.write(fh.read()) 
+
+    return id_elemento
 
 
 def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> str:
@@ -99,19 +112,13 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
         print(f'\n--- {nombre_elemento} ---')    
     
     elif opc == 2:
-        id_elemento, nombre_elemento = descargar_elemento()
+        id_elemento, nombre_elemento = descargar_elemento(info_carpetas, info_archivos)
         print('se ha descargado tal')
 
     else: #retroceder
         info_elementos = info_carpetas #solo para poder printear el nombre de la carpeta      
         id_elemento, nombre_elemento = retroceder(paths)
-        
-    if opc in (1,2):
-        id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto)  
-    
-    if info_elementos == info_carpetas: #es decir si se eligio una carpeta y no un archivo
-        print(f'\n--- {nombre_elemento} ---')
-    
+           
     return id_elemento
 
 
