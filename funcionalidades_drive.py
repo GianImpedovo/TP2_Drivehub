@@ -31,7 +31,8 @@ def retroceder(paths: dict):
         print(carpeta)
 
     carpeta = input('Seleccione la carpeta a la que desea retroceder: ')
-    
+    print()
+
     while carpeta not in paths.keys():
         carpeta = input('Por favor elija una carpeta de las listadas: ')
 
@@ -63,38 +64,77 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     return id_elemento, nombre_elemento
 
 
+def descargar_archivo_binario(id_elemento):
+     
+    request = service().files().get_media(fileId = id_elemento)
+    fh = io.BytesIO()
+   
+    return fh
+
+def descargar_carpeta(id_elemento):
+    
+    page_token = None
+    cortar = False
+    while not cortar:
+        resultados = service().files().list(q= f" '{id_elemento}' in parents",
+                                                spaces='drive',
+                                                fields='nextPageToken, files(id, name, mimeType)',
+                                                pageToken= page_token).execute()
+        elementos = resultados['files']
+        for elemento in elementos:
+            id_elemento = elemento['id']
+            nombre_elemento = elemento['name']
+            mimeType = elemento['mimeType']
+            ruta = os.getcwd()
+            #request = service().files().export_media(fileId = id_elemento)
+            fh = io.BytesIO()
+            if mimeType == 'application/vnd.google-apps.folder':
+                os.mkdir( ruta + '/' + carpeta_actual)
+                carpeta_actual = nombre_elemento
+                fh = descargar_carpeta(id_elemento)
+            else:
+                with open(os.path.join(carpeta_actual,nombre_elemento), 'wb') as arch:
+                    arch.write(fh.read())
+
+        page_token = resultados.get('nextPageToken')
+        if page_token is None:
+            cortar = True
+    
+    #request = service().files().export_media(fileId = id_elemento,
+    #                                        mimeType = mimeType)
+  
+    return fh
+
 def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
     """
-    PRE:
+    PRE: recibe los diccionarios info_carpetas" e "info_archivos" con el numero de elemento,
+    el nombre y su respectivo id
+
     POST: No devuelve nada. Permite descargar el archivo seleccionado en drive por el usuario. 
     """
     print('1-Carpeta\n2-Archivo')
     opc = int( validar_opcion(1,2))        
     if opc == 1:
-        texto = 'seleccione la carpeta que desea descargar'
-        info_elementos = info_carpetas
+        texto = 'seleccione la carpeta que desea descargar' 
+        info_elementos = info_carpetas                  
+        #mimeType = 'application/vnd.google-apps.folder' # to export files
     else:
         texto = 'seleccione el archivo que desea descargar'
         info_elementos = info_archivos
     
     id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
-
-    #file_id = '0BwwA4oUTeiV1UVNwOHItT0xfa2M'
-
-    request = service().files().get_media(fileId = id_elemento)
-    fh = io.BytesIO()
-    downloader = MediaIoBaseDownload(fh, request)
     
-    done = False
-    while not done:
-        status, done = downloader.next_chunk()
-        print(status.progress())
-        print ("Download %d%%." % int(status.progress() * 1000))
-    
-    with open(os.path.join(nombre_elemento), 'wb') as arch:
+    #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
+    #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
+    ubicacion = ''
+        
+    #fh = descargar_archivo_binario(id_elemento)
+    fh = descargar_carpeta(id_elemento)
+
+    with open(os.path.join(ubicacion,nombre_elemento), 'wb') as arch:
         arch.write(fh.read()) 
 
-    return id_elemento
+    return id_elemento, nombre_elemento
 
 
 def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> str:
@@ -211,6 +251,7 @@ def listar_elementos(query: str) -> tuple:
             cortar = True
 
     return info_carpetas, info_archivos
+
 
 def armado_de_consulta(id_elemento: str) -> str:
     """
