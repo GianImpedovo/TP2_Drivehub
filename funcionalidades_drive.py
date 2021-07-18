@@ -329,10 +329,10 @@ def seleccionar_archivo_subida():
     pass
 
 
-def subir_archivos():
+def subir_archivos(ruta_archivo):
     
-    ruta_archivo = seleccionar_archivo_subida()
-    ruta_archivo = 'prueba_xa_subir.txt'
+    #ruta_archivo = seleccionar_archivo_subida()
+    #ruta_archivo = 'prueba_xa_subir.txt'
         
     print('Selccione la carpeta a la que desea subir el archivo')
     carpeta_id, nombre_elemento = consultar_elementos()
@@ -353,15 +353,15 @@ def subir_archivos():
 
 #subir_archivos()
 
-def crear_archivos():
+def crear_archivos(ruta):
     #Funciones en el local para crear el archivo y darme el nombre, 
     #consulto las carpetas para saber a donde lo subo
-    id_elemento, nombre_elemento = consultar_elementos()
+    #id_elemento, nombre_elemento = consultar_elementos()
     #creo el archivo con metodo create en id_elemento q traje de la busqueda
 
     #crear carpetas
     #
-    rutas_archivos = []
+    rutas_archivos = [ruta]
     for ruta in rutas_archivos:
 
         if not os.path.isfile(ruta): # si no es un archivo (=> es una carpeta)
@@ -400,39 +400,60 @@ def crear_archivos():
 
 #crear_archivos()
 
+def remplazar_archivos(arch, id_ele):
+    
+    media = MediaFileUpload(arch)
+
+    service().files().update(fileId = id_ele,
+                                    media_body = media).execute()
+                            
+    #key = 'name'
+    #print(f'se elimino{file_metadata[key]}')
+
 def sincronizar():
-    for i in list(pathlib.Path().iterdir()):
-        print(i)
-        fname = pathlib.Path(i)
-        print(fname.stat().st_ctime)
-        ctime = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
-        #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
-        print(ctime)
+    # for i in list(pathlib.Path().iterdir()):
+    #     print(i)
+    #     fname = pathlib.Path(i)
+    #     print(fname.stat().st_ctime)
+    #     ctime = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
+    #     #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
+    #     print(ctime)
+    
+    arch = 'archivo_xa_actualizar.txt'
+    fname = pathlib.Path(arch)
+    ctime = datetime.datetime.fromtimestamp(fname.stat().st_mtime)
+    print(ctime)
+    
+    page_token = None
+    cortar = False
+    id_carpeta = '1IgwMubXSE_XlBgoSF7pgGS_AL8w2ex6i'
+    while not cortar:
+        #files().list() devuelve un diccionario de diccionarios, q guardo en "resultados"
+        resultados = service().files().list(q= f" '{id_carpeta}' in parents and (not trashed) ",
+                                            spaces='drive',
+                                            fields='nextPageToken, files(id, name, modifiedTime)',
+                                            pageToken=page_token).execute()
+        #print(resultados)  #testing
+        #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
+        #cada diccionario es un elemento de dicha lista. Lo guardo en elementos.
         
-        page_token = None
-        cortar = False
-        while not cortar:
-            #files().list() devuelve un diccionario de diccionarios, q guardo en "resultados"
-            resultados = service().files().list(q= " 'root' in parents ",
-                                                spaces='drive',
-                                                fields='nextPageToken, files(id, name, modifiedTime)',
-                                                pageToken=page_token).execute()
-            #print(resultados)  #testing
-            #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
-            #cada diccionario es un elemento de dicha lista. Lo guardo en elementos.
-            
-            elementos = resultados['files']
+        elementos = resultados['files']
 
-            #print(elementos) #testing
-            #guardar_info_elementos(elementos, info_carpetas, info_archivos)
-            for elemento in elementos:
-                #print(elemento['modifiedTime']) 
-                print(elemento)
-                
-            #chequeo si hay mas resultados
-            page_token = resultados.get('nextPageToken')
-            if page_token is None:
-                cortar = True
-
-
+        #print(elementos) #testing
+        #guardar_info_elementos(elementos, info_carpetas, info_archivos)
+        for elemento in elementos:
+            #print(elemento['modifiedTime']) 
+            print(elemento)
+            print(elemento['modifiedTime'])
+            id_ele = elemento['id']
+        print(id_ele)
+        #chequeo si hay mas resultados
+        page_token = resultados.get('nextPageToken')
+        if page_token is None:
+            cortar = True
+    
+    remplazar_archivos(arch, id_ele)
+    print('replace ok')  
+    #subir_archivos(arch)
+        
 sincronizar()
