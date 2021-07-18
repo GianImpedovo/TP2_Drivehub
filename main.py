@@ -61,19 +61,19 @@ def main()-> None:
     
 
 def obtener_email(id_mensaje):
-    servicio = obtener_servicio()
+    servicio = service_gmail.obtener_servicio()
     mensaje = servicio.users().messages().get(userId='me',id=id_mensaje).execute()
     return mensaje
 
 def obtener_lista_email():
-    servicio = obtener_servicio()
+    servicio = service_gmail.obtener_servicio()
     resultados = servicio.users().messages().list(userId='me', q='in:inbox', maxResults=1).execute()
     #resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread', maxResults=1).execute()
     #pprint.pprint(resultados)
     return resultados.get('messages',[])
 
 def enviar_email(email):
-    servicio = obtener_servicio()
+    servicio = service_gmail.obtener_servicio()
     msj = 'ENTREGA OK'
     mime_mensaje = MIMEMultipart()
     mime_mensaje['subject'] = 'EVALUACION'
@@ -127,9 +127,9 @@ def obtener_evaluaciones():
 def validar_entrega(name):
     print("validar")
 
-if __name__ == '__main__':
-    #enviar_email('adrodriguez@fi.uba.ar')
-    #descomprimir_archivo("108367 - Rodriguez, Adonis")
-    obtener_evaluaciones()
+#if __name__ == '__main__':
+#enviar_email('adrodriguez@fi.uba.ar')
+#descomprimir_archivo("108367 - Rodriguez, Adonis")
+#obtener_evaluaciones()
 
 main()
