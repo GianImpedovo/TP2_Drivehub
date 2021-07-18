@@ -264,13 +264,13 @@ def armado_de_consulta(id_elemento: str) -> str:
     print('2-Busqueda personalizada (busqueda con palara clave)')
     opc = int(validar_opcion(1,2)) 
     if opc == 1:
-        query = f" '{id_elemento}' in parents" 
+        query = f" '{id_elemento}' in parents and (not trashed) " 
 
     else:
         #print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
         #opc = int(validar_opcion(1,2))
         palabra = input('ingerse palabra clave COMPLETA: ')  #contains solo busca palabras completas no letras!
-        query = f" '{id_elemento}' in parents and fullText contains '{palabra}' " 
+        query = f" '{id_elemento}' in parents and fullText contains '{palabra} and (not trashed)' " 
 
         # if opc == 1:
         #     mimeType = 'application/vnd.google-apps.folder'
@@ -456,4 +456,5 @@ def sincronizar():
     print('replace ok')  
     #subir_archivos(arch)
         
-sincronizar()
+#sincronizar()
+consultar_elementos()
