@@ -406,9 +406,15 @@ def remplazar_archivos(arch, id_ele):
 
     service().files().update(fileId = id_ele,
                                     media_body = media).execute()
-                                    
-                                                        
+
+
 def sincronizar():
+    """
+    PRE: Recibe el dict/ list "" con los nombres de los archivos de la carpeta 
+    q se esta sincronizando
+
+    POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
+    """
     # for i in list(pathlib.Path().iterdir()):
     #     print(i)
     #     fname = pathlib.Path(i)
@@ -458,10 +464,10 @@ def sincronizar():
     #arch_remotos_sinc = {nombre_arch: [id_ele, modifiedTime]}
     arch_remotos_sinc = dict()
     for arch_local, fecha_local in arch_locales_sinc.items():
-        for arch_remoto, info_arch in arch_remotos_sinc.items():
+        for arch_remoto in arch_remotos_sinc.keys():
             fecha_remoto = arch_remotos_sinc[arch_remoto][1]
             if fecha_remoto != fecha_local:  
-                id_arch = arch_remotos_sinc[0]
+                id_arch = arch_remotos_sinc[arch_remoto][0]
                 remplazar_archivos(arch_local, id_arch)
                 
                 print(f'se actualizo {arch_local} correctamente')
