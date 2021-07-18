@@ -351,5 +351,14 @@ def subir_archivos():
     
     print (f'Se subio correctamente: {ruta_archivo} a {nombre_elemento}')
 
+#subir_archivos()
 
-subir_archivos()
+def crear_archivos():
+    #Funciones en el local para crear el archivo y darme el nombre, 
+    #consulto las carpetas para saber a donde lo subo
+    id_elemento, nombre_elemento = consultar_elementos()
+    #creo el archivo con metodo create en id_elemento q traje de la busqueda
+
+    #print(f'se creo correctamente {} en {id_elemento}')
+
+crear_archivos()
