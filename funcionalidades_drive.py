@@ -406,10 +406,8 @@ def remplazar_archivos(arch, id_ele):
 
     service().files().update(fileId = id_ele,
                                     media_body = media).execute()
-                            
-    #key = 'name'
-    #print(f'se elimino{file_metadata[key]}')
-
+                                    
+                                                        
 def sincronizar():
     # for i in list(pathlib.Path().iterdir()):
     #     print(i)
@@ -419,6 +417,10 @@ def sincronizar():
     #     #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
     #     print(ctime)
     
+    #cargo y creo el siguiente dict
+    #arch_locales_sinc = {nombre_arch: modifiedTime}
+    arch_locales_sinc = dict()
+
     arch = 'archivo_xa_actualizar.txt'
     fname = pathlib.Path(arch)
     ctime = datetime.datetime.fromtimestamp(fname.stat().st_mtime)
@@ -452,9 +454,18 @@ def sincronizar():
         if page_token is None:
             cortar = True
     
-    remplazar_archivos(arch, id_ele)
-    print('replace ok')  
-    #subir_archivos(arch)
+    #OJO !!! Al caegar la fecha de modif hay q formatearla xq viene en horario yanqui
+    #arch_remotos_sinc = {nombre_arch: [id_ele, modifiedTime]}
+    arch_remotos_sinc = dict()
+    for arch_local, fecha_local in arch_locales_sinc.items():
+        for arch_remoto, info_arch in arch_remotos_sinc.items():
+            fecha_remoto = arch_remotos_sinc[arch_remoto][1]
+            if fecha_remoto != fecha_local:  
+                id_arch = arch_remotos_sinc[0]
+                remplazar_archivos(arch_local, id_arch)
+                
+                print(f'se actualizo {arch_local} correctamente')
+    
         
 #sincronizar()
 consultar_elementos()
