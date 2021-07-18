@@ -37,7 +37,7 @@ def retroceder(paths: dict) -> tuple:
     while nombre_carpeta not in paths.keys():
         nombre_carpeta = input('Por favor elija una carpeta de las listadas: \n')
 
-    print(f'---{nombre_carpeta}---')
+    #print(f'---{nombre_carpeta}---')
 
     id_carpeta = paths[nombre_carpeta]
 
@@ -106,8 +106,10 @@ def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
     PRE: recibe los diccionarios info_carpetas" e "info_archivos" con el numero de elemento,
     el nombre y su respectivo id
 
-    POST: No devuelve nada. Permite descargar el archivo seleccionado en drive por el usuario. 
+    POST: Devuelve el id y el nombre del elemento descargado. 
+    Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
     """
+    pass
     print('1-Carpeta\n2-Archivo')
     opc = int( validar_opcion(1,2))        
     if opc == 1:
@@ -136,7 +138,8 @@ def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
 def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> str:
     """
     PRE:
-    POST: Devuelve el str "id_elemento" con el id del elemento con el q se desea realizar 
+    POST: Devuelve una tupla con el str "id_elemento" con el id del elemento y 
+    el str "nombre_elemento" con el nombre del elemento con el q se desea realizar 
     una operacion
     """
     print('1-Abrir una carpeta\n2-Descargar un archivo o carpeta\n3-Atras')
@@ -145,17 +148,18 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
         texto ='Seleccione la carpeta que desea abrir'
         info_elementos = info_carpetas
         id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
-        print(f'\n--- {nombre_elemento} ---')    
+        #print(f'\n--- {nombre_elemento} ---')    
     
     elif opc == 2:
         id_elemento, nombre_elemento = descargar_elemento(info_carpetas, info_archivos)
-        print('se ha descargado tal')
+        print(f'se ha descargado {nombre_elemento}')
+        nombre_elemento = 'root' #Xq quiero, lo redirijo a root xa que continue desde ahi
 
     else: #retroceder
         print('Esta vacio ves? No hay monstruos aqui')
         id_elemento, nombre_elemento = retroceder(paths)
            
-    return id_elemento
+    return id_elemento, nombre_elemento
 
 
 def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
@@ -307,9 +311,17 @@ def consultar_elementos():
         guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
                             #xa q el usario pueda volver hacia atras al navegar entre carpetas
         
-        id_elemento = generador_de_id_elemento(info_carpetas, info_archivos, paths)       
+        id_elemento, nombre_elemento = generador_de_id_elemento(info_carpetas, info_archivos, paths)
+        
+        print(f'---{nombre_elemento}---\n'.ljust(10))
+        
+        print('Desea continuar buscando?\n')
+        print('1-Si\n2-Seleccionar carpeta (Solo para subida de archivo)')
+        opc = int(validar_opcion(1,2))
+        if opc == 2:
+            cortar = True
 
-    return id_elemento
+    return id_elemento, nombre_elemento
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
@@ -320,10 +332,10 @@ def seleccionar_archivo_subida():
 def subir_archivos():
     
     ruta_archivo = seleccionar_archivo_subida()
-    ruta_archivo = 'prueba_3_anidada.txt'
+    ruta_archivo = 'prueba_xa_subir.txt'
         
-    print('Selccione la carpeta q la que desea subir el archivo')
-    carpeta_id = consultar_elementos()
+    print('Selccione la carpeta a la que desea subir el archivo')
+    carpeta_id, nombre_elemento = consultar_elementos()
     
     
     file_metadata = {
@@ -337,7 +349,7 @@ def subir_archivos():
                                         media_body = media,
                                         fields = 'id').execute()
     
-    print ('Se subio correctamente: %s' % file.get('name'))
+    print (f'Se subio correctamente: {ruta_archivo} a {nombre_elemento}')
 
 
 subir_archivos()
