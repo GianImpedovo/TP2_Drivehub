@@ -3,8 +3,8 @@ import io
 from typing import Text
 from service_drive import obtener_servicio as service
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
-
-
+import pathlib
+import datetime
 
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
@@ -359,6 +359,80 @@ def crear_archivos():
     id_elemento, nombre_elemento = consultar_elementos()
     #creo el archivo con metodo create en id_elemento q traje de la busqueda
 
+    #crear carpetas
+    #
+    rutas_archivos = []
+    for ruta in rutas_archivos:
+
+        if not os.path.isfile(ruta): # si no es un archivo (=> es una carpeta)
+
+            nombre_archivo = ruta   
+            file_metadata = {
+                'name': nombre_archivo,
+                'mimeType': 'application/vnd.google-apps.folder'
+                        }
+
+            file = service().files().create(body=file_metadata,
+                                            fields='id').execute()
+            
+            #print 'Folder ID: %s' % file.get('id')
+        
+            id_carpeta = file.get('id')
+        
+        else:
+            #create file in a folder
+
+            folder_id = '0BwwA4oUTeiV1TGRPeTVjaWRDY1E'
+            file_metadata = {
+            'name': 'photo.jpg',
+            'parents': [folder_id]
+                }
+            media = MediaFileUpload('files/photo.jpg',
+                                mimetype='image/jpeg',
+                                resumable=True)
+            
+            file = service().files().create(body=file_metadata,
+                                            media_body=media,
+                                            fields='id').execute()
+            #print 'File ID: %s' % file.get('id')
+
     #print(f'se creo correctamente {} en {id_elemento}')
 
-crear_archivos()
+#crear_archivos()
+
+def sincronizar():
+    for i in list(pathlib.Path().iterdir()):
+        print(i)
+        fname = pathlib.Path(i)
+        print(fname.stat().st_ctime)
+        ctime = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
+        #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
+        print(ctime)
+        
+        page_token = None
+        cortar = False
+        while not cortar:
+            #files().list() devuelve un diccionario de diccionarios, q guardo en "resultados"
+            resultados = service().files().list(q= " 'root' in parents ",
+                                                spaces='drive',
+                                                fields='nextPageToken, files(id, name, modifiedTime)',
+                                                pageToken=page_token).execute()
+            #print(resultados)  #testing
+            #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
+            #cada diccionario es un elemento de dicha lista. Lo guardo en elementos.
+            
+            elementos = resultados['files']
+
+            #print(elementos) #testing
+            #guardar_info_elementos(elementos, info_carpetas, info_archivos)
+            for elemento in elementos:
+                #print(elemento['modifiedTime']) 
+                print(elemento)
+                
+            #chequeo si hay mas resultados
+            page_token = resultados.get('nextPageToken')
+            if page_token is None:
+                cortar = True
+
+
+sincronizar()
