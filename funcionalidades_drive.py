@@ -146,10 +146,10 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     el str "nombre_elemento" con el nombre del elemento con el q se desea realizar 
     una operacion
     """
-    print('1-Abrir una carpeta\n2-Descargar un archivo o carpeta\n3-Atras')
+    print('1-Seleccionar una carpeta\n2-Descargar un archivo o carpeta\n3-Atras')
     opc = int( validar_opcion(1,3) )
     if opc == 1 and info_carpetas:      #si la carpeta no esta vacia
-        texto ='Seleccione la carpeta que desea abrir'
+        texto ='¿Cual?: '
         info_elementos = info_carpetas
         id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
         #ojooo deberia cambiarse x seleccionar elemento y le mando tmbien archivos.
@@ -266,8 +266,8 @@ def armado_de_consulta(id_elemento: str) -> str:
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
     print('0-Listar todas las carpetas')
-    print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)')
-    print('2-Busqueda personalizada (busqueda con palara clave)')
+    print('1-Busqueda manual (lista todas las carpetas y archivos en la carpeta actual)')
+    print('2-Busqueda personalizada (busqueda con palara clave en la carpeta actual)')
     opc = int(validar_opcion(0,2)) 
     #opc == o -> listar todo giuardar todo
     if opc == 0:
@@ -304,8 +304,8 @@ def consultar_elementos():
     info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
     "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}
     """
-    print('BUSCADOR DE DRIVE')
-    print('--root/Directorio principal--')
+    print('BUSCADOR DE DRIVE'.rjust(50))
+    print('---root/Directorio principal---'.rjust(57))
     cortar = False
     id_elemento = 'root'
     paths = {'root':'root'}
@@ -325,10 +325,10 @@ def consultar_elementos():
         
         id_elemento, nombre_elemento = generador_de_id_elemento(info_carpetas, info_archivos, paths)
         
-        print(f'---{nombre_elemento}---\n'.ljust(10))
+        print(f'---{nombre_elemento}---\n'.rjust(50))
         
-        print('Desea continuar buscando?\n')
-        print('1-Si\n2-Seleccionar carpeta (Solo para subida de archivo)') #2-seleccionar elemento?
+        #print('Desea continuar buscando?\n')
+        print('1-Abrir carpeta\n2-Seleccionar elemento') #2-seleccionar elemento?
         opc = int(validar_opcion(1,2))
         if opc == 2:
             cortar = True
