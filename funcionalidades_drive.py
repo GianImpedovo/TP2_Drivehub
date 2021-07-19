@@ -264,7 +264,7 @@ def armado_de_consulta(id_elemento: str) -> str:
     
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
-    print('0 - listar todas las carpetas')
+    print('0-Listar todas las carpetas')
     print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)')
     print('2-Busqueda personalizada (busqueda con palara clave)')
     opc = int(validar_opcion(0,2)) 
@@ -366,6 +366,26 @@ def subir_archivos(ruta_archivo):
     print (f'Se subio correctamente: {ruta_archivo} a {nombre_elemento}')
 
 #subir_archivos()
+def pre_menu_subir_archivos():
+    """
+
+    """
+
+def subir_archivos_misma_carpta():
+    """
+    """
+    #ruta_archivo = seleccionar_archivo_subida()
+    ruta_archivo = 'prueba_xa_subir.txt'
+    carpeta_contenedora = 'carpeta_prueba_0'
+    
+    #primero listo todas las carpetas de la nube
+    query = " mimeType = 'application/vnd.google-apps.folder' "
+    info_carpetas, info_archivos = listar_elementos(query)
+    
+    #si coincide con la local lo subo ahi
+    for info_carpeta in info_carpetas.values():
+        if info_carpeta[0] == carpeta_contenedora
+        subir_archivos(ruta_archivo)
 
 def crear_archivos(ruta):
     #Funciones en el local para crear el archivo y darme el nombre, 
@@ -481,19 +501,15 @@ def sincronizar():
     #arch_remotos_sinc = {nombre_arch: [id_ele, modifiedTime]}
     arch_remotos_sinc = dict()
     for arch_local, fecha_local in arch_locales_sinc.items():
-
         for arch_remoto in arch_remotos_sinc.keys():
-
-            fecha_remoto = arch_remotos_sinc[arch_remoto][1]
-            if fecha_remoto != fecha_local:  
-                id_arch = arch_remotos_sinc[arch_remoto][0]
-                remplazar_archivos(arch_local, id_arch)
-                
-                print(f'se actualizo {arch_local} correctamente')
-    
-
-
-
+            if arch_local == arch_remoto:
+                fecha_remoto = arch_remotos_sinc[arch_remoto][1]
+                if fecha_remoto != fecha_local:  
+                    id_arch = arch_remotos_sinc[arch_remoto][0]
+                    remplazar_archivos(arch_local, id_arch)
+                    
+                    print(f'se actualizo {arch_local} correctamente')
+        
 #sincronizar()
 #consultar_elementos()
 
