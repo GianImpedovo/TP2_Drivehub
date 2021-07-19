@@ -427,8 +427,6 @@ def menu_subir_archivos() -> None:
     
     subir_archivos(ruta_archivo ,carpeta_id, nombre_carpeta)
 
-menu_subir_archivos()
-
 #menu_subir_archivos()
 
 
@@ -497,65 +495,90 @@ def sincronizar():
 
     POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
     """
-    for i in list(pathlib.Path().iterdir()):
-        print(i)
-        fname = pathlib.Path(i)
-        print(fname.stat().st_ctime)
-        ctime = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
-        #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
-        print(ctime)
+    # for i in list(pathlib.Path().iterdir()):
+    #     print(i)
+    #     fname = pathlib.Path(i)
+    #     print(fname.stat().st_ctime)
+    #     ctime = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
+    #     #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
+    #     print(ctime)
     
     #cargo y creo el siguiente dict
     #arch_locales_sinc = {nombre_arch: modifiedTime}
-    arch_locales_sinc = dict()
-
-    arch = 'archivo_xa_actualizar.txt'
-    fname = pathlib.Path(arch)
-    ctime = datetime.datetime.fromtimestamp(fname.stat().st_mtime)
-    print(ctime)
-    
-    page_token = None
-    cortar = False
-    id_carpeta = '1IgwMubXSE_XlBgoSF7pgGS_AL8w2ex6i'
-    while not cortar:
-        #files().list() devuelve un diccionario de diccionarios, q guardo en "resultados"
-        resultados = service().files().list(q= f" '{id_carpeta}' in parents and (not trashed) ",
-                                            spaces='drive',
-                                            fields='nextPageToken, files(id, name, modifiedTime)',
-                                            pageToken=page_token).execute()
-        #print(resultados)  #testing
-        #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
-        #cada diccionario es un elemento de dicha lista. Lo guardo en elementos.
-        
-        elementos = resultados['files']
-
-        #print(elementos) #testing
-        #guardar_info_elementos(elementos, info_carpetas, info_archivos)
-        for elemento in elementos:
-            #print(elemento['modifiedTime']) 
-            print(elemento)
-            print(elemento['modifiedTime'])
-            id_ele = elemento['id']
-        print(id_ele)
-        #chequeo si hay mas resultados
-        page_token = resultados.get('nextPageToken')
-        if page_token is None:
-            cortar = True
     
     #OJO !!! Al caegar la fecha de modif hay q formatearla xq viene en horario yanqui
     #arch_remotos_sinc = {nombre_arch: [id_ele, modifiedTime]}
-    arch_remotos_sinc = dict()
-    for arch_local, fecha_local in arch_locales_sinc.items():
-        for arch_remoto in arch_remotos_sinc.keys():
-            if arch_local == arch_remoto:
-                fecha_remoto = arch_remotos_sinc[arch_remoto][1]
-                if fecha_remoto != fecha_local:  
-                    id_arch = arch_remotos_sinc[arch_remoto][0]
-                    remplazar_archivos(arch_local, id_arch)
-                    
-                    print(f'se actualizo {arch_local} correctamente')
+    #UNA SOLA CARPETA  A LA VEZ!!!!
+    #query = "'root' in parents and (not trashed)"
+    #query = f" '{id_elemento}' in parents and (not trashed) "        
+    
+    arch_locales_sinc = dict()
+
+    arch = 'archivo_xa_actualizar_2.txt'
+    
+    #Otengo hora LOCAL de modif
+    fname = pathlib.Path(arch)
+    ctime = datetime.datetime.fromtimestamp(fname.stat().st_mtime)
+    print('ctime_org:',ctime)
+    
+
+    # current_date_and_time = datetime.datetime.now()
+
+    # print(current_date_and_time)
+    # hours = 3
+    # hours_added = datetime.timedelta(hours = hours)
+
+    # future_date_and_time = current_date_and_time + hours_added
+
+    # print(future_date_and_time)
+    
+    #Sumo + 3 HORAS a hora  LOCAL
+    
+    horas = 3
+    horas_sumadas = datetime.timedelta(hours = horas)
+    
+    new_ctime = ctime + horas_sumadas # sumo 3 horas 
+    
+    #Edito el str de la hora local sacandole el .00Z etc!!
+    print('sin editar: ', new_ctime)
+    fecha_local = str(new_ctime)
+    fecha_local = fecha_local[:19]
+    print('new_ctime:', fecha_local)
+    
+    id_carpeta ='1IgwMubXSE_XlBgoSF7pgGS_AL8w2ex6i'
+    
+    #query = " mimeType = 'application/vnd.google-apps.folder' " 
+    query = f" '{id_carpeta}' in parents and not trashed" 
+    carpetas, archivos = listar_elementos(query)
+    
+    #{nombre_carpeta: ['id carpeta', 'fecha_modif']})
+    #print(carpetas)
+    #print(archivos)
+    #print(carpetas)
+    for archivo, info_archivo in archivos.items():
+        print(f'{archivo}-{info_archivo[1]}')
+        #print(info_archivo[1])
+        print(fecha_local)
+        fecha_remoto = info_archivo[1][:19].replace('T',' ')
+        print(fecha_remoto)
         
-#sincronizar()
+        #fecha_orgig_google = info_carpeta[1]
+        # fecha_orgig_google[
+            #2021-07-14T22:06:05
+            #2021-07-18 15:44:31
+    
+    # arch_remotos_sinc = dict()
+    # for arch_local, fecha_local in arch_locales_sinc.items():
+    #     for arch_remoto in arch_remotos_sinc.keys():
+    #         if arch_local == arch_remoto:
+    #             fecha_remoto = arch_remotos_sinc[arch_remoto][1]
+    #             if fecha_remoto != fecha_local:  
+    #                 id_arch = arch_remotos_sinc[arch_remoto][0]
+    #                 remplazar_archivos(arch_local, id_arch)
+                    
+    #                 print(f'se actualizo {arch_local} correctamente')
+        
+sincronizar()
 #consultar_elementos()
 
 def mover_archivos():
