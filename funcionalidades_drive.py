@@ -51,6 +51,8 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     
     POST: devuelve el string "id_elemento" con id del elemento y el str "nomrbe_elemento" 
     con su nombre
+    info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
+    "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}
     """
     print(texto)
                     #info_elementos.keys() es {1,2,3... correspondiente a cada ele
@@ -84,6 +86,7 @@ def descargar_carpeta(id_elemento):
             nombre_elemento = elemento['name']
             mimeType = elemento['mimeType']
             ruta = os.getcwd()
+            carpeta_actual = ''
             #request = service().files().export_media(fileId = id_elemento)
             fh = io.BytesIO()
             if mimeType == 'application/vnd.google-apps.folder':
@@ -127,10 +130,10 @@ def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
     ubicacion = ''
         
     #fh = descargar_archivo_binario(id_elemento)
-    fh = descargar_carpeta(id_elemento)
+    #fh = descargar_carpeta(id_elemento)
 
-    with open(os.path.join(ubicacion,nombre_elemento), 'wb') as arch:
-        arch.write(fh.read()) 
+    # with open(os.path.join(ubicacion,nombre_elemento), 'wb') as arch:
+    #     arch.write(fh.read()) 
 
     return id_elemento, nombre_elemento
 
@@ -148,10 +151,12 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
         texto ='Seleccione la carpeta que desea abrir'
         info_elementos = info_carpetas
         id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
-        #print(f'\n--- {nombre_elemento} ---')    
-    
+        #ojooo deberia cambiarse x seleccionar elemento y le mando tmbien archivos.
+        #si selecciona un archivo, no lo abre.
+
     elif opc == 2:
-        id_elemento, nombre_elemento = descargar_elemento(info_carpetas, info_archivos)
+        id_elemento, nombre_elemento = descargar_carpeta(id_elemento)
+        #id_elemento, nombre_elemento = descargar_elemento(info_carpetas, info_archivos)
         print(f'se ha descargado {nombre_elemento}')
         nombre_elemento = 'root' #Xq quiero, lo redirijo a root xa que continue desde ahi
 
@@ -259,11 +264,15 @@ def armado_de_consulta(id_elemento: str) -> str:
     
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
-
+    print('0 - listar todas las carpetas')
     print('1-Busqueda manual (lista todas las carpetas y archivos disponibles)')
     print('2-Busqueda personalizada (busqueda con palara clave)')
-    opc = int(validar_opcion(1,2)) 
-    if opc == 1:
+    opc = int(validar_opcion(0,2)) 
+    #opc == o -> listar todo giuardar todo
+    if opc == 0:
+        query = " mimeType = 'application/vnd.google-apps.folder' "
+
+    elif opc == 1:
         query = f" '{id_elemento}' in parents and (not trashed) " 
 
     else:
@@ -291,6 +300,8 @@ def consultar_elementos():
     PRE:
 
     POST: Redirige a otras funciones de filtro y busqueda de archivos.
+    info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
+    "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}
     """
     print('BUSCADOR DE DRIVE')
     print('--root/Directorio principal--')
@@ -316,12 +327,15 @@ def consultar_elementos():
         print(f'---{nombre_elemento}---\n'.ljust(10))
         
         print('Desea continuar buscando?\n')
-        print('1-Si\n2-Seleccionar carpeta (Solo para subida de archivo)')
+        print('1-Si\n2-Seleccionar carpeta (Solo para subida de archivo)') #2-seleccionar elemento?
         opc = int(validar_opcion(1,2))
         if opc == 2:
             cortar = True
 
     return id_elemento, nombre_elemento
+
+
+consultar_elementos()
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
@@ -358,8 +372,11 @@ def crear_archivos(ruta):
     #consulto las carpetas para saber a donde lo subo
     #id_elemento, nombre_elemento = consultar_elementos()
     #creo el archivo con metodo create en id_elemento q traje de la busqueda
-
-    #crear carpetas
+    #
+    #crear carpetas a local ----  a remoto
+    #
+    # ruta_archivo = /os/   documentos/prueba.txt
+    # nombre_archivo = prueba.txt
     #
     rutas_archivos = [ruta]
     for ruta in rutas_archivos:
@@ -415,13 +432,13 @@ def sincronizar():
 
     POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
     """
-    # for i in list(pathlib.Path().iterdir()):
-    #     print(i)
-    #     fname = pathlib.Path(i)
-    #     print(fname.stat().st_ctime)
-    #     ctime = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
-    #     #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
-    #     print(ctime)
+    for i in list(pathlib.Path().iterdir()):
+        print(i)
+        fname = pathlib.Path(i)
+        print(fname.stat().st_ctime)
+        ctime = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
+        #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
+        print(ctime)
     
     #cargo y creo el siguiente dict
     #arch_locales_sinc = {nombre_arch: modifiedTime}
@@ -464,7 +481,9 @@ def sincronizar():
     #arch_remotos_sinc = {nombre_arch: [id_ele, modifiedTime]}
     arch_remotos_sinc = dict()
     for arch_local, fecha_local in arch_locales_sinc.items():
+
         for arch_remoto in arch_remotos_sinc.keys():
+
             fecha_remoto = arch_remotos_sinc[arch_remoto][1]
             if fecha_remoto != fecha_local:  
                 id_arch = arch_remotos_sinc[arch_remoto][0]
@@ -472,6 +491,35 @@ def sincronizar():
                 
                 print(f'se actualizo {arch_local} correctamente')
     
-        
+
+
+
 #sincronizar()
-consultar_elementos()
+#consultar_elementos()
+
+def mover_archivos():
+    """
+    PRE:
+
+    POST:
+    """
+    #Segun entieindo de pdf, se aconseja primero crear carpetas (anidadas x ej) y recien dsps
+    #mover los archivos. (con update)
+    
+    #creo las carpetas
+    #crear_archivos()
+    id_archivo, nombre_arch = consultar_elementos() 
+    print(id_archivo)
+    #ver opcion de mover todos los archivos de una carpeta
+    #muevo los archivos
+    #id_archivo = 
+    #cargo archivos_mover con lo q traiga de consultar_elementos()
+
+    archivos_mover = dict()
+    
+    for arch in archivos_mover.keys():
+            service.files.update(arch
+            )    
+            
+
+#mover_archivos()
