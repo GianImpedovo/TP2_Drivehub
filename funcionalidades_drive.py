@@ -200,7 +200,40 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
         print(f'Se encontraron {num_ele} {tipo_ele}\n')
 
 
-def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
+# def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
+#     """
+#     PRE: recibe los diccionarios "elementos":
+#     [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
+#     "info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
+#     "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}.
+    
+#     POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
+#     "info_archivos" colocando como clave los nombres de los elementos y sus id's como valores.
+#     """
+#     num_arch = 0
+#     num_carp = 0
+#     for elemento in elementos:
+#         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
+#             num_carp += 1
+#             info_carpetas[num_carp] =   [ elemento['name'], elemento['id'] ]
+#             #print(elemento['parents']) #testing
+#         else:
+#             num_arch += 1
+#             info_archivos[num_arch] =  [elemento['name'], elemento['id'] ] 
+#             #print(elemento['parents']) #testing
+
+
+def ordenar_info_elementos(elementos: dict):
+    info_elementos = dict()
+    num_ele = 0
+    for nombre_elemento, info_elemento in elementos.items():
+        num_ele += 1                 #name           #id
+        info_elementos[num_ele] =   [nombre_elemento, info_elemento[0]]
+    
+    return info_elementos
+
+
+def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     """
     PRE: recibe los diccionarios "elementos":
     [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
@@ -210,16 +243,12 @@ def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
     POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
     "info_archivos" colocando como clave los nombres de los elementos y sus id's como valores.
     """
-    num_arch = 0
-    num_carp = 0
     for elemento in elementos:
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
-            num_carp += 1
-            info_carpetas[num_carp] =   [ elemento['name'], elemento['id'] ]
+            carpetas[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime']]
             #print(elemento['parents']) #testing
         else:
-            num_arch += 1
-            info_archivos[num_arch] =  [elemento['name'], elemento['id'] ] 
+            archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime']]
             #print(elemento['parents']) #testing
 
 
@@ -234,13 +263,15 @@ def listar_elementos(query: str) -> tuple:
     page_token = None
     cortar = False
 
-    info_carpetas = dict()
-    info_archivos = dict()
+    #info_carpetas = dict()
+    #info_archivos = dict()
+    carpetas = dict()
+    archivos = dict()
     while not cortar:
         #files().list() devuelve un diccionario de diccionarios, q guardo en "resultados"
         resultados = service().files().list(q= query,
                                             spaces='drive',
-                                            fields='nextPageToken, files(id, name, mimeType, parents)',
+                                            fields='nextPageToken, files(id, name, mimeType, modifiedTime)',
                                             pageToken=page_token).execute()
         #print(resultados)  #testing
         #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
@@ -249,14 +280,17 @@ def listar_elementos(query: str) -> tuple:
         elementos = resultados['files']
 
         #print(elementos) #testing
-        guardar_info_elementos(elementos, info_carpetas, info_archivos)
+        #guardar_info_elementos(elementos, info_carpetas, info_archivos)
 
+        guardar_info_elementos(elementos, carpetas, archivos)
+        
         #chequeo si hay mas resultados
         page_token = resultados.get('nextPageToken')
         if page_token is None:
             cortar = True
 
-    return info_carpetas, info_archivos
+    #return info_carpetas, info_archivos
+    return carpetas, archivos
 
 
 def armado_de_consulta(id_elemento: str) -> str:
@@ -265,6 +299,7 @@ def armado_de_consulta(id_elemento: str) -> str:
     
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
+    
     print('0-Listar todas las carpetas')
     print('1-Busqueda manual (lista todas las carpetas y archivos en la carpeta actual)')
     print('2-Busqueda personalizada (busqueda con palara clave en la carpeta actual)')
@@ -312,7 +347,12 @@ def consultar_elementos():
     while not cortar:
 
         query = armado_de_consulta(id_elemento)
-        info_carpetas, info_archivos = listar_elementos(query)
+        #info_carpetas, info_archivos = listar_elementos(query)
+        
+        carpetas, archivos = listar_elementos(query)
+
+        info_carpetas = ordenar_info_elementos(carpetas)
+        info_archivos = ordenar_info_elementos(archivos)
 
         print('CARPETAS')
         mostrar_elementos(info_carpetas, 'carpetas')
@@ -336,7 +376,7 @@ def consultar_elementos():
     return id_elemento, nombre_elemento
 
 
-#consultar_elementos()
+consultar_elementos()
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
@@ -405,7 +445,7 @@ def menu_subir_archivos() -> None:
     subir_archivos(ruta_archivo ,carpeta_id, nombre_carpeta)
 
 
-menu_subir_archivos()
+#menu_subir_archivos()
 
 
 def crear_archivos(ruta):
