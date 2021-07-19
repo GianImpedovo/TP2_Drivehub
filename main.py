@@ -5,6 +5,15 @@ import service_gmail
 from pathlib import Path
 import csv
 
+import base64
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from zipfile import ZipFile
+import shutil
+from zipfile import ZipFile
+import pprint
+
+
 RUTA = os.getcwd()
 
 MENU = ["COMANDOS : 'cd + < nombre_directorio >' (avanzo directorio), '..' (retrocedo)",
@@ -128,24 +137,38 @@ def crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo):
     crea_csv_DA(diccionario_alumno_docente,nombre_archivo)
 
 def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes, nombre_archivo):
-    lista_alumnos = list()
+    try : 
+        lista_alumnos = list()
+        lista_docentes = list()
+        with open(archivo_alumnos) as alumnos:
+            for linea in alumnos:
+                linea = linea.strip().split(",")
+                lista_alumnos.append(linea[0])
+        with open(archivo_docentes) as docentes:
+            for linea in docentes:
+                linea = linea.strip().split(",")
+                lista_docentes.append(linea[0])
+        crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo)
+    except:
+        print("\nUno de estos archivos NO existe.")
 
-    lista_docentes = list()
-    with open(archivo_alumnos) as alumnos:
-        for linea in alumnos:
-            linea = linea.strip().split(",")
-            lista_alumnos.append(linea[0])
-    with open(archivo_docentes) as docentes:
-        for linea in docentes:
-            linea = linea.strip().split(",")
-            lista_docentes.append(linea[0])
-
-    print(lista_docentes)
-    print(lista_alumnos)
-
-    crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo)
 
 # ---------------- CREAR CARPETA DE EVALUACION (LOCAL)------------------
+# ---> envio mail de instrucciones :
+INSTRUCCIONES = ""
+
+def enviar_email_instrucciones(email):
+    servicio = service_gmail.obtener_servicio()
+    msj = INSTRUCCIONES
+    mime_mensaje = MIMEMultipart()
+    mime_mensaje['subject'] = 'Instrucciones para crear carpeta Evaluacion'
+    mime_mensaje['to'] = email
+    mime_mensaje.attach(MIMEText(msj, 'plain'))
+    raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
+    mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(mensaje) 
+
+# ---> creo la carpeta evaluacion 
 def crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, profesor):
     lista_alumnos = dict_docentes[profesor]
     for alumno in lista_alumnos:
@@ -175,9 +198,6 @@ def crear_carpeta_profesores(archivo_docente_alumno, ruta_ev):
 
         crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, k)
 
-## Necesito recibir los archivos csv 
-## y mas que nada una funcion que relacion a los alumnos con los profesores ---> []
-
 def crear_carpeta_evaluacion(ruta): 
     nombre_ev = input("Nombre de la evalucaion: ")
     archivo_alumnos = input("ingrese el nombre del archivo de los alumnos cursando: ")
@@ -194,6 +214,8 @@ def crear_carpeta_evaluacion(ruta):
     os.getcwd()
 
     crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
+
+
 
 
 def main()-> None:
@@ -230,17 +252,13 @@ def main()-> None:
             ## FALTA PODER SINCRONIZAR , FUN_DRIVE []
             pass
         elif opcion[0] == "6":
-            ## FALTA ENVIAR MAIL CON ESPECIFICACIONES PARA CREAR CARPETA DE EVALUACIONES []
-            
-            # enviar_mail()
-            # una vez enviado el mail: 
+            email_usuario = input("Introduzca su email: ")
+            enviar_email_instrucciones(email_usuario)
             crear_carpeta_evaluacion(ruta_actual)
-            pass
+
         elif opcion[0] == "7":
             pass
-        elif opcion[0] == "8":
-            pass
-        
+
         mostrar_menu(ruta_actual)
         opcion = input("opcion : ")
 
