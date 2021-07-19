@@ -358,7 +358,7 @@ def consultar_elementos():
     return id_elemento, nombre_elemento
 
 
-consultar_elementos()
+#consultar_elementos()
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
@@ -400,11 +400,9 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     
     #si coincide con la local lo subo ahi
 
-
-    for info_carpeta in info_carpetas.values():
-        if info_carpeta[0] == carpeta_contenedora:
-            carpeta_id = info_carpeta[1]
-            nombre_carpeta = info_carpeta[0]
+    for nombre_carpeta, info_carpeta in carpetas.items():
+        if nombre_carpeta == carpeta_contenedora:
+            carpeta_id = info_carpeta[0]
 
     return carpeta_id, nombre_carpeta
 
@@ -429,6 +427,7 @@ def menu_subir_archivos() -> None:
     
     subir_archivos(ruta_archivo ,carpeta_id, nombre_carpeta)
 
+menu_subir_archivos()
 
 #menu_subir_archivos()
 
