@@ -7,7 +7,7 @@ import csv
 
 RUTA = os.getcwd()
 
-MENU = ["COMANDOS : 'cd' (avanzo directorio), '..' (retrocedo)",
+MENU = ["COMANDOS : 'cd + < nombre_directorio >' (avanzo directorio), '..' (retrocedo)",
         "1 - Listar archivos de la carpeta actual",
         "2 - Crear archivos",
         "3 - Subir archivos",
@@ -80,8 +80,6 @@ def directorio_actual(ruta: str)->str:
     directorio_actual = ruta[-1]
     return ruta_actual, directorio_actual
 
-# directorio_actual(RUTA)
-# recorrer_directorio(RUTA)
 ## --------------------------------------------------------------------------------------------
 
 # ---------------- CREAR CARPETA DE EVALUACION ------------------
@@ -129,8 +127,6 @@ def crear_carpeta_evaluacion():
 
     crear_carpeta_profesores(archivo_docente_alumno, nombre_ev)
 
-#crear_carpeta_evaluacion()
-
 # ---------------- CREAR CARPETA/ARCHIVO ------------------
 # -------> Carpetas
 def crear_carpetas(nombre: str, ruta: str)->None:
@@ -153,7 +149,6 @@ def crear_archivos(elegir: str, ruta: str)->None:
     elif elegir == '3':
         nombre = input('Ingrese nombre para la carpeta: ')
         crear_carpetas(nombre, ruta)
-
 
 # -------> Matcheo archivo docentes , alumnos:
 def crea_csv_DA(diccionario_alumno_docente):
@@ -192,8 +187,6 @@ def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes):
             lista_docentes.append(linea[0])
     crea_relacion_DA(lista_alumnos,lista_docentes)
 
-# crear_archivo_alumnos_docentes("alumnos.csv", "docentes.csv")
-
 def main()-> None:
     ruta_actual = RUTA
     mostrar_menu(ruta_actual)
@@ -206,16 +199,17 @@ def main()-> None:
             comando = opcion
             ruta_actual = recorrer_directorio(ruta_actual, comando)
 
-        # acciones para realizar dentro del directorio
+        # Acciones para realizar dentro del directorio: 
         elif opcion[0] == "1":
             mostrar_directorio_actual(ruta_actual)
-        elif opcion[0] == "2":
 
+        elif opcion[0] == "2":
             print('\n1 - Archivo .txt\n2 - Archivo .csv\n3 - Carpeta\n')
             print('Elija una opcion:\n')
             elegir = input('Opcion: ')
             crear_archivos(elegir, ruta_actual)
-            
+            ## FALTA PODER CREAR ARCHIVOS EN DRIVE []
+
         elif opcion[0] == "3":
             pass
         elif opcion[0] == "4":
