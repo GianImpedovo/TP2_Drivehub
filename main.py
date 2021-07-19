@@ -40,7 +40,7 @@ def mostrar_directorio_actual(ruta_actual: str)->None:
     PRE: Recibo la ruta donde me encuntro
     POST: Retorno un listado de los elementos que se encuentran en donde estoy parado
     '''
-    print("\n - CARPETA ACTUAL -")
+    print("\n - CARPETA ACTUAL (LOCAL)-")
     print("--> DIRECTORIO : ",ruta_actual)
     contenido = os.listdir(ruta_actual)
     for fichero in contenido:
@@ -112,7 +112,11 @@ def crear_archivos(elegir: str, ruta: str)->None:
         crear_carpetas(nombre, ruta)
 
 # -------> Matcheo archivo docentes , alumnos:
-def crea_csv_DA(diccionario_alumno_docente, nombre_del_archivo):
+def crea_csv_DA(diccionario_alumno_docente: dict(), nombre_del_archivo: str)->None:
+    '''
+    PRE: Recibe el diccionario con la relacion docente alumno
+    POST: Crea el archivo csv con dicha relacion
+    '''
     ''' asumo que el archivo no existe '''
     with open(nombre_del_archivo, 'w') as archivo:
         csv_writer = csv.writer(archivo, delimiter = ',')
@@ -123,7 +127,11 @@ def crea_csv_DA(diccionario_alumno_docente, nombre_del_archivo):
                 csv_writer.writerow((profesor, alumno))
     print("\n ### Se creo con exito el archivo que relaciona los docentes y los alumnos ### ")
 
-def crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo):
+def crea_relacion_DA(lista_alumnos: list(),lista_docentes: list(),nombre_archivo: str)->None:
+    '''
+    PRE: Recibe las listas creadas de los docentes y los alumnos
+    POST: Crea un diccionario con la relacion clave: docente, valor: lista de alumnos
+    '''
     diccionario_alumno_docente = dict()
     while len(lista_alumnos) != 0:
         for profesor in range(len(lista_docentes)):
@@ -136,7 +144,11 @@ def crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo):
     
     crea_csv_DA(diccionario_alumno_docente,nombre_archivo)
 
-def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes, nombre_archivo):
+def crear_archivo_alumnos_docentes(archivo_alumnos: str, archivo_docentes: str, nombre_archivo: str)->None:
+    '''
+    PRE: Recibe los archivos a matchear
+    POST: En caso que los archivos existan los envia a la funcion para que los relacione
+    '''
     try : 
         lista_alumnos = list()
         lista_docentes = list()
@@ -157,7 +169,11 @@ def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes, nombre_arc
 # ---> envio mail de instrucciones :
 INSTRUCCIONES = ""
 
-def enviar_email_instrucciones(email):
+def enviar_email_instrucciones(email: str)->None:
+    '''
+    PRE: Recibe el mail del docente que desea crear una carpeta de evaluacion
+    POST: Envia mail al docente con las instrucciones
+    '''
     servicio = service_gmail.obtener_servicio()
     msj = INSTRUCCIONES
     mime_mensaje = MIMEMultipart()
@@ -169,14 +185,22 @@ def enviar_email_instrucciones(email):
     print(mensaje) 
 
 # ---> creo la carpeta evaluacion 
-def crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, profesor):
+def crear_carpeta_alumnos(dict_docentes: dict(),directorio_evaluacion: str, profesor: str)->None:
+    '''
+    PRE: recibe la relacion de los docentes y sus alumnos
+    POST: dentro de la carpeta del profesor correspondiente crea la carpeta de los alumnos que debe corregir
+    '''
     lista_alumnos = dict_docentes[profesor]
     for alumno in lista_alumnos:
         os.mkdir(directorio_evaluacion + "/" + profesor + "/" + alumno)
     
     # ingresar en cada carpeta del alumno su examen []
 
-def crear_carpeta_profesores(archivo_docente_alumno, ruta_ev):
+def crear_carpeta_profesores(archivo_docente_alumno: str, ruta_ev: str)->None:
+    '''
+    PRE: recibe los archivos correspondientes 
+    POST: crea las carpetas de los docentes dentro de la evaluacion 
+    '''
     dict_docentes = dict()
     with open(archivo_docente_alumno, newline='', encoding="UTF-8") as archivo:
 
@@ -198,7 +222,11 @@ def crear_carpeta_profesores(archivo_docente_alumno, ruta_ev):
 
         crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, k)
 
-def crear_carpeta_evaluacion(ruta): 
+def crear_carpeta_evaluacion(ruta: str)->None: 
+    '''
+    PRE: Recibe la ruta de la ubicacion donde se encuentra el usuario
+    POST: usando las distintas funciones para anidar crea la carpeta de la evaluacion
+    '''
     nombre_ev = input("Nombre de la evalucaion: ")
     archivo_alumnos = input("ingrese el nombre del archivo de los alumnos cursando: ")
     archivo_docentes = input("ingrese el nombre del archivo de los docentes:")
@@ -252,11 +280,12 @@ def main()-> None:
             ## FALTA PODER SINCRONIZAR , FUN_DRIVE []
             pass
         elif opcion[0] == "6":
-            email_usuario = input("Introduzca su email: ")
+            email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
             enviar_email_instrucciones(email_usuario)
             crear_carpeta_evaluacion(ruta_actual)
 
         elif opcion[0] == "7":
+            # FALTA PODER ACTUALIZAR LOS ALUMNOS SEGUN LOS MAILS RECIBIDOS []
             pass
 
         mostrar_menu(ruta_actual)
