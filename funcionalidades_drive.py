@@ -1,6 +1,8 @@
 import os
 import io
 from typing import Text
+#from typing import overload, union
+import typing
 from service_drive import obtener_servicio as service
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import pathlib
@@ -137,8 +139,7 @@ def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
 
     return id_elemento, nombre_elemento
 
-
-def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> str:
+def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> tuple:
     """
     PRE:
     POST: Devuelve una tupla con el str "id_elemento" con el id del elemento y 
@@ -335,7 +336,7 @@ def consultar_elementos():
     return id_elemento, nombre_elemento
 
 
-consultar_elementos()
+#consultar_elementos()
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
@@ -343,15 +344,12 @@ def seleccionar_archivo_subida():
     pass
 
 
-def subir_archivos(ruta_archivo):
+def subir_archivos(ruta_archivo: str, carpeta_id: str, nombre_carpeta: str) -> None:
+    """
+    PRE:
     
-    #ruta_archivo = seleccionar_archivo_subida()
-    #ruta_archivo = 'prueba_xa_subir.txt'
-        
-    print('Selccione la carpeta a la que desea subir el archivo')
-    carpeta_id, nombre_elemento = consultar_elementos()
-    
-    
+    POST: No devuelve nada. Sube los archivo a la carpetas indicadas
+    """    
     file_metadata = {
                     'name': ruta_archivo,
                     'parents': [carpeta_id]
@@ -363,29 +361,52 @@ def subir_archivos(ruta_archivo):
                                         media_body = media,
                                         fields = 'id').execute()
     
-    print (f'Se subio correctamente: {ruta_archivo} a {nombre_elemento}')
+    print (f'Se subio correctamente: {ruta_archivo} a {nombre_carpeta}')
 
-#subir_archivos()
-def pre_menu_subir_archivos():
-    """
 
+def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     """
+    PRE:
 
-def subir_archivos_misma_carpta():
-    """
-    """
-    #ruta_archivo = seleccionar_archivo_subida()
-    ruta_archivo = 'prueba_xa_subir.txt'
-    carpeta_contenedora = 'carpeta_prueba_0'
-    
+    POST: Compara las carpetas de local y remoto para encontrar la q correspondiente a
+    la q me encuentro localmente
+    """    
     #primero listo todas las carpetas de la nube
-    query = " mimeType = 'application/vnd.google-apps.folder' "
+    query = f" mimeType = 'application/vnd.google-apps.folder' and name contains '{carpeta_contenedora}' and not trashed "
     info_carpetas, info_archivos = listar_elementos(query)
     
     #si coincide con la local lo subo ahi
     for info_carpeta in info_carpetas.values():
-        if info_carpeta[0] == carpeta_contenedora
-        subir_archivos(ruta_archivo)
+        if info_carpeta[0] == carpeta_contenedora:
+            carpeta_id = info_carpeta[1]
+            nombre_carpeta = info_carpeta[0]
+
+    return carpeta_id, nombre_carpeta
+
+
+def menu_subir_archivos() -> None:
+    """
+    PRE:
+    POST:No devuelve nada, es un menu intermedio para subir archivos
+    """
+    #ruta_archivo = seleccionar_archivo_subida()
+    ruta_archivo = 'prueba_xa_subir_2.txt'
+    carpeta_contenedora = 'carpeta_prueba_0'
+    
+    print('SUBIR ARCHIVOS')
+    print('1-Subir a misma carpeta en drive\n2-Elegir otra carpeta')
+    opc = int(validar_opcion(1,2))
+    if opc == 1:
+        carpeta_id, nombre_carpeta = encontrar_carpeta_upstream(carpeta_contenedora)
+    else:
+        print('Selccione la carpeta a la que desea subir el archivo')
+        carpeta_id, nombre_carpeta = consultar_elementos()
+    
+    subir_archivos(ruta_archivo ,carpeta_id, nombre_carpeta)
+
+
+menu_subir_archivos()
+
 
 def crear_archivos(ruta):
     #Funciones en el local para crear el archivo y darme el nombre, 
