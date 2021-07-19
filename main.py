@@ -133,35 +133,27 @@ def crear_carpeta_evaluacion():
 
 # ---------------- CREAR CARPETA/ARCHIVO ------------------
 # -------> Carpetas
-def crear_carpetas(nombre: str):
-    Path(nombre).mkdir(exist_ok=True)
-
-def crear_carpeta_sobre_carpeta(nombre1: str, nombre2: str, nombre3: str):
-    os.makedirs(os.path.join(nombre1, nombre2, nombre3))
+def crear_carpetas(nombre: str, ruta: str)->None:
+    os.mkdir(ruta + "/" + nombre)
 
 # -------> Archivos
-def crear_txt_csv(nombre: str):
-    file = open(nombre, "w")
+def crear_txt_csv(nombre: str, ruta : str)->None:
+    file = open(ruta + "/" + nombre, "w")
+    file.close()
 
-def crear_archivos(elegir: str):
+def crear_archivos(elegir: str, ruta: str)->None:
     if elegir == '1':
         nombre = input('Ingrese un nombre para el archivo .txt: ')
-        crear_txt_csv(nombre+'.txt')
+        crear_txt_csv(nombre+'.txt', ruta)
         
     elif elegir == '2':
         nombre = input('Ingrese un nombre para el archivo .csv: ')
-        crear_txt_csv(nombre+'.csv')
+        crear_txt_csv(nombre+'.csv', ruta)
 
     elif elegir == '3':
-        opcion = input('Ingrese:\n[1]Para crear una carpeta\n[2]Crear carpetas multiples\n')
-        if opcion == '1':
-            nombre = input('Ingrese nombre para la carpeta: ')
-            crear_carpetas(nombre)
-        elif opcion == '2':
-            nombre1 = input('Ingrese un nombre para la carpeta : ')
-            nombre2 = input('Ingrese un nombre para la carpeta : ')
-            nombre3 = input('Ingrese un nombre para la carpeta : ')
-            crear_carpeta_sobre_carpeta(nombre1, nombre2, nombre3)
+        nombre = input('Ingrese nombre para la carpeta: ')
+        crear_carpetas(nombre, ruta)
+
 
 # -------> Matcheo archivo docentes , alumnos:
 def crea_csv_DA(diccionario_alumno_docente):
@@ -218,7 +210,12 @@ def main()-> None:
         elif opcion[0] == "1":
             mostrar_directorio_actual(ruta_actual)
         elif opcion[0] == "2":
-            pass
+
+            print('\n1 - Archivo .txt\n2 - Archivo .csv\n3 - Carpeta\n')
+            print('Elija una opcion:\n')
+            elegir = input('Opcion: ')
+            crear_archivos(elegir, ruta_actual)
+            
         elif opcion[0] == "3":
             pass
         elif opcion[0] == "4":
