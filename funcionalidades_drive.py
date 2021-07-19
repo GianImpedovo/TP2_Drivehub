@@ -200,29 +200,6 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
         print(f'Se encontraron {num_ele} {tipo_ele}\n')
 
 
-# def guardar_info_elementos(elementos: dict, info_carpetas:dict, info_archivos):
-#     """
-#     PRE: recibe los diccionarios "elementos":
-#     [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
-#     "info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
-#     "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}.
-    
-#     POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
-#     "info_archivos" colocando como clave los nombres de los elementos y sus id's como valores.
-#     """
-#     num_arch = 0
-#     num_carp = 0
-#     for elemento in elementos:
-#         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
-#             num_carp += 1
-#             info_carpetas[num_carp] =   [ elemento['name'], elemento['id'] ]
-#             #print(elemento['parents']) #testing
-#         else:
-#             num_arch += 1
-#             info_archivos[num_arch] =  [elemento['name'], elemento['id'] ] 
-#             #print(elemento['parents']) #testing
-
-
 def ordenar_info_elementos(elementos: dict):
     info_elementos = dict()
     num_ele = 0
@@ -263,8 +240,6 @@ def listar_elementos(query: str) -> tuple:
     page_token = None
     cortar = False
 
-    #info_carpetas = dict()
-    #info_archivos = dict()
     carpetas = dict()
     archivos = dict()
     while not cortar:
@@ -299,7 +274,7 @@ def armado_de_consulta(id_elemento: str) -> str:
     
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
-    
+
     print('0-Listar todas las carpetas')
     print('1-Busqueda manual (lista todas las carpetas y archivos en la carpeta actual)')
     print('2-Busqueda personalizada (busqueda con palara clave en la carpeta actual)')
@@ -347,8 +322,7 @@ def consultar_elementos():
     while not cortar:
 
         query = armado_de_consulta(id_elemento)
-        #info_carpetas, info_archivos = listar_elementos(query)
-        
+                
         carpetas, archivos = listar_elementos(query)
 
         info_carpetas = ordenar_info_elementos(carpetas)
