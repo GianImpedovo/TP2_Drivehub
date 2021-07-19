@@ -7,7 +7,7 @@ import csv
 
 RUTA = os.getcwd()
 
-MENU = ["COMANDOS : 'cd' (avanzo directorio), '..' (retrocedo)); 'ls' (lista directorios)",
+MENU = ["COMANDOS : 'cd' (avanzo directorio), '..' (retrocedo)",
         "1 - Listar archivos de la carpeta actual",
         "2 - Crear archivos",
         "3 - Subir archivos",
@@ -47,7 +47,7 @@ def mostrar_directorio_actual(ruta_actual: str)->None:
                 else:
                     print(" -> archivo:  ",contenido)
 
-def recorrer_directorio(ruta_actual: str, comando: str = ["salir"])->None:
+def recorrer_directorio(ruta_actual: str, comando: str)->None:
     '''
     PRE: recibe la ubicacion donde me encuentro 
     POST: Puedo recorrer los ficheros
@@ -71,9 +71,6 @@ def recorrer_directorio(ruta_actual: str, comando: str = ["salir"])->None:
             actual = "/".join(actual)
             print(actual)
             ruta_actual = actual
-        if "ls" == comando[0]:
-            mostrar_directorio_actual(ruta_actual)
-            ruta_actual = ruta_actual
 
         return ruta_actual
 
@@ -133,7 +130,6 @@ def crear_carpeta_evaluacion():
     crear_carpeta_profesores(archivo_docente_alumno, nombre_ev)
 
 #crear_carpeta_evaluacion()
-## --------------------------------------------------------------------------------------------
 
 # ---------------- CREAR CARPETA/ARCHIVO ------------------
 # -------> Carpetas
@@ -213,11 +209,14 @@ def main()-> None:
 
     while opcion != "8":
         opcion = opcion.split(" ")
-        if opcion[0] == "cd" or opcion[0] == ".." or opcion[0] == "ls":
+        # --------  Navegacion :
+        if opcion[0] == "cd" or opcion[0] == "..":
             comando = opcion
             ruta_actual = recorrer_directorio(ruta_actual, comando)
+
+        # acciones para realizar dentro del directorio
         elif opcion[0] == "1":
-            pass
+            mostrar_directorio_actual(ruta_actual)
         elif opcion[0] == "2":
             pass
         elif opcion[0] == "3":
@@ -230,7 +229,7 @@ def main()-> None:
             pass
         elif opcion[0] == "7":
             pass
-        elif opcion == "8":
+        elif opcion[0] == "8":
             pass
         
         mostrar_menu(ruta_actual)
