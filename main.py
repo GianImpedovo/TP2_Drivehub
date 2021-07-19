@@ -3,10 +3,12 @@ import os
 import service_drive
 import service_gmail
 from pathlib import Path
+import csv
 
 RUTA = os.getcwd()
 
-MENU = ["1 - Listar archivos de la carpeta actual",
+MENU = ["COMANDOS : 'cd' (avanzo directorio), '..' (retrocedo)); 'ls' (lista directorios)",
+        "1 - Listar archivos de la carpeta actual",
         "2 - Crear archivos",
         "3 - Subir archivos",
         "4 - Descargar un archivo",
@@ -16,10 +18,11 @@ MENU = ["1 - Listar archivos de la carpeta actual",
         "8 - Salir"
         ]
 
-def mostrar_menu()->None:
+def mostrar_menu(ruta: str)->None:
     print()
     for x in MENU:
         print(x)
+    print("RUTA ACTUAL : " ,ruta)
     print("\nElija una opcion: ")
 
 ## --------------- RECORRER TODO --------------------------------------------------------------
@@ -44,36 +47,35 @@ def mostrar_directorio_actual(ruta_actual: str)->None:
                 else:
                     print(" -> archivo:  ",contenido)
 
-def recorrer_directorio(ruta_actual: str )->None:
+def recorrer_directorio(ruta_actual: str, comando: str = ["salir"])->None:
     '''
     PRE: recibe la ubicacion donde me encuentro 
     POST: Puedo recorrer los ficheros
     '''
-
-    print("\n ---> Recorrer directorio : 'cd' : moverse entre directorios ; 'salir' ; '..' retrocede")
-    
-    mostrar_directorio_actual(ruta_actual)
-    
     for dirpath, dirnames, filenames in os.walk(ruta_actual):
         ", ".join(dirnames)
         ", ".join(filenames)
         print("\n",ruta_actual)
-        accion = input("Accion que desea realizar: ").split()
-        print(accion)
-        while accion[0] != "salir":
-            if "cd" == accion[0]:
-                print("\n",ruta_actual)
-                if os.path.isdir(ruta_actual):
-                    recorrer_directorio(ruta_actual + "/" + accion[1])
-                else:
-                    pass
-                    # abrir el archivo
-            elif ".." == accion[0]:
-                print("\n",ruta_actual)
-                actual = ruta_actual.split("/")
-                actual.pop(-1)
-                actual = "/".join(actual)
-                recorrer_directorio(actual)
+
+        if "cd" == comando[0]:
+            print("\n",ruta_actual)
+            if os.path.isdir(ruta_actual):
+                ruta_actual = (ruta_actual + "/" + comando[1])
+            else:
+                pass
+                # abrir el archivo
+        elif ".." == comando[0]:
+            print("\n",ruta_actual)
+            actual = ruta_actual.split("/")
+            actual.pop(-1)
+            actual = "/".join(actual)
+            print(actual)
+            ruta_actual = actual
+        if "ls" == comando[0]:
+            mostrar_directorio_actual(ruta_actual)
+            ruta_actual = ruta_actual
+
+        return ruta_actual
 
 def directorio_actual(ruta: str)->str:
     ruta_actual = ruta
@@ -188,7 +190,6 @@ def crea_relacion_DA(lista_alumnos,lista_docentes):
     
     crea_csv_DA(diccionario_alumno_docente)
 
-
 def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes):
     lista_alumnos = list()
 
@@ -201,39 +202,38 @@ def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes):
         for linea in docentes:
             linea = linea.strip().split(",")
             lista_docentes.append(linea[0])
-
-    print(lista_docentes)
-    print(lista_alumnos)
-
     crea_relacion_DA(lista_alumnos,lista_docentes)
 
 # crear_archivo_alumnos_docentes("alumnos.csv", "docentes.csv")
-'''
+
 def main()-> None:
-    
-    mostrar_menu()
+    ruta_actual = RUTA
+    mostrar_menu(ruta_actual)
     opcion = input("opcione : ")
+
     while opcion != "8":
-        
-        if opcion == "1":
+        opcion = opcion.split(" ")
+        if opcion[0] == "cd" or opcion[0] == ".." or opcion[0] == "ls":
+            comando = opcion
+            ruta_actual = recorrer_directorio(ruta_actual, comando)
+        elif opcion[0] == "1":
             pass
-        elif opcion == "2":
+        elif opcion[0] == "2":
             pass
-        elif opcion == "3":
+        elif opcion[0] == "3":
             pass
-        elif opcion == "4":
+        elif opcion[0] == "4":
             pass
-        elif opcion == "5":
+        elif opcion[0] == "5":
             pass
-        elif opcion == "6":
+        elif opcion[0] == "6":
             pass
-        elif opcion == "7":
+        elif opcion[0] == "7":
             pass
         elif opcion == "8":
             pass
         
-        mostrar_menu()
+        mostrar_menu(ruta_actual)
         opcion = input("opcion : ")
     
 main()
-'''
