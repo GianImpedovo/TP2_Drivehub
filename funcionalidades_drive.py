@@ -201,6 +201,12 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
 
 
 def ordenar_info_elementos(elementos: dict):
+    """
+    PRE: recibe los diccionarios "elementos":
+    [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
+    POST: Crear y devuelve el diccionario "info_elementos" con esta etsructura:
+    {num_carp:['nombre carpeta','id carpeta']}
+    """
     info_elementos = dict()
     num_ele = 0
     for nombre_elemento, info_elemento in elementos.items():
@@ -214,11 +220,12 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     """
     PRE: recibe los diccionarios "elementos":
     [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
-    "info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
-    "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}.
+    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif']} y
+    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif']}.
     
     POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
-    "info_archivos" colocando como clave los nombres de los elementos y sus id's como valores.
+    "info_archivos" colocando como clave los nombres de los elementos y sus id's y fecha de modif
+    en una lista como valores.
     """
     for elemento in elementos:
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
@@ -234,8 +241,9 @@ def listar_elementos(query: str) -> tuple:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
     
-    POST: Devuelve los diccionarios "info_carpetas" e "info_archivos" con los nombres de los 
-    elementos como clave y sus id's como valores.
+    POST: Devuelve los diccionarios "carpetas" y "archivos" con los nombres de los 
+    elementos como clave y sus id's y fechas de modif en una lita como valores.
+    ({nombre_carpeta: ['id carpeta', 'fecha_modif']})
     """
     page_token = None
     cortar = False
@@ -322,7 +330,7 @@ def consultar_elementos():
     while not cortar:
 
         query = armado_de_consulta(id_elemento)
-                
+
         carpetas, archivos = listar_elementos(query)
 
         info_carpetas = ordenar_info_elementos(carpetas)
@@ -387,9 +395,12 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     """    
     #primero listo todas las carpetas de la nube
     query = f" mimeType = 'application/vnd.google-apps.folder' and name contains '{carpeta_contenedora}' and not trashed "
-    info_carpetas, info_archivos = listar_elementos(query)
+    
+    carpetas, archivos = listar_elementos(query)
     
     #si coincide con la local lo subo ahi
+
+
     for info_carpeta in info_carpetas.values():
         if info_carpeta[0] == carpeta_contenedora:
             carpeta_id = info_carpeta[1]
