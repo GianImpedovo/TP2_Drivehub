@@ -55,15 +55,12 @@ def recorrer_directorio(ruta_actual: str, comando: str)->None:
     for dirpath, dirnames, filenames in os.walk(ruta_actual):
         ", ".join(dirnames)
         ", ".join(filenames)
-        print("\n",ruta_actual)
 
         if "cd" == comando[0]:
-            print("\n",ruta_actual)
-            if os.path.isdir(ruta_actual):
+            if os.path.isdir(ruta_actual + "/" + comando[1]):
                 ruta_actual = (ruta_actual + "/" + comando[1])
             else:
-                pass
-                # abrir el archivo
+                print(f"\t --- La carpeta: '{comando[1]}' NO existe --- \t")
         elif ".." == comando[0]:
             print("\n",ruta_actual)
             actual = ruta_actual.split("/")
@@ -80,62 +77,17 @@ def directorio_actual(ruta: str)->str:
     directorio_actual = ruta[-1]
     return ruta_actual, directorio_actual
 
-## --------------------------------------------------------------------------------------------
-
-# ---------------- CREAR CARPETA DE EVALUACION ------------------
-def crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, profesor):
-    lista_alumnos = dict_docentes[profesor]
-    for alumno in lista_alumnos:
-        os.mkdir(directorio_evaluacion + "/" + profesor + "/" + alumno)
-    
-    # ingresar en cada carpeta del alumno su examen []
-
-def crear_carpeta_profesores(archivo_docente_alumno, nombre_ev):
-    dict_docentes = dict()
-    with open(archivo_docente_alumno, newline='', encoding="UTF-8") as archivo:
-
-        csv_reader = csv.reader(archivo_docente_alumno, delimiter=',')
-        next(csv_reader)
-
-        for linea in archivo:
-            linea = linea.strip().split(",")
-            if linea[0] in dict_docentes:
-                dict_docentes[linea[0]].append(linea[1])
-            else:
-                dict_docentes[linea[0]] = [linea[1]]
-
-    directorio_evaluacion = RUTA + "/" + nombre_ev
-    dict_docentes.pop("Docente")
-
-    for k in dict_docentes.keys():
-        os.mkdir(directorio_evaluacion + "/" + k)
-
-        crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, k)
-
-## Necesito recibir los archivos csv 
-## y mas que nada una funcion que relacion a los alumnos con los profesores ---> []
-
-def crear_carpeta_evaluacion(): 
-    nombre_ev = input("Nombre de la evalucaion: ")
-    archivo_alumnos = input("ingrese el nombre del archivo de los alumnos cursando: ")
-    archivo_docentes = input("ingrese el nombre del archivo de los docentes:")
-    archivo_docente_alumno = "d_a.csv" # cambiar por la funcion que trar los archivos matcheados []
-
-    os.mkdir(nombre_ev)
-
-    os.getcwd()
-
-    crear_carpeta_profesores(archivo_docente_alumno, nombre_ev)
-
 # ---------------- CREAR CARPETA/ARCHIVO ------------------
 # -------> Carpetas
 def crear_carpetas(nombre: str, ruta: str)->None:
     os.mkdir(ruta + "/" + nombre)
+    print(f"Carpeta: {nombre} fue creada con exito")
 
 # -------> Archivos
 def crear_txt_csv(nombre: str, ruta : str)->None:
     file = open(ruta + "/" + nombre, "w")
     file.close()
+    print(f"Archivo: {nombre} fue creada con exito")
 
 def crear_archivos(elegir: str, ruta: str)->None:
     if elegir == '1':
@@ -151,29 +103,31 @@ def crear_archivos(elegir: str, ruta: str)->None:
         crear_carpetas(nombre, ruta)
 
 # -------> Matcheo archivo docentes , alumnos:
-def crea_csv_DA(diccionario_alumno_docente):
+def crea_csv_DA(diccionario_alumno_docente, nombre_del_archivo):
     ''' asumo que el archivo no existe '''
-    with open("d_a.csv", 'w') as archivo:
+    with open(nombre_del_archivo, 'w') as archivo:
         csv_writer = csv.writer(archivo, delimiter = ',')
         csv_writer.writerow(["Docente","Alumno"])
 
         for profesor , alumnos in diccionario_alumno_docente.items():
             for alumno in alumnos:
                 csv_writer.writerow((profesor, alumno))
+    print("\n ### Se creo con exito el archivo que relaciona los docentes y los alumnos ### ")
 
-def crea_relacion_DA(lista_alumnos,lista_docentes):
+def crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo):
     diccionario_alumno_docente = dict()
     while len(lista_alumnos) != 0:
         for profesor in range(len(lista_docentes)):
-            alumno = lista_alumnos.pop(0)
-            if lista_docentes[profesor] in diccionario_alumno_docente:
-                diccionario_alumno_docente[lista_docentes[profesor]].append(alumno)
-            else:
-                diccionario_alumno_docente[lista_docentes[profesor]] = [alumno]
+            if len(lista_alumnos) != 0:
+                alumno = lista_alumnos.pop(0)
+                if lista_docentes[profesor] in diccionario_alumno_docente:
+                    diccionario_alumno_docente[lista_docentes[profesor]].append(alumno)
+                else:
+                    diccionario_alumno_docente[lista_docentes[profesor]] = [alumno]
     
-    crea_csv_DA(diccionario_alumno_docente)
+    crea_csv_DA(diccionario_alumno_docente,nombre_archivo)
 
-def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes):
+def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes, nombre_archivo):
     lista_alumnos = list()
 
     lista_docentes = list()
@@ -185,7 +139,62 @@ def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes):
         for linea in docentes:
             linea = linea.strip().split(",")
             lista_docentes.append(linea[0])
-    crea_relacion_DA(lista_alumnos,lista_docentes)
+
+    print(lista_docentes)
+    print(lista_alumnos)
+
+    crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo)
+
+# ---------------- CREAR CARPETA DE EVALUACION (LOCAL)------------------
+def crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, profesor):
+    lista_alumnos = dict_docentes[profesor]
+    for alumno in lista_alumnos:
+        os.mkdir(directorio_evaluacion + "/" + profesor + "/" + alumno)
+    
+    # ingresar en cada carpeta del alumno su examen []
+
+def crear_carpeta_profesores(archivo_docente_alumno, ruta_ev):
+    dict_docentes = dict()
+    with open(archivo_docente_alumno, newline='', encoding="UTF-8") as archivo:
+
+        csv_reader = csv.reader(archivo_docente_alumno, delimiter=',')
+        next(csv_reader)
+
+        for linea in archivo:
+            linea = linea.strip().split(",")
+            if linea[0] in dict_docentes:
+                dict_docentes[linea[0]].append(linea[1])
+            else:
+                dict_docentes[linea[0]] = [linea[1]]
+
+    directorio_evaluacion = ruta_ev
+    dict_docentes.pop("Docente")
+
+    for k in dict_docentes.keys():
+        os.mkdir(directorio_evaluacion + "/" + k)
+
+        crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, k)
+
+## Necesito recibir los archivos csv 
+## y mas que nada una funcion que relacion a los alumnos con los profesores ---> []
+
+def crear_carpeta_evaluacion(ruta): 
+    nombre_ev = input("Nombre de la evalucaion: ")
+    archivo_alumnos = input("ingrese el nombre del archivo de los alumnos cursando: ")
+    archivo_docentes = input("ingrese el nombre del archivo de los docentes:")
+    archivo_docente_alumno = input("nombre que le quiere poner al nuevo archivo de docentes y alumnos: ")
+
+    
+    nombre_csv_DA = archivo_docente_alumno + ".csv"
+    crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes,nombre_csv_DA)
+
+    ruta_ev = ruta + "/" + nombre_ev
+    os.mkdir(ruta_ev)
+
+    os.getcwd()
+
+    crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
+
 
 def main()-> None:
     ruta_actual = RUTA
@@ -202,6 +211,7 @@ def main()-> None:
         # Acciones para realizar dentro del directorio: 
         elif opcion[0] == "1":
             mostrar_directorio_actual(ruta_actual)
+            ## FALTA MOSTRAR EL DIRECTORIO REMOTO []
 
         elif opcion[0] == "2":
             print('\n1 - Archivo .txt\n2 - Archivo .csv\n3 - Carpeta\n')
@@ -211,12 +221,20 @@ def main()-> None:
             ## FALTA PODER CREAR ARCHIVOS EN DRIVE []
 
         elif opcion[0] == "3":
+            ## FALTA PODER SUBIR (DE LOCAL A REMOTO) ARCHIVO []
             pass
         elif opcion[0] == "4":
+            ## FALTA PODER DESCARGAR (DE REMOTO A LOCAL) ARCHIVO []
             pass
         elif opcion[0] == "5":
+            ## FALTA PODER SINCRONIZAR , FUN_DRIVE []
             pass
         elif opcion[0] == "6":
+            ## FALTA ENVIAR MAIL CON ESPECIFICACIONES PARA CREAR CARPETA DE EVALUACIONES []
+            
+            # enviar_mail()
+            # una vez enviado el mail: 
+            crear_carpeta_evaluacion(ruta_actual)
             pass
         elif opcion[0] == "7":
             pass
@@ -225,5 +243,5 @@ def main()-> None:
         
         mostrar_menu(ruta_actual)
         opcion = input("opcion : ")
-    
+
 main()
