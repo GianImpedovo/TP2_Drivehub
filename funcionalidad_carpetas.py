@@ -3,8 +3,44 @@ import os
 import csv
 
 RUTA = os.getcwd()
+def crea_csv_DA(diccionario_alumno_docente, nombre_del_archivo):
+    ''' asumo que el archivo no existe '''
+    with open(nombre_del_archivo, 'w') as archivo:
+        csv_writer = csv.writer(archivo, delimiter = ',')
+        csv_writer.writerow(["Docente","Alumno"])
 
+        for profesor , alumnos in diccionario_alumno_docente.items():
+            for alumno in alumnos:
+                csv_writer.writerow((profesor, alumno))
+    print("\n ### Se creo con exito el archivo que relaciona los docentes y los alumnos ### ")
 
+def crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo):
+    diccionario_alumno_docente = dict()
+    while len(lista_alumnos) != 0:
+        for profesor in range(len(lista_docentes)):
+            if len(lista_alumnos) != 0:
+                alumno = lista_alumnos.pop(0)
+                if lista_docentes[profesor] in diccionario_alumno_docente:
+                    diccionario_alumno_docente[lista_docentes[profesor]].append(alumno)
+                else:
+                    diccionario_alumno_docente[lista_docentes[profesor]] = [alumno]
+    
+    crea_csv_DA(diccionario_alumno_docente,nombre_archivo)
+
+def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes, nombre_archivo):
+    lista_alumnos = list()
+
+    lista_docentes = list()
+    with open(archivo_alumnos) as alumnos:
+        for linea in alumnos:
+            linea = linea.strip().split(",")
+            lista_alumnos.append(linea[0])
+    with open(archivo_docentes) as docentes:
+        for linea in docentes:
+            linea = linea.strip().split(",")
+            lista_docentes.append(linea[0])
+
+    crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo)
 
 # Necesito recibir las evaluaciones de los alumnos por gmail
 # para poder adjuntar cada examen a su carpeta  ---> []
@@ -15,7 +51,6 @@ def crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, profesor):
         os.mkdir(directorio_evaluacion + "/" + profesor + "/" + alumno)
     
     # ingresar en cada carpeta del alumno su examen []
-
 
 def crear_carpeta_profesores(archivo_docente_alumno, nombre_ev):
     dict_docentes = dict()
@@ -39,7 +74,6 @@ def crear_carpeta_profesores(archivo_docente_alumno, nombre_ev):
 
         crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, k)
 
-
 ## Necesito recibir los archivos csv 
 ## y mas que nada una funcion que relacion a los alumnos con los profesores ---> []
 
@@ -47,56 +81,18 @@ def crear_carpeta_evaluacion():
     nombre_ev = input("Nombre de la evalucaion: ")
     archivo_alumnos = input("ingrese el nombre del archivo de los alumnos cursando: ")
     archivo_docentes = input("ingrese el nombre del archivo de los docentes:")
-    archivo_docente_alumno = "d_a.csv" # cambiar por la funcion que trar los archivos matcheados []
+    archivo_docente_alumno = input("nombre que le quiere poner al nuevo archivo de docentes y alumnos: ")
 
+    
+    nombre_csv_DA = archivo_docente_alumno + ".csv"
+    crear_archivo_alumnos_docentes("alumnos.csv", "docentes.csv",nombre_csv_DA)
     os.mkdir(nombre_ev)
 
     os.getcwd()
 
-    crear_carpeta_profesores(archivo_docente_alumno, nombre_ev)
+    crear_carpeta_profesores(nombre_csv_DA, nombre_ev)
 
-#crear_carpeta_evaluacion()
+    return nombre_csv_DA
 
-# ----------- recorrido de carpetas 
+crear_carpeta_evaluacion()
 
-def mostrar_directorio_actual(ruta_actual: str)->None:
-    '''
-    PRE: Recibo la ruta donde me encuntro
-    POST: Retorno un listado de los elementos que se encuentran en donde estoy parado
-    '''
-    print(ruta_actual)
-    contenido = os.listdir(ruta_actual)
-    for fichero in contenido:
-        if os.path.isfile(ruta_actual + "/" + fichero):
-            print("Archivo - ",fichero)
-        else:
-            print("Carpeta - ",fichero)
-            contenido_carpeta = os.listdir(ruta_actual + "/" + fichero)
-
-            for contenido in contenido_carpeta:
-                if os.path.isdir(ruta_actual + "/" + fichero + "/" + contenido):
-                    print(" -> carpeta: ", contenido)
-                else:
-                    print(" -> archivo:  ",contenido)
-
-def recorrer_directorio(ruta_actual: str)->None:
-    mostrar_directorio_actual(ruta_actual)
-    print(ruta_actual)
-    for dirpath, dirnames, filenames in os.walk(ruta_actual):
-        ", ".join(dirnames)
-        ", ".join(filenames)
-
-        print("\n ---> Recorrer directorio , si desea salir escriba 'salir'")
-        accion = input("A que directorio/archivo desea ir: ")
-        if accion == "salir":
-            ruta_actual = "/home/gianfranco/Documentos/fiuba/Algoritmos/TP2" # cambiar por la ruta del usuario
-            break # me lleva al main
-        elif accion == "mover":
-            if os.path.isdir(ruta_actual):
-                recorrer_directorio(ruta_actual + "/" + accion)
-            else:
-                pass
-                # abrir el archivo
-
-
-recorrer_directorio(RUTA)
