@@ -1,7 +1,7 @@
 
 import os
 import service_drive
-import service_gmail
+#import service_gmail
 from pathlib import Path
 import csv
 
@@ -115,7 +115,7 @@ def crear_archivos(elegir: str, ruta: str)->None:
 def crea_csv_DA(diccionario_alumno_docente: dict(), nombre_del_archivo: str)->None:
     '''
     PRE: Recibe el diccionario con la relacion docente alumno
-    POST: Crea el archivo csv con dicha relacion
+    POST: Crea el archivo csv con dicha
     '''
     ''' asumo que el archivo no existe '''
     with open(nombre_del_archivo, 'w') as archivo:
@@ -155,15 +155,16 @@ def crear_archivo_alumnos_docentes(archivo_alumnos: str, archivo_docentes: str, 
         with open(archivo_alumnos) as alumnos:
             for linea in alumnos:
                 linea = linea.strip().split(",")
-                lista_alumnos.append(linea[0])
+                if linea[0] != "Nombre":
+                    lista_alumnos.append(linea[0])
         with open(archivo_docentes) as docentes:
             for linea in docentes:
                 linea = linea.strip().split(",")
-                lista_docentes.append(linea[0])
+                if linea[0] != "Nombre":
+                    lista_docentes.append(linea[0])
         crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo)
     except:
         print("\nUno de estos archivos NO existe.")
-
 
 # ---------------- CREAR CARPETA DE EVALUACION (LOCAL)------------------
 # ---> envio mail de instrucciones :
@@ -204,7 +205,7 @@ def crear_carpeta_profesores(archivo_docente_alumno: str, ruta_ev: str)->None:
     dict_docentes = dict()
     with open(archivo_docente_alumno, newline='', encoding="UTF-8") as archivo:
 
-        csv_reader = csv.reader(archivo_docente_alumno, delimiter=',')
+        csv_reader = csv.reader(archivo, delimiter=',')
         next(csv_reader)
 
         for linea in archivo:
@@ -244,8 +245,6 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
 
 
-
-
 def main()-> None:
     ruta_actual = RUTA
     mostrar_menu(ruta_actual)
@@ -280,8 +279,8 @@ def main()-> None:
             ## FALTA PODER SINCRONIZAR , FUN_DRIVE []
             pass
         elif opcion[0] == "6":
-            email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
-            enviar_email_instrucciones(email_usuario)
+            #email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
+            #enviar_email_instrucciones(email_usuario)
             crear_carpeta_evaluacion(ruta_actual)
 
         elif opcion[0] == "7":
