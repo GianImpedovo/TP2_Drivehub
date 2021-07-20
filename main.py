@@ -1,7 +1,7 @@
 
 import os
 import service_drive
-#import service_gmail
+import service_gmail
 from pathlib import Path
 import csv
 
@@ -168,7 +168,7 @@ def crear_archivo_alumnos_docentes(archivo_alumnos: str, archivo_docentes: str, 
 
 # ---------------- CREAR CARPETA DE EVALUACION (LOCAL)------------------
 # ---> envio mail de instrucciones :
-INSTRUCCIONES = ""
+INSTRUCCIONES = "crear carpeta evaluacion\ncrear otras carpetas"
 
 def enviar_email_instrucciones(email: str)->None:
     '''
@@ -185,15 +185,31 @@ def enviar_email_instrucciones(email: str)->None:
     mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
     print(mensaje) 
 
-# ---> creo la carpeta evaluacion 
+def crear_carpeta_sobrantes(directorio_evaluacion: str)->None:
+    '''
+    PRE: Recibo el directorio donde estan las evaluaciones
+    POST: Para los alumnos no matcheados se les crea una carpeta aparte donde seran guardados sus examenes
+    '''
+    os.mkdir(directorio_evaluacion + "/" + "sobrantes")
+    alumnos_sobrantes = directorio_evaluacion + "/" + "sobrantes" + "/"
+    ruta_alumnos_sobrantes = os.getcwd() + "/" + "evaluacion" + "/"
+    lista_sobrantes = os.listdir(ruta_alumnos_sobrantes)
+    for sobrante in lista_sobrantes:
+        ruta_alumnos_sobrantes += sobrante
+        shutil.move(ruta_alumnos_sobrantes, alumnos_sobrantes)
+
 def crear_carpeta_alumnos(dict_docentes: dict(),directorio_evaluacion: str, profesor: str)->None:
     '''
     PRE: recibe la relacion de los docentes y sus alumnos
     POST: dentro de la carpeta del profesor correspondiente crea la carpeta de los alumnos que debe corregir
     '''
+    
     lista_alumnos = dict_docentes[profesor]
     for alumno in lista_alumnos:
-        os.mkdir(directorio_evaluacion + "/" + profesor + "/" + alumno)
+        ruta_alumno = directorio_evaluacion + "/" + profesor + "/"
+        ruta_evaluaciones = os.getcwd() + "/" + "evaluacion" + "/" + alumno + "/"
+        if os.path.isdir(ruta_evaluaciones):
+            shutil.move(ruta_evaluaciones, ruta_alumno)
     
     # ingresar en cada carpeta del alumno su examen []
 
@@ -216,12 +232,13 @@ def crear_carpeta_profesores(archivo_docente_alumno: str, ruta_ev: str)->None:
                 dict_docentes[linea[0]] = [linea[1]]
 
     directorio_evaluacion = ruta_ev
-    dict_docentes.pop("Docente")
-
     for k in dict_docentes.keys():
         os.mkdir(directorio_evaluacion + "/" + k)
 
         crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, k)
+
+    crear_carpeta_sobrantes(directorio_evaluacion)
+    shutil.rmtree(os.getcwd() + "/" + "evaluacion")
 
 def crear_carpeta_evaluacion(ruta: str)->None: 
     '''
@@ -229,11 +246,10 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     POST: usando las distintas funciones para anidar crea la carpeta de la evaluacion
     '''
     nombre_ev = input("Nombre de la evalucaion: ")
-    archivo_alumnos = input("ingrese el nombre del archivo de los alumnos cursando: ")
-    archivo_docentes = input("ingrese el nombre del archivo de los docentes:")
-    archivo_docente_alumno = input("nombre que le quiere poner al nuevo archivo de docentes y alumnos: ")
+    archivo_alumnos = "alumnos.csv"
+    archivo_docentes = "docentes.csv"
+    archivo_docente_alumno = "relacion"
 
-    
     nombre_csv_DA = archivo_docente_alumno + ".csv"
     crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes,nombre_csv_DA)
 
@@ -241,9 +257,8 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     os.mkdir(ruta_ev)
 
     os.getcwd()
-
+    
     crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
-
 
 def main()-> None:
     ruta_actual = RUTA
