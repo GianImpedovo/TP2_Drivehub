@@ -32,27 +32,40 @@ def crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes, nombre_arc
 
     lista_docentes = list()
     with open(archivo_alumnos) as alumnos:
+        csv_reader = csv.reader(archivo_alumnos,delimiter = ",")
+        next(csv_reader)
         for linea in alumnos:
             linea = linea.strip().split(",")
             lista_alumnos.append(linea[0])
     with open(archivo_docentes) as docentes:
+        csv_reader = csv.reader(archivo_docentes,delimiter = ",")
+        next(csv_reader)
         for linea in docentes:
             linea = linea.strip().split(",")
             lista_docentes.append(linea[0])
-
+    print(lista_alumnos)
+    print(lista_docentes)
     crea_relacion_DA(lista_alumnos,lista_docentes,nombre_archivo)
 
 # Necesito recibir las evaluaciones de los alumnos por gmail
 # para poder adjuntar cada examen a su carpeta  ---> []
-
-def crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, profesor):
+# ---> creo la carpeta evaluacion 
+def crear_carpeta_alumnos(dict_docentes: dict(),directorio_evaluacion: str, profesor: str)->None:
+    '''
+    PRE: recibe la relacion de los docentes y sus alumnos
+    POST: dentro de la carpeta del profesor correspondiente crea la carpeta de los alumnos que debe corregir
+    '''
     lista_alumnos = dict_docentes[profesor]
     for alumno in lista_alumnos:
         os.mkdir(directorio_evaluacion + "/" + profesor + "/" + alumno)
     
     # ingresar en cada carpeta del alumno su examen []
 
-def crear_carpeta_profesores(archivo_docente_alumno, nombre_ev):
+def crear_carpeta_profesores(archivo_docente_alumno: str, ruta_ev: str)->None:
+    '''
+    PRE: recibe los archivos correspondientes 
+    POST: crea las carpetas de los docentes dentro de la evaluacion 
+    '''
     dict_docentes = dict()
     with open(archivo_docente_alumno, newline='', encoding="UTF-8") as archivo:
 
@@ -66,33 +79,35 @@ def crear_carpeta_profesores(archivo_docente_alumno, nombre_ev):
             else:
                 dict_docentes[linea[0]] = [linea[1]]
 
-    directorio_evaluacion = RUTA + "/" + nombre_ev
-    dict_docentes.pop("Docente")
-
+    directorio_evaluacion = ruta_ev
+    dict_docentes.pop("Nombre")
+    print(dict_docentes)
+    
     for k in dict_docentes.keys():
         os.mkdir(directorio_evaluacion + "/" + k)
 
         crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, k)
 
-## Necesito recibir los archivos csv 
-## y mas que nada una funcion que relacion a los alumnos con los profesores ---> []
-
-def crear_carpeta_evaluacion(): 
+def crear_carpeta_evaluacion(ruta: str)->None: 
+    '''
+    PRE: Recibe la ruta de la ubicacion donde se encuentra el usuario
+    POST: usando las distintas funciones para anidar crea la carpeta de la evaluacion
+    '''
     nombre_ev = input("Nombre de la evalucaion: ")
     archivo_alumnos = input("ingrese el nombre del archivo de los alumnos cursando: ")
-    archivo_docentes = input("ingrese el nombre del archivo de los docentes:")
+    archivo_docentes = input("ingrese el nombre del archivo de los docentes: ")
     archivo_docente_alumno = input("nombre que le quiere poner al nuevo archivo de docentes y alumnos: ")
 
     
     nombre_csv_DA = archivo_docente_alumno + ".csv"
-    crear_archivo_alumnos_docentes("alumnos.csv", "docentes.csv",nombre_csv_DA)
-    os.mkdir(nombre_ev)
+    crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes,nombre_csv_DA)
+
+    ruta_ev = ruta + "/" + nombre_ev
+    os.mkdir(ruta_ev)
 
     os.getcwd()
 
-    crear_carpeta_profesores(nombre_csv_DA, nombre_ev)
+    crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
 
-    return nombre_csv_DA
-
-crear_carpeta_evaluacion()
+crear_carpeta_evaluacion(RUTA)
 
