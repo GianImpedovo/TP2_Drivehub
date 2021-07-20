@@ -117,6 +117,7 @@ def crear_csv():
             writer.writerow(datos)
             salir = input("Desea seguir agregando filas al archivo (s/n): ")
             if salir != "s": salir = True
+            else : salir = False
 
 def modificar_csv(archivo: str):
     
@@ -125,7 +126,7 @@ def modificar_csv(archivo: str):
         list_of_column_names = []
         for row in csv_reader: 
             list_of_column_names.append(row)
-            break
+            break ## ----------> ojo con este break ver la manera de salcarlo !!! 
     with open(archivo, "a", newline='') as csvfile:
         writer = csv.DictWriter(csvfile,delimiter=',', fieldnames = list_of_column_names[0])
         
@@ -137,6 +138,7 @@ def modificar_csv(archivo: str):
             writer.writerow(datos)
             salir = input("Desea seguir agregando (s/n): ")
             if salir != "s": salir = True
+            else : salir = False
 
 def crear_archivos(elegir: str, ruta: str)->None:
     if elegir == '1':
