@@ -86,7 +86,7 @@ def directorio_actual(ruta: str)->str:
     directorio_actual = ruta[-1]
     return ruta_actual, directorio_actual
 
-# ---------------- CREAR CARPETA/ARCHIVO ------------------
+# ---------------- CREAR CARPETA/ARCHIVO ------------------(CODIGO ANTO)
 # -------> Carpetas
 def crear_carpetas(nombre: str, ruta: str)->None:
     os.mkdir(ruta + "/" + nombre)
@@ -260,6 +260,77 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     
     crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
 
+# --------------------- RECEPCION DE EVALUACIONES ---------- (CODIGO ADO)
+def obtener_email(id_mensaje):
+    servicio = service_gmail.obtener_servicio()
+    mensaje = servicio.users().messages().get(userId='me',id=id_mensaje).execute()
+    return mensaje
+
+def obtener_lista_email():
+    servicio = service_gmail.obtener_servicio()
+    resultados = servicio.users().messages().list(userId='me', q='in:inbox', maxResults=1).execute()
+    #resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread', maxResults=1).execute()
+    #pprint.pprint(resultados)
+    return resultados.get('messages',[])
+
+def enviar_email(email):
+    servicio = service_gmail.obtener_servicio()
+    msj = 'ENTREGA OK'
+    mime_mensaje = MIMEMultipart()
+    mime_mensaje['subject'] = 'EVALUACION'
+    mime_mensaje['to'] = email
+    mime_mensaje.attach(MIMEText(msj, 'plain'))
+    raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
+    mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(mensaje)    
+
+def descomprimir_archivo(name):
+
+    archivo = "./evaluaciones_zip/"+name+".zip"
+
+    #with ZipFile(archivo, 'r') as zip:
+    #    zip.printdir()
+    #    zip.extractall() 
+    #print("Archivo desconprimido.")
+
+    with ZipFile(archivo, 'r') as evaluacion:
+        nombres_archivo = evaluacion.namelist()
+        for nombre_archivo in nombres_archivo: 
+            if nombre_archivo.endswith('.py'):
+                evaluacion.extract(nombre_archivo, 'evaluaciones_zip/'+name)
+                print("Archivo desconprimido.")
+
+def obtener_evaluaciones():
+    mensajes = obtener_lista_email()
+    email = ''
+    titulo = ''
+    for msj in mensajes:
+        #print(msj['id'])
+        #pprint.pprint(msj)
+        #pprint.pprint(obtener_email(msj['id']))
+        msj_detalles = obtener_email(msj['id'])
+        pprint.pprint(msj_detalles)
+        msj_detalles = msj_detalles["payload"]["headers"]
+
+        for msj_detalle in msj_detalles: 
+
+            if msj_detalle["name"] == 'To':
+                email = msj_detalle["value"]
+                print("email",email)
+            if msj_detalle["name"] == 'Subject':   
+                titulo = msj_detalle["value"]
+                print("titulo",titulo)
+        #descomprimir_archivo(titulo)    
+        #enviar_email(email)
+
+def validar_entrega(name):
+    print("validar")
+
+#if __name__ == '__main__':
+#enviar_email('adrodriguez@fi.uba.ar')
+#descomprimir_archivo("108367 - Rodriguez, Adonis")
+#obtener_evaluaciones()
+
 def main()-> None:
     ruta_actual = RUTA
     mostrar_menu(ruta_actual)
@@ -294,13 +365,10 @@ def main()-> None:
             ## FALTA PODER SINCRONIZAR , FUN_DRIVE []
             pass
         elif opcion[0] == "6":
-            #email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
-            #enviar_email_instrucciones(email_usuario)
-            crear_carpeta_evaluacion(ruta_actual)
-
+            email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
+            enviar_email_instrucciones(email_usuario)
         elif opcion[0] == "7":
-            # FALTA PODER ACTUALIZAR LOS ALUMNOS SEGUN LOS MAILS RECIBIDOS []
-            pass
+            crear_carpeta_evaluacion(ruta_actual)
 
         mostrar_menu(ruta_actual)
         opcion = input("opcion : ")
