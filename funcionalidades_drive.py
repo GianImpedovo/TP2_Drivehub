@@ -481,7 +481,10 @@ def crear_archivos(ruta):
 #crear_archivos()
 
 def remplazar_archivos(arch, id_ele):
-    
+    """
+    PRE: Reemplaza el archivo de string "arch" conociendo su id con el str "id_ele"
+    POST:
+    """
     media = MediaFileUpload(arch)
 
     service().files().update(fileId = id_ele,
@@ -494,90 +497,65 @@ def sincronizar():
     q se esta sincronizando
 
     POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
+    OJO!
+    1 - las fechas de modif se aproximaron a los minutos por lo que si se modifica dentro del 
+    #mismo minuto y se sincroiza no se matienen los cambios.
     """
-    # for i in list(pathlib.Path().iterdir()):
-    #     print(i)
-    #     fname = pathlib.Path(i)
-    #     print(fname.stat().st_ctime)
-    #     ctime = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
-    #     #assert fname.exists(), f'No such file: {fname}'  # check that the file exists
-    #     print(ctime)
-    
+
     #cargo y creo el siguiente dict
     #arch_locales_sinc = {nombre_arch: modifiedTime}
-    
-    #OJO !!! Al caegar la fecha de modif hay q formatearla xq viene en horario yanqui
-    #arch_remotos_sinc = {nombre_arch: [id_ele, modifiedTime]}
-    #UNA SOLA CARPETA  A LA VEZ!!!!
-    #query = "'root' in parents and (not trashed)"
-    #query = f" '{id_elemento}' in parents and (not trashed) "        
-    
-    arch_locales_sinc = dict()
+    archivos_locales = dict()
 
-    arch = 'archivo_xa_actualizar_2.txt'
-    
-    #Otengo hora LOCAL de modif
-    fname = pathlib.Path(arch)
-    ctime = datetime.datetime.fromtimestamp(fname.stat().st_mtime)
-    print('ctime_org:',ctime)
-    
-
-    # current_date_and_time = datetime.datetime.now()
-
-    # print(current_date_and_time)
-    # hours = 3
-    # hours_added = datetime.timedelta(hours = hours)
-
-    # future_date_and_time = current_date_and_time + hours_added
-
-    # print(future_date_and_time)
-    
-    #Sumo + 3 HORAS a hora  LOCAL
-    
-    horas = 3
-    horas_sumadas = datetime.timedelta(hours = horas)
-    
-    new_ctime = ctime + horas_sumadas # sumo 3 horas 
-    
-    #Edito el str de la hora local sacandole el .00Z etc!!
-    print('sin editar: ', new_ctime)
-    fecha_local = str(new_ctime)
-    fecha_local = fecha_local[:19]
-    print('new_ctime:', fecha_local)
-    
-    id_carpeta ='1IgwMubXSE_XlBgoSF7pgGS_AL8w2ex6i'
-    
-    #query = " mimeType = 'application/vnd.google-apps.folder' " 
-    query = f" '{id_carpeta}' in parents and not trashed" 
-    carpetas, archivos = listar_elementos(query)
-    
-    #{nombre_carpeta: ['id carpeta', 'fecha_modif']})
-    #print(carpetas)
-    #print(archivos)
-    #print(carpetas)
-    for archivo, info_archivo in archivos.items():
-        print(f'{archivo}-{info_archivo[1]}')
-        #print(info_archivo[1])
-        print(fecha_local)
-        fecha_remoto = info_archivo[1][:19].replace('T',' ')
-        print(fecha_remoto)
+    for arch in list(pathlib.Path().iterdir()):
+        print(arch)
         
-        #fecha_orgig_google = info_carpeta[1]
-        # fecha_orgig_google[
-            #2021-07-14T22:06:05
-            #2021-07-18 15:44:31
-    
-    # arch_remotos_sinc = dict()
-    # for arch_local, fecha_local in arch_locales_sinc.items():
-    #     for arch_remoto in arch_remotos_sinc.keys():
-    #         if arch_local == arch_remoto:
-    #             fecha_remoto = arch_remotos_sinc[arch_remoto][1]
-    #             if fecha_remoto != fecha_local:  
-    #                 id_arch = arch_remotos_sinc[arch_remoto][0]
-    #                 remplazar_archivos(arch_local, id_arch)
-                    
-    #                 print(f'se actualizo {arch_local} correctamente')
+        #obtengo hora de modif de cada archivo usando el objeto datetime
+        hora_local = datetime.datetime.fromtimestamp(arch.stat().st_mtime)
         
+        #Sumo + 3 HORAS a hora LOCAL usando el objeto datetime
+        horas = 3
+        horas_sumadas = datetime.timedelta(hours = horas)
+        nueva_hora_local = hora_local + horas_sumadas # sumo 3 horas
+
+        #Convierto el objeto datetime en str
+        fecha_local = str(nueva_hora_local)
+        #le rcorto hasta los segundos inclusive por un tema de error
+        fecha_local = fecha_local[:16]  
+        
+        #casteo arch xa que se pueda comparar mas facil (la magia de python)
+        archivos_locales[str(arch)] = fecha_local
+
+    query = "not trashed" 
+    carpetas, archivos_remotos = listar_elementos(query)
+    
+    #print(archivos_remotos)
+    #archivos_remotos = {nombre_archivo: ['id archivo', 'fecha_modif']})
+    #Modifico en el dict archivos_remotos la "modifiedTime" xa q coincida con la local
+    for archivo_remoto, info_archivo in archivos_remotos.items():
+        
+        #Modifico la fecha del remoto xa poderla comparar con la local (tambien hasta seg inclusive)
+        nueva_fecha_remoto = info_archivo[1][:16].replace('T',' ')          #por error
+        archivos_remotos[archivo_remoto][1] = nueva_fecha_remoto
+
+    #LOGICA PPAL DE SYNC
+    #archivos_remotos = {archivo_remoto: ['id archivo', 'fecha_modif']})
+    #arch_locales = {archivo_remoto: modifiedTime}
+
+    for arch_local, fecha_local in archivos_locales.items():
+        if arch_local in archivos_remotos.keys(): #si el archivo esta en el remoto            
+        
+            for arch_remoto in archivos_remotos.keys():                
+                if arch_local == arch_remoto:   #si coincide el arch                        
+                    fecha_remoto = archivos_remotos[arch_remoto][1]     
+                    print(f'{arch_local}-modif_remoto: {fecha_remoto}')
+                    print(f'{arch_remoto}-modif_local: {fecha_local}')                
+                    if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta                        
+                        id_arch = archivos_remotos[arch_remoto][0]
+                        remplazar_archivos(arch_local, id_arch)
+                        print(f'--El archivo {arch_local} se actualizo correctamente--')
+        else:       
+            print(f'El archivo{arch_local} no se encuentra en el remoto')
+
 sincronizar()
 #consultar_elementos()
 
