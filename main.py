@@ -93,21 +93,65 @@ def crear_carpetas(nombre: str, ruta: str)->None:
     print(f"Carpeta: {nombre} fue creada con exito")
 
 # -------> Archivos
-def crear_txt_csv(nombre: str, ruta : str)->None:
+def crear_txt(nombre: str, ruta : str)->None:
     file = open(ruta + "/" + nombre, "w")
     file.close()
     print(f"Archivo: {nombre} fue creada con exito")
 
+def crear_csv():
+    nombre = input('Ingrese nombre para crear archivo .csv: ')
+    with open(nombre+'.csv', 'w', newline='') as csvfile:
+        salir = 0
+        fieldnames = []
+        while salir != 1:
+            fieldnames.append(input('Ingrese nombre de la columna: '))
+            salir = int(input('Ingrese 1 para terminar casillas, 2-9 para agregar otra: '))
+        
+        writer = csv.DictWriter(csvfile, delimiter=',', fieldnames=fieldnames)
+        writer.writeheader()
+        salir = False
+        while not salir :
+            datos={}      
+            for i in range(len(fieldnames)):
+                datos[fieldnames[i]] = input('Ingrese el valor de la casilla '+ fieldnames[i] + ': ')   
+            writer.writerow(datos)
+            salir = input("Desea seguir agregando filas al archivo (s/n): ")
+            if salir != "s": salir = True
+
+def modificar_csv(archivo: str):
+    
+    with open(archivo) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter = ',')
+        list_of_column_names = []
+        for row in csv_reader: 
+            list_of_column_names.append(row)
+            break
+    with open(archivo, "a", newline='') as csvfile:
+        writer = csv.DictWriter(csvfile,delimiter=',', fieldnames = list_of_column_names[0])
+        
+        salir = False
+        while not salir:
+            datos={}
+            for i in range(len(list_of_column_names[0])):
+                datos[list_of_column_names[0][i]] = input('Ingrese el valor de la casilla '+ list_of_column_names[0][i]+ ': ')
+            writer.writerow(datos)
+            salir = input("Desea seguir agregando (s/n): ")
+            if salir != "s": salir = True
+
 def crear_archivos(elegir: str, ruta: str)->None:
     if elegir == '1':
         nombre = input('Ingrese un nombre para el archivo .txt: ')
-        crear_txt_csv(nombre+'.txt', ruta)
+        crear_txt(nombre+'.txt', ruta)
         
     elif elegir == '2':
-        nombre = input('Ingrese un nombre para el archivo .csv: ')
-        crear_txt_csv(nombre+'.csv', ruta)
-
+        crear_csv()
+    
     elif elegir == '3':
+        print("\nIngrese el nombre del archivo con su extension ej: alumnos.csv")
+        nombre_archivo = input("Archivo: ")
+        modificar_csv(nombre_archivo)
+
+    elif elegir == '4':
         nombre = input('Ingrese nombre para la carpeta: ')
         crear_carpetas(nombre, ruta)
 
@@ -349,7 +393,7 @@ def main()-> None:
             ## FALTA MOSTRAR EL DIRECTORIO REMOTO []
 
         elif opcion[0] == "2":
-            print('\n1 - Archivo .txt\n2 - Archivo .csv\n3 - Carpeta\n')
+            print('\n1 - Archivo .txt\n2 - Archivo .csv\n3 - Modificar .csv\n4 - Carpeta\n')
             print('Elija una opcion:\n')
             elegir = input('Opcion: ')
             crear_archivos(elegir, ruta_actual)
