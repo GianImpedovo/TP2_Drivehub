@@ -122,11 +122,10 @@ def crear_csv():
 def modificar_csv(archivo: str):
     
     with open(archivo) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter = ',')
-        list_of_column_names = []
-        for row in csv_reader: 
-            list_of_column_names.append(row)
-            break ## ----------> ojo con este break ver la manera de salcarlo !!! 
+        csv_reader = csv.DictReader(csv_file)
+        dict_from_csv = dict(list(csv_reader)[0])
+        list_of_column_names = list(dict_from_csv.keys())
+
     with open(archivo, "a", newline='') as csvfile:
         writer = csv.DictWriter(csvfile,delimiter=',', fieldnames = list_of_column_names[0])
         
@@ -278,10 +277,10 @@ def crear_carpeta_profesores(archivo_docente_alumno: str, ruta_ev: str)->None:
                 dict_docentes[linea[0]] = [linea[1]]
 
     directorio_evaluacion = ruta_ev
-    for k in dict_docentes.keys():
-        os.mkdir(directorio_evaluacion + "/" + k)
+    for profesor in dict_docentes.keys():
+        os.mkdir(directorio_evaluacion + "/" + profesor)
 
-        crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, k)
+        crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, profesor)
 
     crear_carpeta_sobrantes(directorio_evaluacion)
     shutil.rmtree(os.getcwd() + "/" + "evaluacion")
@@ -395,7 +394,8 @@ def main()-> None:
             ## FALTA MOSTRAR EL DIRECTORIO REMOTO []
 
         elif opcion[0] == "2":
-            print('\n1 - Archivo .txt\n2 - Archivo .csv\n3 - Modificar .csv\n4 - Carpeta\n')
+            print('\n1 - Archivo .txt\n2 - Archivo .csv\n3 - Modificar .csv\n4 - Carpeta\n5 - salir')
+            ## fijar salir []
             print('Elija una opcion:\n')
             elegir = input('Opcion: ')
             crear_archivos(elegir, ruta_actual)
