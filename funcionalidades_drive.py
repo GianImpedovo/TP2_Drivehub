@@ -53,17 +53,19 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     
     POST: devuelve el string "id_elemento" con id del elemento y el str "nomrbe_elemento" 
     con su nombre
-    info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
-    "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}
+    
+    info_carpetas = {num_carp:['nombre carpeta','id carpeta', ['id parents'] ]}
+    
     """
     print(texto)
                     #info_elementos.keys() es {1,2,3... correspondiente a cada ele
     num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ) ) )
     
+    nombre_elemento = info_elementos[num_ele][0]
     id_elemento =  info_elementos[num_ele][1]
-    nombre_elemento = info_elementos[num_ele][0] 
+    id_parents =  info_elementos[num_ele][2]
 
-    return id_elemento, nombre_elemento
+    return id_elemento, nombre_elemento, id_parents
 
 
 def descargar_archivo_binario(id_elemento):
@@ -148,32 +150,42 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     el str "nombre_elemento" con el nombre del elemento con el q se desea realizar 
     una operacion
     """
-    print('1-Seleccionar una carpeta\n2-Descargar un archivo o carpeta\n3-Atras')
+    print('1-Seleccionar una carpeta\n2-Seleccioinar un archivo\n3-Atras')
     opc = int( validar_opcion(1,3) )
     if opc == 1 and info_carpetas:      #si la carpeta no esta vacia
         texto ='¿Cual?: '
         info_elementos = info_carpetas
-        id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
+        id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_elementos, texto) 
         #ojooo deberia cambiarse x seleccionar elemento y le mando tmbien archivos.
         #si selecciona un archivo, no lo abre.
 
+    # elif opc == 2:
+    #     id_elemento, nombre_elemento = descargar_carpeta(id_elemento)
+    #     #id_elemento, nombre_elemento = descargar_elemento(info_carpetas, info_archivos)
+    #     print(f'se ha descargado {nombre_elemento}')
+    #     nombre_elemento = 'root' #Xq quiero, lo redirijo a root xa que continue desde ahi
+
     elif opc == 2:
-        id_elemento, nombre_elemento = descargar_carpeta(id_elemento)
+        texto ='¿Cual?: '
+        info_elementos = info_archivos
+        id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_elementos, texto)
         #id_elemento, nombre_elemento = descargar_elemento(info_carpetas, info_archivos)
-        print(f'se ha descargado {nombre_elemento}')
-        nombre_elemento = 'root' #Xq quiero, lo redirijo a root xa que continue desde ahi
+        print(f'se ha seleccionado {nombre_elemento}')
+        #nombre_elemento = 'root' #Xq quiero, lo redirijo a root xa que continue desde ahi
 
     else: #retroceder
         print('La carpeta que selecciono no tiene nada adentro.')
         id_elemento, nombre_elemento = retroceder(paths)
-           
-    return id_elemento, nombre_elemento
+        id_parents = []
+
+    return id_elemento, nombre_elemento, id_parents
 
 
 def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
     """
-    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta]} ) es un diccionario y 
+    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'] ] } ) es un diccionario y 
     paths ({nombre_carpeta: id_carpeta } )
+    
     
     POST: No devuelve nada. Modifica por parametro el diccionario paths cargandole los datos 
     de info_carpetas, colocando como clave el nombre de la carpeta y como valor su 
@@ -204,19 +216,19 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
 
 def ordenar_info_elementos(elementos: dict):
     """
-    PRE: recibe los diccionarios "elementos":
-    [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
+    PRE: recibe el diccionario "elementos" que puede ser:
 
-    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif']} y
+    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]} y
+    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]}.
 
     POST: Crear y devuelve el diccionario "info_elementos" con esta etsructura:
-    {num_carp:['nombre carpeta','id carpeta']}
+    {num_carp:['nombre carpeta','id carpeta', ['id parents'] ]}
     """
     info_elementos = dict()
     num_ele = 0
     for nombre_elemento, info_elemento in elementos.items():
-        num_ele += 1                 #name           #id
-        info_elementos[num_ele] =   [nombre_elemento, info_elemento[0]]
+        num_ele += 1                 #name           #id                #2
+        info_elementos[num_ele] =   [nombre_elemento, info_elemento[0], info_elemento[2]]
     
     return info_elementos
 
@@ -224,9 +236,11 @@ def ordenar_info_elementos(elementos: dict):
 def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     """
     PRE: recibe los diccionarios "elementos":
-    [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
-    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif']} y
-    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif']}.
+    [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'},
+    'modifiedTime': 'fecha de modif','parents': ['id_parents']]
+   
+    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', '[id_parents'] ]} y
+    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]}.
     
     POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
     "info_archivos" colocando como clave los nombres de los elementos y sus id's y fecha de modif
@@ -235,10 +249,10 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     for elemento in elementos:
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
             #chequea q no existe
-            carpetas[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime']]
+            carpetas[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents']]
             #print(elemento['parents']) #testing
         else:
-            archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime']]
+            archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents']]
             #print(elemento['parents']) #testing
 
 
@@ -248,8 +262,9 @@ def listar_elementos(query: str) -> tuple:
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
     
     POST: Devuelve los diccionarios "carpetas" y "archivos" con los nombres de los 
-    elementos como clave y sus id's y fechas de modif en una lita como valores.
-    ({nombre_carpeta: ['id carpeta', 'fecha_modif']})
+
+    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]} y
+    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]}.
     """
     page_token = None
     cortar = False
@@ -260,7 +275,7 @@ def listar_elementos(query: str) -> tuple:
         #files().list() devuelve un diccionario de diccionarios, q guardo en "resultados"
         resultados = service().files().list(q= query,
                                             spaces='drive',
-                                            fields='nextPageToken, files(id, name, mimeType, modifiedTime)',
+                                            fields='nextPageToken, files(id, name, mimeType, modifiedTime, parents)',
                                             pageToken=page_token).execute()
         #print(resultados)  #testing
         #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
@@ -325,8 +340,9 @@ def consultar_elementos():
     PRE:
 
     POST: Redirige a otras funciones de filtro y busqueda de archivos.
-    info_carpetas"  {num_carp:['nombre carpeta','id carpeta']} y
-    "info_archivos" {num_arch: ['nombre archivo', 'id archivo']}
+    info_carpetas"  {num_carp:['nombre carpeta','id carpeta', ['id_parents'] ] } y
+    "info_archivos" {num_arch: ['nombre archivo', 'id archivo', ['id_parents'] ] }
+    devuelve id_elemento, nombre_elemento, id_parents
     """
     print('BUSCADOR DE DRIVE'.rjust(50))
     print('---root/Directorio principal---'.rjust(57))
@@ -351,7 +367,7 @@ def consultar_elementos():
         guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
                             #xa q el usario pueda volver hacia atras al navegar entre carpetas
         
-        id_elemento, nombre_elemento = generador_de_id_elemento(info_carpetas, info_archivos, paths)
+        id_elemento, nombre_elemento, id_parents = generador_de_id_elemento(info_carpetas, info_archivos, paths)
         
         print(f'---{nombre_elemento}---\n'.rjust(50))
         
@@ -361,10 +377,10 @@ def consultar_elementos():
         if opc == 2:
             cortar = True
 
-    return id_elemento, nombre_elemento
+    return id_elemento, nombre_elemento, id_parents
 
 
-consultar_elementos()
+#consultar_elementos()
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
@@ -429,7 +445,7 @@ def menu_subir_archivos() -> None:
         carpeta_id, nombre_carpeta = encontrar_carpeta_upstream(carpeta_contenedora)
     else:
         print('Selccione la carpeta a la que desea subir el archivo')
-        carpeta_id, nombre_carpeta = consultar_elementos()
+        carpeta_id, nombre_carpeta, id_parents = consultar_elementos()
     
     subir_archivos(ruta_archivo ,carpeta_id, nombre_carpeta)
 
@@ -593,19 +609,20 @@ def mover_archivos():
     PRE:
 
     POST:
-    """    
-    id_archivo, nombre_arch = consultar_elementos() 
-    print(id_archivo)
-    #ver opcion de mover todos los archivos de una carpeta
-    #muevo los archivos
-    #id_archivo = 
-    #cargo archivos_mover con lo q traiga de consultar_elementos()
-
-    archivos_mover = dict()
+    """
+    print('Seleccione el archivo que desea mover\n')    
+    id_archivo, nombre_arch, id_parents = consultar_elementos()
     
-    for arch in archivos_mover.keys():
-            service.files.update(arch
-            )    
-            
+    id_carpeta_salida = id_parents[0]  #ojo q parents es una lista    
 
-#mover_archivos()
+    print('\nSeleccione la carpeta a la que desea mover el archivo')
+    id_carpeta_destino, nombre_carpeta, id_parents = consultar_elementos() 
+
+    service().files().update(fileId = id_archivo,
+                        addParents = id_carpeta_destino,
+                        removeParents = id_carpeta_salida
+                        ).execute()    
+    
+    print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
+
+mover_archivos()
