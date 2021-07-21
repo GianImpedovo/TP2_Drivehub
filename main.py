@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import csv
 
 
 RUTA = os.getcwd()
@@ -14,7 +15,46 @@ MENU = ["1 - Listar archivos de la carpeta actual",
         "8 - Salir"
         ]
 
-
+def crear_csv():
+    nombre = input('Ingrese nombre para crear archivo .csv: ')
+    with open(nombre+'.csv', 'w', newline='') as csvfile:
+        salir = 0
+        fieldnames = []
+        while salir != 1:
+            fieldnames.append(input('Ingrese nombre de la columna: '))
+            salir = int(input('Ingrese 1 para terminar casillas, 2 para agregar otra: '))
+        
+        writer = csv.DictWriter(csvfile, delimiter=',', fieldnames=fieldnames)
+        writer.writeheader()
+        while not salir:
+            datos={}      
+            for i in range(len(fieldnames)):
+                datos[fieldnames[i]] = input('Ingrese el valor de la casilla '+ fieldnames[i] + ': ')   
+            writer.writerow(datos)
+            salir= input('Desea seguir agregando filas al archivo(s/n): ')
+            if salir != 's': salir = True
+        
+            
+            
+def escribir_csv(archivo: str):
+    
+    with open(archivo) as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        dict_from_csv = dict(list(csv_reader)[0])
+        list_of_column_names = list(dict_from_csv.keys())
+        
+    with open(archivo, "a", newline='') as csvfile:
+        writer = csv.DictWriter(csvfile,delimiter=',', fieldnames = list_of_column_names)
+        salir = 1
+        for i in list_of_column_names:
+            print(i)
+        while salir != 0:
+            datos={}
+            for i in range(len(list_of_column_names)):
+                datos[list_of_column_names[i]] = input('Ingrese el valor de la casilla '+ list_of_column_names[i]+ ': ')
+            writer.writerow(datos)
+            salir = int(input('Ingrese 1 para agregar otra fila, 0 para salir: '))
+            
 def listar_todos_archivos(): #lista los archivos donde esta almacenado el .py
     for i in list(Path().iterdir()):
         print(i)
