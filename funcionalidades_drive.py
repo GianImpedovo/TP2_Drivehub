@@ -70,7 +70,7 @@ def descargar_archivo_binario(id_elemento):
      
     request = service().files().get_media(fileId = id_elemento)
     fh = io.BytesIO()
-   
+    
     return fh
 
 def descargar_carpeta(id_elemento):
@@ -91,6 +91,8 @@ def descargar_carpeta(id_elemento):
             carpeta_actual = ''
             #request = service().files().export_media(fileId = id_elemento)
             fh = io.BytesIO()
+
+
             if mimeType == 'application/vnd.google-apps.folder':
                 os.mkdir( ruta + '/' + carpeta_actual)
                 carpeta_actual = nombre_elemento
@@ -114,12 +116,12 @@ def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
     POST: Devuelve el id y el nombre del elemento descargado. 
     Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
     """
-    pass
     print('1-Carpeta\n2-Archivo')
     opc = int( validar_opcion(1,2))        
     if opc == 1:
         texto = 'seleccione la carpeta que desea descargar' 
-        info_elementos = info_carpetas                  
+        info_elementos = info_carpetas    
+        descargar_carpeta(info_elementos)              
         #mimeType = 'application/vnd.google-apps.folder' # to export files
     else:
         texto = 'seleccione el archivo que desea descargar'
@@ -162,7 +164,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
         nombre_elemento = 'root' #Xq quiero, lo redirijo a root xa que continue desde ahi
 
     else: #retroceder
-        print('Esta vacio ves? No hay monstruos aqui')
+        print('La carpeta que selecciono no tiene nada adentro.')
         id_elemento, nombre_elemento = retroceder(paths)
            
     return id_elemento, nombre_elemento
@@ -180,7 +182,7 @@ def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
     for info_carpeta in info_carpetas.values():
         nombre_carpeta = info_carpeta[0]
         id_carpeta = info_carpeta[1]
-
+            #mejorar con pila LIFO con una lista usando append y pop. 
         if nombre_carpeta not in paths.keys():
             paths[nombre_carpeta] = id_carpeta
 
@@ -204,6 +206,9 @@ def ordenar_info_elementos(elementos: dict):
     """
     PRE: recibe los diccionarios "elementos":
     [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'}]
+
+    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif']} y
+
     POST: Crear y devuelve el diccionario "info_elementos" con esta etsructura:
     {num_carp:['nombre carpeta','id carpeta']}
     """
@@ -229,6 +234,7 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     """
     for elemento in elementos:
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
+            #chequea q no existe
             carpetas[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime']]
             #print(elemento['parents']) #testing
         else:
@@ -358,7 +364,7 @@ def consultar_elementos():
     return id_elemento, nombre_elemento
 
 
-#consultar_elementos()
+consultar_elementos()
 
 def seleccionar_archivo_subida():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
@@ -429,56 +435,6 @@ def menu_subir_archivos() -> None:
 
 #menu_subir_archivos()
 
-
-def crear_archivos(ruta):
-    #Funciones en el local para crear el archivo y darme el nombre, 
-    #consulto las carpetas para saber a donde lo subo
-    #id_elemento, nombre_elemento = consultar_elementos()
-    #creo el archivo con metodo create en id_elemento q traje de la busqueda
-    #
-    #crear carpetas a local ----  a remoto
-    #
-    # ruta_archivo = /os/   documentos/prueba.txt
-    # nombre_archivo = prueba.txt
-    #
-    rutas_archivos = [ruta]
-    for ruta in rutas_archivos:
-
-        if not os.path.isfile(ruta): # si no es un archivo (=> es una carpeta)
-
-            nombre_archivo = ruta   
-            file_metadata = {
-                'name': nombre_archivo,
-                'mimeType': 'application/vnd.google-apps.folder'
-                        }
-
-            file = service().files().create(body=file_metadata,
-                                            fields='id').execute()
-            
-            #print 'Folder ID: %s' % file.get('id')
-        
-            id_carpeta = file.get('id')
-        
-        else:
-            #create file in a folder
-
-            folder_id = '0BwwA4oUTeiV1TGRPeTVjaWRDY1E'
-            file_metadata = {
-            'name': 'photo.jpg',
-            'parents': [folder_id]
-                }
-            media = MediaFileUpload('files/photo.jpg',
-                                mimetype='image/jpeg',
-                                resumable=True)
-            
-            file = service().files().create(body=file_metadata,
-                                            media_body=media,
-                                            fields='id').execute()
-            #print 'File ID: %s' % file.get('id')
-
-    #print(f'se creo correctamente {} en {id_elemento}')
-
-#crear_archivos()
 
 def remplazar_archivos(arch, id_ele):
     """
@@ -556,20 +512,88 @@ def sincronizar():
         else:       
             print(f'El archivo{arch_local} no se encuentra en el remoto')
 
-sincronizar()
-#consultar_elementos()
+#sincronizar()
+
+
+def crear_archivos(nombre_archivo, id_carpeta, ruta_archivo):  
+    """
+    """                      
+    file_metadata = {
+                    'name': nombre_archivo,     #OJO!! NO SE Q INFO ME MANDAN!!
+                    'parents': [id_carpeta]
+                    }
+    
+    media = MediaFileUpload(filename = ruta_archivo,    #OJO!!!
+                            resumable=True)
+    
+    file = service().files().create(body = file_metadata,
+                                    media_body = media,
+                                    fields='id').execute()
+
+    #id_archivo = file.get('id')
+
+    print(f'se creo correctamente {nombre_archivo} en {id_carpeta}')
+
+
+def crear_carpeta(nombre_carpeta, id_carpeta):
+    """
+    PRE:
+
+    POST:    
+    """
+    file_metadata = {
+                    'name': nombre_carpeta,
+                    'mimeType': 'application/vnd.google-apps.folder',
+                    'parents': id_carpeta
+                        }
+
+    file = service().files().create(body = file_metadata,
+                                    fields = 'id').execute()
+        
+    id_carpeta_creada = file.get('id')
+
+    return id_carpeta_creada
+
+
+def crear_carpetas_anidadas():
+    """
+    PRE:"nomrbe_ev", "docentes_alumnos"
+
+    POST:
+
+    docentes_alumnos = { docentes: [alumno1, alumno2,etc] }
+    carpetas_docentes = { docente: id_carpeta_docente }
+    carpetas_alumnos = { nombre: id_carpeta_alumno }
+    """
+    nombre_ev =  'ev_1'       #parametro!!! OJO PEDIR!!!
+    
+    docentes_alumnos = dict() #parametro!! OJO PEDIR!!!
+
+
+    carpetas_docentes =  dict()
+    carpetas_alumnos = dict()
+    
+    id_carpeta_evaluacion = crear_carpeta(nombre_ev, 'root') #creo la carepta de la evaluacion
+    
+    #creo carpetas docentes
+    for docente in docentes_alumnos.keys():
+        id_carpeta_docente = crear_carpeta(docente, id_carpeta_evaluacion)
+        carpetas_docentes[docente] = id_carpeta_docente  #cargo docentes y sus carpetas
+    
+    #creo carpetas alumnos anidadas en las de su correspondiente docente
+    for docente, lista_alumnos in docentes_alumnos.items():
+        id_carpeta_docente = carpetas_docentes[docente]
+        for alumno in lista_alumnos:
+            id_carpeta_alumno = crear_carpeta(alumno, id_carpeta_docente)  #creo la carpeta dentro de la de su docente
+            carpetas_alumnos[alumno] = id_carpeta_alumno    #cargo alumnos con sus carpetas
+    
 
 def mover_archivos():
     """
     PRE:
 
     POST:
-    """
-    #Segun entieindo de pdf, se aconseja primero crear carpetas (anidadas x ej) y recien dsps
-    #mover los archivos. (con update)
-    
-    #creo las carpetas
-    #crear_archivos()
+    """    
     id_archivo, nombre_arch = consultar_elementos() 
     print(id_archivo)
     #ver opcion de mover todos los archivos de una carpeta
