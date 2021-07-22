@@ -8,13 +8,15 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import pathlib
 import datetime
 
-#VALIDAR SI LO Q TRAIGO ES CARPETA O ARCHIVO ===> VOLER A MODIFCAR info_carpetas, info_archivos
+
+#FALTA: 
+#   1)-- VALIDAR SI LO Q TRAIGO ES CARPETA O ARCHIVO ===> VOLER A MODIFCAR info_carpetas, info_archivos
 #xa q traigan el mimetype. Crear funcion, validar mimetype, q va a ser solo un ciclos que
 # llama a consultar_elementos() hasta q el mimetype deja de ser ( o es) una carpeta.
 # parametros: mimetype, y adentro llama a consultar_elementos(). Asi valido todas las cosas
 #q bajo de la nube
-
-
+#   2)Hacer menu descargar_carpeta y chequear decargar carpeta
+#   3)Chequear con csv's y dict la creacion de carpetas anidadas.
 
 
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
