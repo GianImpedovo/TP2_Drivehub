@@ -8,6 +8,13 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import pathlib
 import datetime
 
+#VALIDAR SI LO Q TRAIGO ES CARPETA O ARCHIVO ===> VOLER A MODIFCAR info_carpetas, info_archivos
+#xa q traigan el mimetype. Crear funcion, validar mimetype, q va a ser solo un ciclos que
+# llama a consultar_elementos() hasta q el mimetype deja de ser ( o es) una carpeta.
+# parametros: mimetype, y adentro llama a consultar_elementos(). Asi valido todas las cosas
+#q bajo de la nube
+
+
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
     PRE: "opc_minimas" y "opc_maximas" son dos números enteros que 
@@ -76,6 +83,7 @@ def descargar_archivo_binario(id_elemento):
     
     return fh
 
+
 def descargar_carpeta(id_elemento):
     
     page_token = None
@@ -111,7 +119,8 @@ def descargar_carpeta(id_elemento):
     #                                        mimeType = mimeType)
     return fh
 
-def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
+
+def menu_descargar_elementos(info_carpetas: dict, info_archivos: dict) -> None: #toda mall rehacer
     """
     PRE: recibe los diccionarios info_carpetas" e "info_archivos" con el numero de elemento,
     el nombre y su respectivo id
@@ -119,6 +128,16 @@ def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
     POST: Devuelve el id y el nombre del elemento descargado. 
     Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
     """
+    #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA
+    #OSEA, VUELVO AL MAIN, y dsps vuelvo xa aca
+    # nombre_archivo = 'prueba_xa_subir_2.txt'
+    # ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
+    # ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
+    # #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
+    # carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
+    #opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
+    #de aca va al menu ppal de nuevo
+
     print('1-Carpeta\n2-Archivo')
     opc = int( validar_opcion(1,2))        
     if opc == 1:
@@ -143,6 +162,9 @@ def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
     #     arch.write(fh.read()) 
 
     return id_elemento, nombre_elemento
+
+
+#menu_descargar_elemnetos()
 
 def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> tuple:
     """
@@ -383,30 +405,24 @@ def consultar_elementos():
 
 #consultar_elementos()
 
-def seleccionar_archivo_subida():
-    print('Seleccione el archivo o carpeta de su computadora que desea subir')
-    #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL
-    pass
 
-
-def subir_archivos(ruta_archivo: str, carpeta_id: str, nombre_carpeta: str) -> None:
+def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     """
     PRE:
     
-    POST: No devuelve nada. Sube los archivo a la carpetas indicadas
+    POST: No devuelve nada. Sube los archivos a la carpetas indicadas. Esta funcion
+    reemplaza crear archivos, pues crear un archivo es subir un archivo vacio.
     """    
     file_metadata = {
-                    'name': ruta_archivo,
+                    'name': nombre_archivo,
                     'parents': [carpeta_id]
                 }
  
-    media = MediaFileUpload(ruta_archivo)
+    media = MediaFileUpload(filename = ruta_archivo)
 
     file = service().files().create(body = file_metadata,
-                                        media_body = media,
-                                        fields = 'id').execute()
-    
-    print (f'Se subio correctamente: {ruta_archivo} a {nombre_carpeta}')
+                                    media_body = media,
+                                    fields = 'id').execute()    #creo q esta de mas
 
 
 def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
@@ -421,38 +437,61 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     
     carpetas, archivos = listar_elementos(query)
     
-    #si coincide con la local lo subo ahi
-
-    for nombre_carpeta, info_carpeta in carpetas.items():
-        if nombre_carpeta == carpeta_contenedora:
-            carpeta_id = info_carpeta[0]
+    if carpeta_contenedora in carpetas.keys():  #si existe la carpeta en el remoto
+        #si coincide con la local lo subo ahi
+        for nombre_carpeta, info_carpeta in carpetas.items():
+            if nombre_carpeta == carpeta_contenedora:
+                carpeta_id = info_carpeta[0]
+    else:
+        print('La carpeta no existe con este mismo nombre en la nube')
+        print('Por favor elija otra carpeta, o cree una nueva')
+        carpeta_id = '' #xa q no falle
+        nombre_carpeta = '' #xa q no falle
 
     return carpeta_id, nombre_carpeta
 
 
-def menu_subir_archivos() -> None:
+def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_contenedora: str) -> None:
     """
     PRE:
+
     POST:No devuelve nada, es un menu intermedio para subir archivos
-    """
-    #ruta_archivo = seleccionar_archivo_subida()
-    ruta_archivo = 'prueba_xa_subir_2.txt'
-    carpeta_contenedora = 'carpeta_prueba_0'
-    
+    """    
     print('SUBIR ARCHIVOS')
     print('1-Subir a misma carpeta en drive\n2-Elegir otra carpeta')
     opc = int(validar_opcion(1,2))
     if opc == 1:
         carpeta_id, nombre_carpeta = encontrar_carpeta_upstream(carpeta_contenedora)
+        if carpeta_id != '' and nombre_carpeta != '': #si encontro la carpeta
+            subir_archivos(nombre_archivo, ruta_archivo, carpeta_id)
+        #else no va, vuelve al menu ppal y da 2 opc. 
+        # 1) crear carpeta con 
+        # mismo nombre ojo, todavia no puedo subir todos loas archivos. 
+        # 2)(pedir nombre y dsps consultar_elmentos(), xa elegir donde crearla
+        # y recien manda a crear_carpeta)  
     else:
         print('Selccione la carpeta a la que desea subir el archivo')
         carpeta_id, nombre_carpeta, id_parents = consultar_elementos()
-    
-    subir_archivos(ruta_archivo ,carpeta_id, nombre_carpeta)
+        
+        subir_archivos(nombre_archivo, ruta_archivo, carpeta_id)
+        
+        print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
 
+
+def menu_subir_archivos():
+    print('Seleccione el archivo o carpeta de su computadora que desea subir')
+    #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA:
+    #OSEA, VUELVO AL MAIN, y dsps vuelvo xa ca
+    # nombre_archivo = 'prueba_xa_subir_2.txt'
+    # ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
+    # ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
+    # #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
+    # carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
+    #opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
+    #de aca va al menu ppal de nuevo
+    pass
 
 #menu_subir_archivos()
-
 
 def remplazar_archivos(arch, id_ele):
     """
@@ -462,7 +501,7 @@ def remplazar_archivos(arch, id_ele):
     media = MediaFileUpload(arch)
 
     service().files().update(fileId = id_ele,
-                                    media_body = media).execute()
+                            media_body = media).execute()
 
 
 def pull_remoto_a_local(archivos_locales:dict, archivos_remotos: dict):
@@ -492,7 +531,7 @@ def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict):
                     if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta                        
                         id_arch = archivos_remotos[arch_remoto][0]
                         remplazar_archivos(info_local[1], id_arch)
-                                    #la ruta es el elemento 1 de la lista
+                                    #la ruta es el elemento 1 de info_local
                         print(f'--El archivo {arch_local} se actualizo correctamente--')
                     else:
                         print(f'***El archivo {arch_local} no se actualizo ***')        
@@ -581,25 +620,6 @@ def sincronizar():
 
 
 #sincronizar()
-
-
-def crear_archivos(nombre_archivo, ruta_archivo):  
-    """
-    """
-    id_carpeta, nombre_elemento, id_parents = consultar_elementos()                
-    file_metadata = {
-                    'name': nombre_archivo,     #OJO!! NO SE Q INFO ME MANDAN!!
-                    'parents': [id_carpeta]
-                    }
-    
-    media = MediaFileUpload(filename = ruta_archivo,    #OJO!!!
-                            resumable=True)
-    
-    file = service().files().create(body = file_metadata,
-                                    media_body = media,
-                                    fields='id').execute()
-
-    print(f'se creo correctamente {nombre_archivo} en {id_carpeta}')
 
 
 def crear_carpeta(nombre_carpeta, id_carpeta):
