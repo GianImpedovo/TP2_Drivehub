@@ -414,6 +414,12 @@ def consultar_elementos():
 
 
 def validar_elemento(elemento):
+    """
+    PRE:Recibe un str con el tipo de elemmento a validar
+    
+    POST:Redirige a consultar elementos hasta devolver una carpeta o archivo segun corresponda.
+    Devuelve: id_elemento, nombre_elemento, id_parents, elemento
+    """
     mime_type_carpeta = 'application/vnd.google-apps.folder'
     id_elemento, nombre_elemento, id_parents, elemento, mime_type = consultar_elementos()
 
@@ -427,8 +433,9 @@ def validar_elemento(elemento):
             print('Por favor elija un archivo')
             id_elemento, nombre_elemento, id_parents, elemento, mime_type = consultar_elementos()
 
-    return id_elemento, nombre_elemento, id_parents, elemento, mime_type
-    
+    return id_elemento, nombre_elemento, id_parents, elemento
+
+
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     """
     PRE:
@@ -494,8 +501,8 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         # y recien manda a crear_carpeta)  
     else:
         print('Selccione la carpeta a la que desea subir el archivo')
-        carpeta_id, nombre_carpeta, id_parents, mime_type = consultar_elementos()
-        
+        carpeta_id, nombre_carpeta, id_parents = validar_elemento('carpeta')
+        #carpeta_id, nombre_carpeta, id_parents, mime_type = consultar_elementos()
         subir_archivos(nombre_archivo, ruta_archivo, carpeta_id)
         
         print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
@@ -708,12 +715,15 @@ def mover_archivos():
     POST:
     """
     print('Seleccione el archivo que desea mover\n')    
-    id_archivo, nombre_arch, id_parents, mime_type = consultar_elementos()
+    id_archivo, nombre_arch, id_parents = validar_elemento('archivo')
+    
+    #id_archivo, nombre_arch, id_parents, mime_type = consultar_elementos()
     
     id_carpeta_salida = id_parents[0]  #ojo q parents es una lista    
 
     print('\nSeleccione la carpeta a la que desea mover el archivo')
-    id_carpeta_destino, nombre_carpeta, id_parents, mime_type = consultar_elementos() 
+    id_carpeta_destino, nombre_carpeta, id_parents = validar_elemento('carpeta')
+    #id_carpeta_destino, nombre_carpeta, id_parents, mime_type = consultar_elementos() 
 
     service().files().update(fileId = id_archivo,
                         addParents = id_carpeta_destino,
