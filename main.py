@@ -13,6 +13,7 @@ import shutil
 from zipfile import ZipFile
 import pprint
 
+import funcionalidad_drive as drive
 
 RUTA = os.getcwd()
 
@@ -211,6 +212,27 @@ def crear_archivo_alumnos_docentes(archivo_alumnos: str, archivo_docentes: str, 
     except:
         print("\nUno de estos archivos NO existe.")
 
+def diccionario_docentes(archivo_docente_alumno: str)->dict:
+    '''
+    PRE: Recibe csv relacion de docentes y alumnos
+    POST: Retorna un diccionario con esta relacion
+    '''
+    dict_docentes = dict()
+    with open(archivo_docente_alumno, newline='', encoding="UTF-8") as archivo:
+
+        csv_reader = csv.reader(archivo, delimiter=',')
+        next(csv_reader)
+
+        for linea in archivo:
+            linea = linea.strip().split(",")
+            if linea[0] in dict_docentes:
+                dict_docentes[linea[0]].append(linea[1])
+            else:
+                dict_docentes[linea[0]] = [linea[1]]
+    
+    return dict_docentes
+
+
 # ---------------- CREAR CARPETA DE EVALUACION (LOCAL)------------------
 # ---> envio mail de instrucciones :
 INSTRUCCIONES = "crear carpeta evaluacion\ncrear otras carpetas"
@@ -263,18 +285,7 @@ def crear_carpeta_profesores(archivo_docente_alumno: str, ruta_ev: str)->None:
     PRE: recibe los archivos correspondientes 
     POST: crea las carpetas de los docentes dentro de la evaluacion 
     '''
-    dict_docentes = dict()
-    with open(archivo_docente_alumno, newline='', encoding="UTF-8") as archivo:
-
-        csv_reader = csv.reader(archivo, delimiter=',')
-        next(csv_reader)
-
-        for linea in archivo:
-            linea = linea.strip().split(",")
-            if linea[0] in dict_docentes:
-                dict_docentes[linea[0]].append(linea[1])
-            else:
-                dict_docentes[linea[0]] = [linea[1]]
+    dict_docentes = diccionario_docentes(archivo_docente_alumno)
 
     directorio_evaluacion = ruta_ev
     for profesor in dict_docentes.keys():
@@ -376,12 +387,14 @@ def validar_entrega(name):
 #descomprimir_archivo("108367 - Rodriguez, Adonis")
 #obtener_evaluaciones()
 
+# ------------------------------ DRIVE 
+
 def main()-> None:
     ruta_actual = RUTA
     mostrar_menu(ruta_actual)
-    opcion = input("opcione : ")
+    opcion = input("opcion : ")
 
-    while opcion != "8":
+    while (opcion[0] != "8"):
         opcion = opcion.split(" ")
         # --------  Navegacion :
         if opcion[0] == "cd" or opcion[0] == "..":
@@ -390,26 +403,49 @@ def main()-> None:
 
         # Acciones para realizar dentro del directorio: 
         elif opcion[0] == "1":
-            mostrar_directorio_actual(ruta_actual)
-            ## FALTA MOSTRAR EL DIRECTORIO REMOTO []
+            elegir = input("1 - Local\n2 - Remoto\n -> ")
+            if elegir == "1":
+                mostrar_directorio_actual(ruta_actual)
+            elif elegir == "2":
+                drive.consultar_elementos()
 
         elif opcion[0] == "2":
+            
             print('\n1 - Archivo .txt\n2 - Archivo .csv\n3 - Modificar .csv\n4 - Carpeta\n5 - salir')
             ## fijar salir []
             print('Elija una opcion:\n')
-            elegir = input('Opcion: ')
-            crear_archivos(elegir, ruta_actual)
-            ## FALTA PODER CREAR ARCHIVOS EN DRIVE []
+            eleccion = input('Opcion: ')
+            crear_archivos(eleccion, ruta_actual)
+            ## -> subir el archivo creado
+            if eleccion == "4":
+                print("\nIngrese el nombre de la carpeta creada recientemente")
+                nombre_carpeta = input(" -> ")
+                print("\nEliga la ubicacion donde quiera crear la carpeta en el remoto")
+                id_elemento = drive.consultar_elementos()[0]
+                drive.crear_carpeta(nombre_carpeta,id_elemento)
+                
+            else :
+                ## subo el archivo a drive
+                print("\n --- Suba el archivo recien creado a su drive ---  ")
+                print("Ingrese el nombre del archivo recien creado con la extension -> ej: texto.txt")
+                nombre_archivo = input("Archivo: ")
+                ruta_archivo = RUTA + "/" + nombre_archivo
+                carpeta_contenedora = ruta_actual.split("/")[-1]
+                drive.opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
 
         elif opcion[0] == "3":
-            ## FALTA PODER SUBIR (DE LOCAL A REMOTO) ARCHIVO []
-            pass
+            nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
+            ruta_actual = RUTA + "/" + nombre_archivo
+            carpeta = RUTA.split("/")[-1]
+            drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta)
+
         elif opcion[0] == "4":
-            ## FALTA PODER DESCARGAR (DE REMOTO A LOCAL) ARCHIVO []
-            pass
+            drive.menu_descargar_elementos(ruta_actual)
+
         elif opcion[0] == "5":
             ## FALTA PODER SINCRONIZAR , FUN_DRIVE []
             pass
+
         elif opcion[0] == "6":
             email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
             enviar_email_instrucciones(email_usuario)
