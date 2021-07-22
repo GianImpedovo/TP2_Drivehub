@@ -443,7 +443,13 @@ def main()-> None:
             drive.menu_descargar_elementos(ruta_actual)
 
         elif opcion[0] == "5":
-            ## FALTA PODER SINCRONIZAR , FUN_DRIVE []
+            directorio_actual = RUTA.split("/")[-1]
+            print(f"\n Sincroniza {directorio_actual}")
+            sincronizacion = input(f"Desea sincronizar la carpeta {directorio_actual} (s/n): ")
+            if sincronizacion == "s":
+                ## drive.sincronizar()
+                pass
+            ## sincronizar la carpeta en donde estoy parado
             pass
 
         elif opcion[0] == "6":
