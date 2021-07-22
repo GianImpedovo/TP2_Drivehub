@@ -447,6 +447,8 @@ def main()-> None:
             print(f"\n Sincroniza {directorio_actual}")
             sincronizacion = input(f"Desea sincronizar la carpeta {directorio_actual} (s/n): ")
             if sincronizacion == "s":
+                carpeta_id = drive.encontrar_carpeta_upstream(directorio_actual)[0]
+                drive.sincronizar(carpeta_id)
                 ## drive.sincronizar()
                 pass
             ## sincronizar la carpeta en donde estoy parado
