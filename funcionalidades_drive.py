@@ -15,6 +15,8 @@ import datetime
 #q bajo de la nube
 
 
+
+
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
     PRE: "opc_minimas" y "opc_maximas" son dos números enteros que 
@@ -493,14 +495,14 @@ def menu_subir_archivos():
 
 #menu_subir_archivos()
 
-def remplazar_archivos(arch, id_ele):
+def remplazar_archivos(ruta_arch, id_arch):
     """
     PRE: Reemplaza el archivo de string "arch" conociendo su id con el str "id_ele"
     POST:
     """
-    media = MediaFileUpload(arch)
+    media = MediaFileUpload(filename = ruta_arch)
 
-    service().files().update(fileId = id_ele,
+    service().files().update(fileId = id_arch,
                             media_body = media).execute()
 
 
