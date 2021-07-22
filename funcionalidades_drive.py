@@ -32,7 +32,7 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
         opc = input("Por favor, ingrese una opcion valida: ")
     
     return opc
-
+  
 
 def retroceder(paths: dict) -> tuple:     #VER CON PILAAAAAAAAA!!!!1 
 
@@ -54,30 +54,6 @@ def retroceder(paths: dict) -> tuple:     #VER CON PILAAAAAAAAA!!!!1
     id_carpeta = paths[nombre_carpeta]
 
     return id_carpeta, nombre_carpeta
-
-
-def seleccionar_elementos(info_elementos: dict) -> str:
-    """
-    PRE: "info_elementos"  es un dict con los datos de las carpetas o archivos segun 
-    corresponda
-    
-    POST: devuelve el string "id_elemento" con id del elemento y el str "nomrbe_elemento" 
-    con su nombre
-    
-    info_carpetas = {num_carp:['nombre carpeta','id carpeta', ['id parents'] ]}
-    
-    """
-    texto = 'cual?: '
-                    #info_elementos.keys() es {1,2,3... correspondiente a cada ele
-    num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ), texto ) )
-    
-    nombre_elemento = info_elementos[num_ele][0]
-    id_elemento =  info_elementos[num_ele][1]
-    id_parents =  info_elementos[num_ele][2]
-    
-    print(f'se ha seleccionado {nombre_elemento}')
-
-    return id_elemento, nombre_elemento, id_parents
 
 
 def descargar_archivo_binario(id_elemento):
@@ -170,6 +146,32 @@ def menu_descargar_elementos(info_carpetas: dict, info_archivos: dict) -> None: 
 
 #menu_descargar_elemnetos()
 
+
+def seleccionar_elementos(info_elementos: dict) -> str:
+    """
+    PRE: "info_elementos"  es un dict con los datos de las carpetas o archivos segun 
+    corresponda
+    
+    POST: devuelve el string "id_elemento" con id del elemento y el str "nomrbe_elemento" 
+    con su nombre
+    
+    info_carpetas = {num_carp:['nombre carpeta','id carpeta', ['id parents'], 'mimeType' ]}
+    
+    """
+    texto = 'cual?: '
+                    #info_elementos.keys() es {1,2,3... correspondiente a cada ele
+    num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ), texto ) )
+    
+    nombre_elemento = info_elementos[num_ele][0]
+    id_elemento =  info_elementos[num_ele][1]
+    id_parents =  info_elementos[num_ele][2]
+    mime_type = info_elementos[num_ele][3]
+    
+    print(f'se ha seleccionado {nombre_elemento}')
+
+    return id_elemento, nombre_elemento, id_parents, mime_type
+
+
 def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> tuple:
     """
     PRE:
@@ -181,24 +183,25 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     opc = int( validar_opcion(1,3) )
     if opc == 1 and info_carpetas:      #si la carpeta no esta vacia
         elemento = 'carpeta'
-        id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_carpetas)
+        id_elemento, nombre_elemento, id_parents, mime_type = seleccionar_elementos(info_carpetas)
     
     elif opc == 2 and info_archivos:  #archivos
         elemento = 'archivo'
-        id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_archivos)
+        id_elemento, nombre_elemento, id_parents, mime_type = seleccionar_elementos(info_archivos)
         
     else: #retroceder
         elemento = 'retroceder'
         print('La carpeta que selecciono no contiene elementos\n')
         id_elemento, nombre_elemento = retroceder(paths)
         id_parents = []
+        mime_type = 'application/vnd.google-apps.folder'
     
-    return id_elemento, nombre_elemento, id_parents, elemento
+    return id_elemento, nombre_elemento, id_parents, elemento, mime_type
 
 
 def guardar_paths(info_carpetas: dict, paths: dict) -> dict: #VER CON PILAAAAAA!!!
     """
-    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'] ] } ) es un diccionario y 
+    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'], 'mimeType' ] } ) es un diccionario y 
     paths ({nombre_carpeta: id_carpeta } )
     
     
@@ -235,17 +238,17 @@ def ordenar_info_elementos(elementos: dict):
     """
     PRE: recibe el diccionario "elementos" que puede ser:
 
-    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]} y
-    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]}.
+    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType'  ]} y
+    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType' ]}.
 
     POST: Crear y devuelve el diccionario "info_elementos" con esta etsructura:
-    {num_carp:['nombre carpeta','id carpeta', ['id parents'] ]}
+    {num_carp:['nombre carpeta','id carpeta', ['id parents'], 'mimeType' ]}
     """
     info_elementos = dict()
     num_ele = 0
     for nombre_elemento, info_elemento in elementos.items():
         num_ele += 1                 #name           #id                #2
-        info_elementos[num_ele] =   [nombre_elemento, info_elemento[0], info_elemento[2]]
+        info_elementos[num_ele] =   [nombre_elemento, info_elemento[0], info_elemento[2], info_elemento[3]]
     
     return info_elementos
 
@@ -256,8 +259,8 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'},
     'modifiedTime': 'fecha de modif','parents': ['id_parents']]
    
-    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', '[id_parents'] ]} y
-    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]}.
+    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', '[id_parents'], 'mimeType' ]} y
+    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType' ]}.
     
     POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
     "info_archivos" colocando como clave los nombres de los elementos y sus id's y fecha de modif
@@ -266,10 +269,10 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     for elemento in elementos:
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
             #chequea q no existe
-            carpetas[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents']]
+            carpetas[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents'], elemento['mimeType']]
             #print(elemento['parents']) #testing
         else:
-            archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents']]
+            archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents'], elemento['mimeType']]
             #print(elemento['parents']) #testing
 
 
@@ -357,8 +360,8 @@ def consultar_elementos():
     PRE:
 
     POST: Redirige a otras funciones de filtro y busqueda de archivos.
-    info_carpetas"  {num_carp:['nombre carpeta','id carpeta', ['id_parents'] ] } y
-    "info_archivos" {num_arch: ['nombre archivo', 'id archivo', ['id_parents'] ] }
+    info_carpetas"  {num_carp:['nombre carpeta','id carpeta', ['id_parents'], 'mimeType' ] } y
+    "info_archivos" {num_arch: ['nombre archivo', 'id archivo', ['id_parents'], 'mimeType' ] }
     
     Devuelve id_elemento, nombre_elemento, id_parents
     """
@@ -385,7 +388,7 @@ def consultar_elementos():
         guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
                             #xa q el usario pueda volver hacia atras al navegar entre carpetas
         
-        id_elemento, nombre_elemento, id_parents, elemento = generador_de_id_elemento(info_carpetas, info_archivos, paths)
+        id_elemento, nombre_elemento, id_parents, elemento, mime_type = generador_de_id_elemento(info_carpetas, info_archivos, paths)
         
         if elemento == 'carpeta':
             print('1-Abrir carpeta\n2-Selccionar elemento')
@@ -404,12 +407,28 @@ def consultar_elementos():
             print(f'---{nombre_elemento}---\n'.rjust(50))
 
 
-    return id_elemento, nombre_elemento, id_parents
+    return id_elemento, nombre_elemento, id_parents, mime_type
 
 
 #consultar_elementos()
 
 
+def validar_elemento(elemento):
+    mime_type_carpeta = 'application/vnd.google-apps.folder'
+    id_elemento, nombre_elemento, id_parents, elemento, mime_type = consultar_elementos()
+
+    if elemento == 'carpeta':
+        while mime_type != mime_type_carpeta:
+            print('Por favor elija una carpeta')
+            id_elemento, nombre_elemento, id_parents, elemento, mime_type = consultar_elementos()
+    
+    else:   # necesito un archivo
+        while mime_type == mime_type_carpeta:
+            print('Por favor elija un archivo')
+            id_elemento, nombre_elemento, id_parents, elemento, mime_type = consultar_elementos()
+
+    return id_elemento, nombre_elemento, id_parents, elemento, mime_type
+    
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     """
     PRE:
@@ -475,7 +494,7 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         # y recien manda a crear_carpeta)  
     else:
         print('Selccione la carpeta a la que desea subir el archivo')
-        carpeta_id, nombre_carpeta, id_parents = consultar_elementos()
+        carpeta_id, nombre_carpeta, id_parents, mime_type = consultar_elementos()
         
         subir_archivos(nombre_archivo, ruta_archivo, carpeta_id)
         
@@ -689,12 +708,12 @@ def mover_archivos():
     POST:
     """
     print('Seleccione el archivo que desea mover\n')    
-    id_archivo, nombre_arch, id_parents = consultar_elementos()
+    id_archivo, nombre_arch, id_parents, mime_type = consultar_elementos()
     
     id_carpeta_salida = id_parents[0]  #ojo q parents es una lista    
 
     print('\nSeleccione la carpeta a la que desea mover el archivo')
-    id_carpeta_destino, nombre_carpeta, id_parents = consultar_elementos() 
+    id_carpeta_destino, nombre_carpeta, id_parents, mime_type = consultar_elementos() 
 
     service().files().update(fileId = id_archivo,
                         addParents = id_carpeta_destino,
