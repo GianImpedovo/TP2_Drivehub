@@ -23,7 +23,8 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     return opc
 
 
-def retroceder(paths: dict) -> tuple:
+def retroceder(paths: dict) -> tuple:     #VER CON PILAAAAAAAAA!!!!1 
+
     """
     PRE: Recibe el diccionario "paths" que tiene como claves los nombres de las carpetas por 
     las que ya se navego el usuario y como valores sus respectivos ids
@@ -129,7 +130,7 @@ def descargar_elemento(info_carpetas: dict, info_archivos: dict) -> None:
         texto = 'seleccione el archivo que desea descargar'
         info_elementos = info_archivos
     
-    id_elemento, nombre_elemento = seleccionar_elementos(info_elementos, texto) 
+    id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_elementos, texto) 
     
     #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
     #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
@@ -169,7 +170,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     return id_elemento, nombre_elemento, id_parents, elemento
 
 
-def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
+def guardar_paths(info_carpetas: dict, paths: dict) -> dict: #VER CON PILAAAAAA!!!
     """
     PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'] ] } ) es un diccionario y 
     paths ({nombre_carpeta: id_carpeta } )
@@ -202,6 +203,7 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
         print(f'Se encontraron {num_ele} {tipo_ele}\n')
     else:
         print(f'No se encontraron {tipo_ele}\n')
+
 
 def ordenar_info_elementos(elementos: dict):
     """
@@ -331,7 +333,8 @@ def consultar_elementos():
     POST: Redirige a otras funciones de filtro y busqueda de archivos.
     info_carpetas"  {num_carp:['nombre carpeta','id carpeta', ['id_parents'] ] } y
     "info_archivos" {num_arch: ['nombre archivo', 'id archivo', ['id_parents'] ] }
-    devuelve id_elemento, nombre_elemento, id_parents
+    
+    Devuelve id_elemento, nombre_elemento, id_parents
     """
     print('BUSCADOR DE DRIVE'.rjust(50))
     print('---root/Directorio principal---'.rjust(57))
@@ -462,23 +465,64 @@ def remplazar_archivos(arch, id_ele):
                                     media_body = media).execute()
 
 
-def sincronizar():
+def pull_remoto_a_local(archivos_locales:dict, archivos_remotos: dict):
     """
-    PRE: Recibe el dict/ list "" con los nombres de los archivos de la carpeta 
-    q se esta sincronizando
-
-    POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
-    OJO!
-    1 - las fechas de modif se aproximaron a los minutos por lo que si se modifica dentro del 
-    #mismo minuto y se sincroiza no se matienen los cambios.
+    PRE: 
+    POST:TODAVIA NO FUNCIONA Compara fecha de modif y dsps cambios
     """
+    pass
 
-    #cargo y creo el siguiente dict
-    #arch_locales_sinc = {nombre_arch: modifiedTime}
-    archivos_locales = dict()
 
-    for arch in list(pathlib.Path().iterdir()):
-        print(arch)
+def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict):
+    """
+    PRE:
+
+    POST: No devuelve nada.
+    Reemplaza los archivos en el remoto que sufireron modificaciones en el local
+    """
+    for arch_local, info_local in archivos_locales.items():
+        if arch_local in archivos_remotos.keys(): #si el nombre del archivo esta en el remoto            
+        
+            for arch_remoto in archivos_remotos.keys():                
+                if arch_local == arch_remoto:   #si coincide el nombre del arch                        
+                    fecha_remoto = archivos_remotos[arch_remoto][1]
+                    fecha_local = info_local[0] #la fecha es el elemento 0 de la lista 
+                    #FALTARIA COMPRARA LINEA A LINEA. Asi no habria q esperar 1 min
+                    # pues al comparar linea a linea no deberia saltar => no se modifica
+                    if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta                        
+                        id_arch = archivos_remotos[arch_remoto][0]
+                        remplazar_archivos(info_local[1], id_arch)
+                                    #la ruta es el elemento 1 de la lista
+                        print(f'--El archivo {arch_local} se actualizo correctamente--')
+                    else:
+                        print(f'***El archivo {arch_local} no se actualizo ***')        
+        else:                               #clave es el nombre
+            print(f'El archivo {arch_local} no se encuentra en el remoto')
+
+
+def modificar_dic_arch_remoto(archivos_remotos):
+    """
+    PRE:
+    
+    POST:
+    No devuelve nada. Modufico por referencia el dict "archivos_locales"
+    con las sig estructura arch_remotos = { nombre_arch: [id_carpeta, fecha_modif] }
+    """
+    for archivo_remoto, info_archivo in archivos_remotos.items():
+        
+        #Modifico la fecha del remoto xa poderla comparar con la local (tambien hasta seg inclusive)
+        nueva_fecha_remoto = info_archivo[1][:16].replace('T',' ')          #por error
+        archivos_remotos[archivo_remoto][1] = nueva_fecha_remoto
+
+
+def cargar_dic_arch_local(archivos_locales):
+    """
+    PRE:
+
+    POST: No devuelve nada. Modufico por referencia el dict "archivos_locales"
+    con las sig estructura arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
+    """
+    for arch in list(pathlib.Path().glob('**/*')):  #recorro todooo
         
         #obtengo hora de modif de cada archivo usando el objeto datetime
         hora_local = datetime.datetime.fromtimestamp(arch.stat().st_mtime)
@@ -493,47 +537,56 @@ def sincronizar():
         #le rcorto hasta los segundos inclusive por un tema de error
         fecha_local = fecha_local[:16]  
         
-        #casteo arch xa que se pueda comparar mas facil (la magia de python)
-        archivos_locales[str(arch)] = fecha_local
+        #uso como clave el nombre del arch, y como valor una lista la fecha de mofi y la 
+        # ruta
+        archivos_locales[str(arch.name)] = [fecha_local, arch]
+    
 
-    query = "not trashed" 
+def sincronizar():
+    """
+    PRE: Recibe el dict/ list "" con los nombres de los archivos de la carpeta 
+    q se esta sincronizando
+
+    POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
+    OJO!
+    1 - las fechas de modif se aproximaron a los minutos por lo que si se modifica dentro del 
+    #mismo minuto y se sincroiza no se matienen los cambios. OJO, una vez cometido el error,
+    es necesario, esperar 1 minuto, modificar, actualizar. y recien 1 min dsps no se actualizara 
+    mas.
+    """
+    #FALTA COMPARAR LINEA A LINEA !!!!!
+    #Y EL DOWNSTREAM!!! (X AHORA SOLO CHEQUEO Q LA MODIF DE ABAJO ESTE ARRIBA.)
+    #SOLUCION: Renviar parametros invertidos a comparar_info_archivos()
+
+    #arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
+    archivos_locales = dict()
+    
+    cargar_dic_arch_local(archivos_locales)
+    
+    #Traigo archivos de drive y cargo el diccionario archivos_remotos
+    query = "not trashed"   #esto es un win win porque solo archivos, ninguna carpeta
     carpetas, archivos_remotos = listar_elementos(query)
     
-    #print(archivos_remotos)
-    #archivos_remotos = {nombre_archivo: ['id archivo', 'fecha_modif']})
-    #Modifico en el dict archivos_remotos la "modifiedTime" xa q coincida con la local
-    for archivo_remoto, info_archivo in archivos_remotos.items():
-        
-        #Modifico la fecha del remoto xa poderla comparar con la local (tambien hasta seg inclusive)
-        nueva_fecha_remoto = info_archivo[1][:16].replace('T',' ')          #por error
-        archivos_remotos[archivo_remoto][1] = nueva_fecha_remoto
-
-    #LOGICA PPAL DE SYNC
-    #archivos_remotos = {archivo_remoto: ['id archivo', 'fecha_modif']})
-    #arch_locales = {archivo_remoto: modifiedTime}
-
-    for arch_local, fecha_local in archivos_locales.items():
-        if arch_local in archivos_remotos.keys(): #si el archivo esta en el remoto            
-        
-            for arch_remoto in archivos_remotos.keys():                
-                if arch_local == arch_remoto:   #si coincide el arch                        
-                    fecha_remoto = archivos_remotos[arch_remoto][1]     
-                    # print(f'{arch_local}-modif_remoto: {fecha_remoto}')
-                    # print(f'{arch_remoto}-modif_local: {fecha_local}')                
-                    if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta                        
-                        id_arch = archivos_remotos[arch_remoto][0]
-                        remplazar_archivos(arch_local, id_arch)
-                        print(f'--El archivo {arch_local} se actualizo correctamente--')
-        else:       
-            print(f'El archivo {arch_local} no se encuentra en el remoto')
+    #Modifico en el dict archivos_remotos la "modifiedTime" por referencia de
+    #xa q coincida con la local
+    modificar_dic_arch_remoto(archivos_remotos)
+    
+    #Sync remoto con local (modifico remoto)
+    print('1-Push (Modifica remoto, con cambios locales)\n2-pull(modifica local con cambios remotos')
+    opc = int(validar_opcion(1,2))
+    if opc == 1:
+        push_local_a_remoto(archivos_locales, archivos_remotos)
+    else:
+        pull_remoto_a_local(archivos_locales, archivos_remotos)
 
 
-sincronizar()
+#sincronizar()
 
 
-def crear_archivos(nombre_archivo, id_carpeta, ruta_archivo):  
+def crear_archivos(nombre_archivo, ruta_archivo):  
     """
-    """                      
+    """
+    id_carpeta, nombre_elemento, id_parents = consultar_elementos()                
     file_metadata = {
                     'name': nombre_archivo,     #OJO!! NO SE Q INFO ME MANDAN!!
                     'parents': [id_carpeta]
@@ -545,8 +598,6 @@ def crear_archivos(nombre_archivo, id_carpeta, ruta_archivo):
     file = service().files().create(body = file_metadata,
                                     media_body = media,
                                     fields='id').execute()
-
-    #id_archivo = file.get('id')
 
     print(f'se creo correctamente {nombre_archivo} en {id_carpeta}')
 
@@ -603,6 +654,9 @@ def crear_carpetas_anidadas():
             id_carpeta_alumno = crear_carpeta(alumno, id_carpeta_docente)  #creo la carpeta dentro de la de su docente
             carpetas_alumnos[alumno] = id_carpeta_alumno    #cargo alumnos con sus carpetas
     
+
+#crear_carpetas_anidadas()
+
 
 def mover_archivos():
     """
