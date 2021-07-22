@@ -39,14 +39,12 @@ def retroceder(paths: dict) -> tuple:
     while nombre_carpeta not in paths.keys():
         nombre_carpeta = input('Por favor elija una carpeta de las listadas: \n')
 
-    #print(f'---{nombre_carpeta}---')
-
     id_carpeta = paths[nombre_carpeta]
 
     return id_carpeta, nombre_carpeta
 
 
-def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
+def seleccionar_elementos(info_elementos: dict) -> str:
     """
     PRE: "info_elementos"  es un dict con los datos de las carpetas o archivos segun 
     corresponda
@@ -57,13 +55,15 @@ def seleccionar_elementos(info_elementos: dict, texto: str) -> str:
     info_carpetas = {num_carp:['nombre carpeta','id carpeta', ['id parents'] ]}
     
     """
-    print(texto)
+    texto = 'cual?: '
                     #info_elementos.keys() es {1,2,3... correspondiente a cada ele
-    num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ) ) )
+    num_ele = int(validar_opcion( min( info_elementos.keys() ), max ( info_elementos.keys() ), texto ) )
     
     nombre_elemento = info_elementos[num_ele][0]
     id_elemento =  info_elementos[num_ele][1]
     id_parents =  info_elementos[num_ele][2]
+    
+    print(f'se ha seleccionado {nombre_elemento}')
 
     return id_elemento, nombre_elemento, id_parents
 
@@ -150,35 +150,23 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     el str "nombre_elemento" con el nombre del elemento con el q se desea realizar 
     una operacion
     """
-    print('1-Seleccionar una carpeta\n2-Seleccioinar un archivo\n3-Atras')
+    print('1-Seleccionar una carpeta\n2-Seleccionar un archivo\n3-Atras')
     opc = int( validar_opcion(1,3) )
     if opc == 1 and info_carpetas:      #si la carpeta no esta vacia
-        texto ='¿Cual?: '
-        info_elementos = info_carpetas
-        id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_elementos, texto) 
-        #ojooo deberia cambiarse x seleccionar elemento y le mando tmbien archivos.
-        #si selecciona un archivo, no lo abre.
-
-    # elif opc == 2:
-    #     id_elemento, nombre_elemento = descargar_carpeta(id_elemento)
-    #     #id_elemento, nombre_elemento = descargar_elemento(info_carpetas, info_archivos)
-    #     print(f'se ha descargado {nombre_elemento}')
-    #     nombre_elemento = 'root' #Xq quiero, lo redirijo a root xa que continue desde ahi
-
-    elif opc == 2:
-        texto ='¿Cual?: '
-        info_elementos = info_archivos
-        id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_elementos, texto)
-        #id_elemento, nombre_elemento = descargar_elemento(info_carpetas, info_archivos)
-        print(f'se ha seleccionado {nombre_elemento}')
-        #nombre_elemento = 'root' #Xq quiero, lo redirijo a root xa que continue desde ahi
-
+        elemento = 'carpeta'
+        id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_carpetas)
+    
+    elif opc == 2 and info_archivos:  #archivos
+        elemento = 'archivo'
+        id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_archivos)
+        
     else: #retroceder
-        print('La carpeta que selecciono no tiene nada adentro.')
+        elemento = 'retroceder'
+        print('La carpeta que selecciono no contiene elementos\n')
         id_elemento, nombre_elemento = retroceder(paths)
         id_parents = []
-
-    return id_elemento, nombre_elemento, id_parents
+    
+    return id_elemento, nombre_elemento, id_parents, elemento
 
 
 def guardar_paths(info_carpetas: dict, paths: dict) -> dict:
@@ -212,7 +200,8 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     
     if info_elementos: #debo preguntarlo porque si esta vacio, tira error
         print(f'Se encontraron {num_ele} {tipo_ele}\n')
-
+    else:
+        print(f'No se encontraron {tipo_ele}\n')
 
 def ordenar_info_elementos(elementos: dict):
     """
@@ -367,15 +356,24 @@ def consultar_elementos():
         guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
                             #xa q el usario pueda volver hacia atras al navegar entre carpetas
         
-        id_elemento, nombre_elemento, id_parents = generador_de_id_elemento(info_carpetas, info_archivos, paths)
+        id_elemento, nombre_elemento, id_parents, elemento = generador_de_id_elemento(info_carpetas, info_archivos, paths)
         
-        print(f'---{nombre_elemento}---\n'.rjust(50))
+        if elemento == 'carpeta':
+            print('1-Abrir carpeta\n2-Selccionar elemento')
+            opc = int(validar_opcion(1,2))        
         
-        #print('Desea continuar buscando?\n')
-        print('1-Abrir carpeta\n2-Seleccionar elemento') #2-seleccionar elemento?
-        opc = int(validar_opcion(1,2))
+        elif elemento == 'retroceder':
+            opc = 1
+        
+        else:           #es un archivo
+            opc = 2
+
         if opc == 2:
             cortar = True
+        
+        else:
+            print(f'---{nombre_elemento}---\n'.rjust(50))
+
 
     return id_elemento, nombre_elemento, id_parents
 
@@ -449,6 +447,7 @@ def menu_subir_archivos() -> None:
     
     subir_archivos(ruta_archivo ,carpeta_id, nombre_carpeta)
 
+
 #menu_subir_archivos()
 
 
@@ -519,16 +518,17 @@ def sincronizar():
             for arch_remoto in archivos_remotos.keys():                
                 if arch_local == arch_remoto:   #si coincide el arch                        
                     fecha_remoto = archivos_remotos[arch_remoto][1]     
-                    print(f'{arch_local}-modif_remoto: {fecha_remoto}')
-                    print(f'{arch_remoto}-modif_local: {fecha_local}')                
+                    # print(f'{arch_local}-modif_remoto: {fecha_remoto}')
+                    # print(f'{arch_remoto}-modif_local: {fecha_local}')                
                     if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta                        
                         id_arch = archivos_remotos[arch_remoto][0]
                         remplazar_archivos(arch_local, id_arch)
                         print(f'--El archivo {arch_local} se actualizo correctamente--')
         else:       
-            print(f'El archivo{arch_local} no se encuentra en el remoto')
+            print(f'El archivo {arch_local} no se encuentra en el remoto')
 
-#sincronizar()
+
+sincronizar()
 
 
 def crear_archivos(nombre_archivo, id_carpeta, ruta_archivo):  
@@ -625,4 +625,4 @@ def mover_archivos():
     
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
-mover_archivos()
+#mover_archivos()
