@@ -181,17 +181,16 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     """
     print('1-Seleccionar una carpeta\n2-Seleccionar un archivo\n3-Atras')
     opc = int( validar_opcion(1,3) )
-    if opc == 1 and info_carpetas:      #si la carpeta no esta vacia
+    if opc == 1 and info_carpetas:  #si hay carpetas para seleccionar
         elemento = 'carpeta'
         id_elemento, nombre_elemento, id_parents, mime_type = seleccionar_elementos(info_carpetas)
-    
+
     elif opc == 2 and info_archivos:  #archivos
         elemento = 'archivo'
         id_elemento, nombre_elemento, id_parents, mime_type = seleccionar_elementos(info_archivos)
         
     else: #retroceder
         elemento = 'retroceder'
-        print('La carpeta que selecciono no contiene elementos\n')
         id_elemento, nombre_elemento = retroceder(paths)
         id_parents = []
         mime_type = 'application/vnd.google-apps.folder'
@@ -410,7 +409,7 @@ def consultar_elementos():
     return id_elemento, nombre_elemento, id_parents, mime_type
 
 
-#consultar_elementos()
+consultar_elementos()
 
 
 def validar_elemento(elemento):
@@ -732,4 +731,4 @@ def mover_archivos():
     
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
-mover_archivos()
+#mover_archivos()
