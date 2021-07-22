@@ -14,15 +14,6 @@ from zipfile import ZipFile
 import pprint
 
 
-import base64
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from zipfile import ZipFile
-import shutil
-from zipfile import ZipFile
-import pprint
-
-
 RUTA = os.getcwd()
 
 MENU = ["COMANDOS : 'cd + < nombre_directorio >' (avanzo directorio), '..' (retrocedo)",
