@@ -418,22 +418,22 @@ def validar_elemento(elemento):
     PRE:Recibe un str con el tipo de elemmento a validar
     
     POST:Redirige a consultar elementos hasta devolver una carpeta o archivo segun corresponda.
-    Devuelve: id_elemento, nombre_elemento, id_parents, elemento
+    Devuelve: id_elemento, nombre_elemento, id_parents
     """
     mime_type_carpeta = 'application/vnd.google-apps.folder'
-    id_elemento, nombre_elemento, id_parents, elemento, mime_type = consultar_elementos()
+    id_elemento, nombre_elemento, id_parents, mime_type = consultar_elementos()
 
     if elemento == 'carpeta':
         while mime_type != mime_type_carpeta:
             print('Por favor elija una carpeta')
-            id_elemento, nombre_elemento, id_parents, elemento, mime_type = consultar_elementos()
+            id_elemento, nombre_elemento, id_parents, mime_type = consultar_elementos()
     
     else:   # necesito un archivo
         while mime_type == mime_type_carpeta:
             print('Por favor elija un archivo')
-            id_elemento, nombre_elemento, id_parents, elemento, mime_type = consultar_elementos()
+            id_elemento, nombre_elemento, id_parents, mime_type = consultar_elementos()
 
-    return id_elemento, nombre_elemento, id_parents, elemento
+    return id_elemento, nombre_elemento, id_parents
 
 
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
@@ -517,7 +517,7 @@ def menu_subir_archivos():
     # ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
     # #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
     # carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
-    #opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
+    # opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
     #de aca va al menu ppal de nuevo
     pass
 
@@ -732,4 +732,4 @@ def mover_archivos():
     
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
-#mover_archivos()
+mover_archivos()
