@@ -299,8 +299,8 @@ def consultar_elementos():
         id_elemento, nombre_elemento, id_parents, elemento, mime_type = generador_de_id_elemento(info_carpetas, info_archivos, paths)
         
         if elemento == 'carpeta':
-            print('1-Abrir carpeta\n2-Selccionar elemento')
-            opc = int(validar_opcion(1,2))        
+            print('1-Abrir carpeta\n2-Selccionar elemento\n3-Salir')
+            opc = int(validar_opcion(1,3))        
         
         elif elemento == 'retroceder':
             opc = 1
@@ -308,11 +308,12 @@ def consultar_elementos():
         else:           #es un archivo
             opc = 2
 
-        if opc == 2:
+        if opc == 2 or opc == 3:
             cortar = True
         
         else:
             print(f'---{nombre_elemento}---\n'.rjust(50))
+        
 
 
     return id_elemento, nombre_elemento, id_parents, mime_type
@@ -433,7 +434,7 @@ def menu_descargar_elementos() -> None: #en proceso......!!!!!!
     with open(os.path.join(ubicacion,nombre_elemento), 'wb') as archivo:
         archivo.write(arch.read()) 
 
-menu_descargar_elementos()
+#menu_descargar_elementos()
 
 
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
@@ -512,12 +513,12 @@ def menu_subir_archivos():
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
     #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA:
     #OSEA, VUELVO AL MAIN, y dsps vuelvo xa ca
-    # nombre_archivo = 'prueba_xa_subir_2.txt'
-    # ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
-    # ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
-    # #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
-    # carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
-    # opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
+    nombre_archivo = 'prueba_xa_subir_2.txt'
+    ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
+    ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
+    #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
+    carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
+    opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
     #de aca va al menu ppal de nuevo
     pass
 
@@ -672,6 +673,7 @@ def crear_carpeta(nombre_carpeta, id_carpeta):
     return id_carpeta_creada
 
 
+
 def crear_carpetas_anidadas():
     """
     PRE:"nomrbe_ev", "docentes_alumnos"
@@ -705,7 +707,7 @@ def crear_carpetas_anidadas():
             carpetas_alumnos[alumno] = id_carpeta_alumno    #cargo alumnos con sus carpetas
     
 
-#crear_carpetas_anidadas()
+crear_carpetas_anidadas()
 
 
 def mover_archivos():
