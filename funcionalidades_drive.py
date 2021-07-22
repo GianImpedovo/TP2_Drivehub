@@ -56,97 +56,6 @@ def retroceder(paths: dict) -> tuple:     #VER CON PILAAAAAAAAA!!!!1
     return id_carpeta, nombre_carpeta
 
 
-def descargar_archivo_binario(id_elemento):
-     
-    request = service().files().get_media(fileId = id_elemento)
-    fh = io.BytesIO()
-    
-    return fh
-
-
-def descargar_carpeta(id_elemento):
-    
-    page_token = None
-    cortar = False
-    while not cortar:
-        resultados = service().files().list(q= f" '{id_elemento}' in parents",
-                                                spaces='drive',
-                                                fields='nextPageToken, files(id, name, mimeType)',
-                                                pageToken= page_token).execute()
-        elementos = resultados['files']
-        for elemento in elementos:
-            id_elemento = elemento['id']
-            nombre_elemento = elemento['name']
-            mimeType = elemento['mimeType']
-            ruta = os.getcwd()
-            carpeta_actual = ''
-            #request = service().files().export_media(fileId = id_elemento)
-            fh = io.BytesIO()
-
-
-            if mimeType == 'application/vnd.google-apps.folder':
-                os.mkdir( ruta + '/' + carpeta_actual)
-                carpeta_actual = nombre_elemento
-                fh = descargar_carpeta(id_elemento)
-            else:
-                with open(os.path.join(carpeta_actual,nombre_elemento), 'wb') as arch:
-                    arch.write(fh.read())
-
-        page_token = resultados.get('nextPageToken')
-        if page_token is None:
-            cortar = True
-    #request = service().files().export_media(fileId = id_elemento,
-    #                                        mimeType = mimeType)
-    return fh
-
-
-def menu_descargar_elementos(info_carpetas: dict, info_archivos: dict) -> None: #toda mall rehacer
-    """
-    PRE: recibe los diccionarios info_carpetas" e "info_archivos" con el numero de elemento,
-    el nombre y su respectivo id
-
-    POST: Devuelve el id y el nombre del elemento descargado. 
-    Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
-    """
-    #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA
-    #OSEA, VUELVO AL MAIN, y dsps vuelvo xa aca
-    # nombre_archivo = 'prueba_xa_subir_2.txt'
-    # ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
-    # ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
-    # #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
-    # carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
-    #opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
-    #de aca va al menu ppal de nuevo
-
-    print('1-Carpeta\n2-Archivo')
-    opc = int( validar_opcion(1,2))        
-    if opc == 1:
-        texto = 'seleccione la carpeta que desea descargar' 
-        info_elementos = info_carpetas    
-        descargar_carpeta(info_elementos)              
-        #mimeType = 'application/vnd.google-apps.folder' # to export files
-    else:
-        texto = 'seleccione el archivo que desea descargar'
-        info_elementos = info_archivos
-    
-    id_elemento, nombre_elemento, id_parents = seleccionar_elementos(info_elementos, texto) 
-    
-    #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
-    #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
-    ubicacion = ''
-        
-    #fh = descargar_archivo_binario(id_elemento)
-    #fh = descargar_carpeta(id_elemento)
-
-    # with open(os.path.join(ubicacion,nombre_elemento), 'wb') as arch:
-    #     arch.write(fh.read()) 
-
-    return id_elemento, nombre_elemento
-
-
-#menu_descargar_elemnetos()
-
-
 def seleccionar_elementos(info_elementos: dict) -> str:
     """
     PRE: "info_elementos"  es un dict con los datos de las carpetas o archivos segun 
@@ -282,8 +191,8 @@ def listar_elementos(query: str) -> tuple:
     
     POST: Devuelve los diccionarios "carpetas" y "archivos" con los nombres de los 
 
-    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]} y
-    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'] ]}.
+    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]} y
+    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]}.
     """
     page_token = None
     cortar = False
@@ -409,8 +318,7 @@ def consultar_elementos():
     return id_elemento, nombre_elemento, id_parents, mime_type
 
 
-consultar_elementos()
-
+#consultar_elementos()
 
 def validar_elemento(elemento):
     """
@@ -433,6 +341,99 @@ def validar_elemento(elemento):
             id_elemento, nombre_elemento, id_parents, mime_type = consultar_elementos()
 
     return id_elemento, nombre_elemento, id_parents
+
+
+#validar_elementos()
+
+def descargar_archivo_binario(id_elemento, nombre_elemento):
+     
+    request = service().files().get_media(fileId = id_elemento)
+    arch = io.BytesIO()
+    
+    return arch
+
+
+def descargar_carpeta(id_elemento):
+    
+    page_token = None
+    cortar = False
+    while not cortar:
+        resultados = service().files().list(q= f" '{id_elemento}' in parents",
+                                                spaces='drive',
+                                                fields='nextPageToken, files(id, name, mimeType)',
+                                                pageToken= page_token).execute()
+        elementos = resultados['files']
+        for elemento in elementos:
+            id_elemento = elemento['id']
+            nombre_elemento = elemento['name']
+            mimeType = elemento['mimeType']
+            ruta = os.getcwd()
+            carpeta_actual = ''
+            #request = service().files().export_media(fileId = id_elemento)
+            fh = io.BytesIO()
+
+
+            if mimeType == 'application/vnd.google-apps.folder':
+                os.mkdir( ruta + '/' + carpeta_actual)
+                carpeta_actual = nombre_elemento
+                fh = descargar_carpeta(id_elemento)
+            else:
+                with open(os.path.join(carpeta_actual,nombre_elemento), 'wb') as arch:
+                    arch.write(fh.read())
+
+        page_token = resultados.get('nextPageToken')
+        if page_token is None:
+            cortar = True
+    #request = service().files().export_media(fileId = id_elemento,
+    #                                        mimeType = mimeType)
+    return fh
+
+
+def menu_descargar_elementos() -> None: #en proceso......!!!!!!
+
+    """
+    PRE: recibe los diccionarios info_carpetas" e "info_archivos" con el numero de elemento,
+    el nombre y su respectivo id
+
+    POST: 
+    Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
+    """
+    # MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA
+    # OSEA, VUELVO AL MAIN, y dsps vuelvo xa aca
+    nombre_archivo = 'prueba_xa_subir_2.txt'
+    ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
+    ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
+    #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
+    carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!    
+    
+    # de aca va al menu ppal de nuevo
+
+    print('MENU DESCARGAR')
+    print('Que desea descargar?')
+    print('1-Carpeta\n2-Archivo')
+    opc = int( validar_opcion(1,2))        
+    if opc == 1:
+        print('seleccione la carpeta que desea descargar')
+
+        id_carpeta, nombre_elemento, id_parents = validar_elemento('carpeta')    
+        
+        arch = descargar_carpeta(id_carpeta, nombre_elemento)              
+    
+    else: #descargar un archivo
+        print('seleccione el archivo que desea descargar')
+        
+        id_archivo, nombre_elemento, id_parents = validar_elemento('archivo')
+
+        arch = descargar_archivo_binario(id_archivo, nombre_elemento)
+    
+    #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
+    #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
+    ubicacion = ''
+    # escribir todo lo q venga en arch
+    with open(os.path.join(ubicacion,nombre_elemento), 'wb') as archivo:
+        archivo.write(arch.read()) 
+
+menu_descargar_elementos()
 
 
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
