@@ -650,7 +650,7 @@ def sincronizar():
         pull_remoto_a_local(archivos_locales, archivos_remotos)
 
 
-sincronizar()
+#sincronizar()
 
 
 def crear_carpeta(nombre_carpeta, id_carpeta):
