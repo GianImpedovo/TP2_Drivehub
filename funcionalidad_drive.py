@@ -1,3 +1,4 @@
+
 import os
 import io
 from typing import Text
@@ -23,11 +24,10 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
     PRE: "opc_minimas" y "opc_maximas" son dos números enteros que 
     simbolizan la cantidad de opciones posibles.
-
     POST: Devuelve en formato string la var "opc" con un número 
     entero dentro del rango de opciones.
     """
-    opc = input("{}".format(texto))
+    opc = input(" -> {}".format(texto))
     while not opc.isnumeric() or int(opc) > opc_maximas or int(opc) < opc_minimas:
         opc = input("Por favor, ingrese una opcion valida: ")
     
@@ -145,10 +145,8 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
 def ordenar_info_elementos(elementos: dict):
     """
     PRE: recibe el diccionario "elementos" que puede ser:
-
     "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType'  ]} y
     "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType' ]}.
-
     POST: Crear y devuelve el diccionario "info_elementos" con esta etsructura:
     {num_carp:['nombre carpeta','id carpeta', ['id parents'], 'mimeType' ]}
     """
@@ -181,7 +179,7 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
             #print(elemento['parents']) #testing
         else:
             archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents'], elemento['mimeType']]
-            #print(elemento['parents']) #testing
+            print(elemento['parents']) #testing
 
 
 #LISTAR ELEMENTOS EL REMOTO
@@ -190,7 +188,6 @@ def listar_elementos(query: str) -> tuple:
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
     
     POST: Devuelve los diccionarios "carpetas" y "archivos" con los nombres de los 
-
     "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]} y
     "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]}.
     """
@@ -210,7 +207,7 @@ def listar_elementos(query: str) -> tuple:
         #cada diccionario es un elemento de dicha lista. Lo guardo en elementos.
         
         elementos = resultados['files']
-
+        
         #print(elementos) #testing
         #guardar_info_elementos(elementos, info_carpetas, info_archivos)
 
@@ -232,9 +229,11 @@ def armado_de_consulta(id_elemento: str) -> str:
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
 
-    print('0-Listar todas las carpetas')
-    print('1-Busqueda manual (lista todas las carpetas y archivos en la carpeta actual)')
-    print('2-Busqueda personalizada (busqueda con palara clave en la carpeta actual)')
+    print('0- LISTA TODO MYDRIVE ')
+    print('1- Busqueda por numero')
+    print('2- Busqueda por palabra (Escribir palabra clave : palabra COMPLETA )')
+    print("----> ej - archivo -> '< nombre archivo >.< extension >' ")
+    print("----> ej - carpeta -> '< nombre carpeta >' ")
     opc = int(validar_opcion(0,2)) 
     #opc == o -> listar todo giuardar todo
     if opc == 0:
@@ -266,7 +265,6 @@ def armado_de_consulta(id_elemento: str) -> str:
 def consultar_elementos():
     """
     PRE:
-
     POST: Redirige a otras funciones de filtro y busqueda de archivos.
     info_carpetas"  {num_carp:['nombre carpeta','id carpeta', ['id_parents'], 'mimeType' ] } y
     "info_archivos" {num_arch: ['nombre archivo', 'id archivo', ['id_parents'], 'mimeType' ] }
@@ -299,8 +297,8 @@ def consultar_elementos():
         id_elemento, nombre_elemento, id_parents, elemento, mime_type = generador_de_id_elemento(info_carpetas, info_archivos, paths)
         
         if elemento == 'carpeta':
-            print('1-Abrir carpeta\n2-Selccionar elemento\n3-Salir')
-            opc = int(validar_opcion(1,3))        
+            print('1-Abrir carpeta\n2-Selccionar elemento')
+            opc = int(validar_opcion(1,2))        
         
         elif elemento == 'retroceder':
             opc = 1
@@ -308,12 +306,11 @@ def consultar_elementos():
         else:           #es un archivo
             opc = 2
 
-        if opc == 2 or opc == 3:
+        if opc == 2:
             cortar = True
         
         else:
             print(f'---{nombre_elemento}---\n'.rjust(50))
-        
 
 
     return id_elemento, nombre_elemento, id_parents, mime_type
@@ -390,25 +387,14 @@ def descargar_carpeta(id_elemento):
     return fh
 
 
-def menu_descargar_elementos() -> None: #en proceso......!!!!!!
+def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
 
     """
     PRE: recibe los diccionarios info_carpetas" e "info_archivos" con el numero de elemento,
     el nombre y su respectivo id
-
     POST: 
     Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
     """
-    # MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA
-    # OSEA, VUELVO AL MAIN, y dsps vuelvo xa aca
-    nombre_archivo = 'prueba_xa_subir_2.txt'
-    ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
-    ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
-    #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
-    carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!    
-    
-    # de aca va al menu ppal de nuevo
-
     print('MENU DESCARGAR')
     print('Que desea descargar?')
     print('1-Carpeta\n2-Archivo')
@@ -418,7 +404,7 @@ def menu_descargar_elementos() -> None: #en proceso......!!!!!!
 
         id_carpeta, nombre_elemento, id_parents = validar_elemento('carpeta')    
         
-        arch = descargar_carpeta(id_carpeta, nombre_elemento)              
+        arch = descargar_carpeta(id_carpeta)              
     
     else: #descargar un archivo
         print('seleccione el archivo que desea descargar')
@@ -429,12 +415,12 @@ def menu_descargar_elementos() -> None: #en proceso......!!!!!!
     
     #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
     #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
-    ubicacion = ''
+    ubicacion = ruta_local
     # escribir todo lo q venga en arch
     with open(os.path.join(ubicacion,nombre_elemento), 'wb') as archivo:
         archivo.write(arch.read()) 
 
-#menu_descargar_elementos()
+##menu_descargar_elementos()
 
 
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
@@ -459,7 +445,6 @@ def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
 def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     """
     PRE:
-
     POST: Compara las carpetas de local y remoto para encontrar la q correspondiente a
     la q me encuentro localmente
     """    
@@ -485,7 +470,6 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
 def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_contenedora: str) -> None:
     """
     PRE:
-
     POST:No devuelve nada, es un menu intermedio para subir archivos
     """    
     print('SUBIR ARCHIVOS')
@@ -509,15 +493,15 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
 
 
-def menu_subir_archivos():
+def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora):
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
     #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA:
     #OSEA, VUELVO AL MAIN, y dsps vuelvo xa ca
-    nombre_archivo = 'prueba_xa_subir_2.txt'
-    ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
-    ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
-    #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
-    carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
+    # nombre_archivo = 'prueba_xa_subir_2.txt'
+    # ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
+    # ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
+    # #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
+    # carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
     opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
     #de aca va al menu ppal de nuevo
     pass
@@ -543,13 +527,14 @@ def pull_remoto_a_local(archivos_locales:dict, archivos_remotos: dict):
     pass
 
 
-def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict):
+def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict, carpeta_id = "root"):
     """
     PRE:
-
     POST: No devuelve nada.
     Reemplaza los archivos en el remoto que sufireron modificaciones en el local
     """
+    #arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
+
     for arch_local, info_local in archivos_locales.items():
         if arch_local in archivos_remotos.keys(): #si el nombre del archivo esta en el remoto            
         
@@ -567,7 +552,11 @@ def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict):
                     else:
                         print(f'***El archivo {arch_local} no se actualizo ***')        
         else:                               #clave es el nombre
+
+            ## SOLO DESCARGA ARCHIVOS 
             print(f'El archivo {arch_local} no se encuentra en el remoto')
+            if arch_local != ".git" and arch_local != "__pycache__" :
+                subir_archivos(arch_local, info_local[1], carpeta_id)
 
 
 def modificar_dic_arch_remoto(archivos_remotos):
@@ -588,7 +577,6 @@ def modificar_dic_arch_remoto(archivos_remotos):
 def cargar_dic_arch_local(archivos_locales):
     """
     PRE:
-
     POST: No devuelve nada. Modufico por referencia el dict "archivos_locales"
     con las sig estructura arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
     """
@@ -612,11 +600,10 @@ def cargar_dic_arch_local(archivos_locales):
         archivos_locales[str(arch.name)] = [fecha_local, arch]
     
 
-def sincronizar():
+def sincronizar(id_carpeta):
     """
     PRE: Recibe el dict/ list "" con los nombres de los archivos de la carpeta 
     q se esta sincronizando
-
     POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
     OJO!
     1 - las fechas de modif se aproximaron a los minutos por lo que si se modifica dentro del 
@@ -634,7 +621,7 @@ def sincronizar():
     cargar_dic_arch_local(archivos_locales)
     
     #Traigo archivos de drive y cargo el diccionario archivos_remotos
-    query = "not trashed"   #esto es un win win porque solo archivos, ninguna carpeta
+    query = f"'{id_carpeta}' in parents and not trashed"   #esto es un win win porque solo archivos, ninguna carpeta
     carpetas, archivos_remotos = listar_elementos(query)
     
     #Modifico en el dict archivos_remotos la "modifiedTime" por referencia de
@@ -645,24 +632,23 @@ def sincronizar():
     print('1-Push (Modifica remoto, con cambios locales)\n2-pull(modifica local con cambios remotos')
     opc = int(validar_opcion(1,2))
     if opc == 1:
-        push_local_a_remoto(archivos_locales, archivos_remotos)
+        push_local_a_remoto(archivos_locales, archivos_remotos,id_carpeta)
     else:
         pull_remoto_a_local(archivos_locales, archivos_remotos)
 
 
-#sincronizar()
+
 
 
 def crear_carpeta(nombre_carpeta, id_carpeta):
     """
     PRE:
-
     POST:    
     """
     file_metadata = {
                     'name': nombre_carpeta,
                     'mimeType': 'application/vnd.google-apps.folder',
-                    'parents': id_carpeta
+                    'parents': [id_carpeta]
                         }
 
     file = service().files().create(body = file_metadata,
@@ -673,20 +659,17 @@ def crear_carpeta(nombre_carpeta, id_carpeta):
     return id_carpeta_creada
 
 
-
-def crear_carpetas_anidadas():
+def crear_carpetas_anidadas(nombre_ev, docentes_alumnos):
     """
     PRE:"nomrbe_ev", "docentes_alumnos"
-
     POST:
-
     docentes_alumnos = { docentes: [alumno1, alumno2,etc] }
     carpetas_docentes = { docente: id_carpeta_docente }
     carpetas_alumnos = { nombre: id_carpeta_alumno }
-    """
-    nombre_ev =  'ev_1'       #parametro!!! OJO PEDIR!!!
+    # """
+    # nombre_ev =  'ev_1'       #parametro!!! OJO PEDIR!!!
     
-    docentes_alumnos = dict() #parametro!! OJO PEDIR!!!
+    # docentes_alumnos = dict() #parametro!! OJO PEDIR!!!
 
 
     carpetas_docentes =  dict()
@@ -695,25 +678,27 @@ def crear_carpetas_anidadas():
     id_carpeta_evaluacion = crear_carpeta(nombre_ev, 'root') #creo la carepta de la evaluacion
     
     #creo carpetas docentes
+    print(id_carpeta_evaluacion)
     for docente in docentes_alumnos.keys():
         id_carpeta_docente = crear_carpeta(docente, id_carpeta_evaluacion)
         carpetas_docentes[docente] = id_carpeta_docente  #cargo docentes y sus carpetas
-    
+
+    crear_carpeta("Sobrante", id_carpeta_evaluacion)
+
     #creo carpetas alumnos anidadas en las de su correspondiente docente
     for docente, lista_alumnos in docentes_alumnos.items():
         id_carpeta_docente = carpetas_docentes[docente]
         for alumno in lista_alumnos:
             id_carpeta_alumno = crear_carpeta(alumno, id_carpeta_docente)  #creo la carpeta dentro de la de su docente
             carpetas_alumnos[alumno] = id_carpeta_alumno    #cargo alumnos con sus carpetas
-    
 
-crear_carpetas_anidadas()
+
+#crear_carpetas_anidadas()
 
 
 def mover_archivos():
     """
     PRE:
-
     POST:
     """
     print('Seleccione el archivo que desea mover\n')    
@@ -733,5 +718,3 @@ def mover_archivos():
                         ).execute()    
     
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
-
-#mover_archivos()
