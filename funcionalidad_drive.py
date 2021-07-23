@@ -717,4 +717,4 @@ def mover_archivos():
                         removeParents = id_carpeta_salida
                         ).execute()    
     
-    print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
+    print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')
