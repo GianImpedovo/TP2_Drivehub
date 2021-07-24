@@ -120,27 +120,6 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     return id_elemento, nombre_elemento, id_parents, elemento, mime_type
 
 
-def guardar_paths(nombre_carpeta, id_carpeta, paths) -> dict: #VER CON PILAAAAAA!!!
-    """
-    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'], 'mimeType' ] } ) es un diccionario y 
-    paths ({nombre_carpeta: id_carpeta } )
-    
-    
-    POST: No devuelve nada. Modifica por parametro el diccionario paths cargandole los datos 
-    de info_carpetas, colocando como clave el nombre de la carpeta y como valor su 
-    respectivo id
-    LA lista paths paths = [ [nombre_carpeta, id_carpeta] ]
-    
-    """
-    # for info_carpeta in info_carpetas.values():
-    #     nombre_carpeta = info_carpeta[0]
-    #     id_carpeta = info_carpeta[1]
-            #mejorar con pila LIFO con una lista usando append y pop. 
-    paths.append([nombre_carpeta, id_carpeta])      #paths =[ [nombre_carpeta, id_carpeta]] tipo pila lifo
-        # if nombre_carpeta not in paths.keys():           
-        #     paths[nombre_carpeta] = id_carpeta
-
-
 def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     """
     PRE: "info_elementos" es un diccionario con numeros de elemento como clave, y con
@@ -293,8 +272,8 @@ def consultar_elementos():
     cortar = False
     nombre_elemento = 'Directorio principal(root)'
     id_elemento = 'root'
-    #paths = {'root':'root'}
     paths = [[nombre_elemento,id_elemento]]
+    
     while not cortar:
 
         query = armado_de_consulta(id_elemento)
@@ -316,7 +295,9 @@ def consultar_elementos():
         id_elemento, nombre_elemento, id_parents, elemento, mime_type = generador_de_id_elemento(info_carpetas, info_archivos, paths)
         
         if elemento == 'carpeta':
+            
             paths.append([nombre_elemento, id_elemento]) # la guardo tipo pila lifo       
+            
             print('1-Abrir carpeta\n2-Selccionar elemento\n')
             opc = int(validar_opcion(1,2))        
         
