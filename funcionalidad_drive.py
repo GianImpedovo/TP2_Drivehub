@@ -34,25 +34,37 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     return opc
   
 
-def retroceder(paths: dict) -> tuple:     #VER CON PILAAAAAAAAA!!!!1 
+def retroceder(paths: list) -> tuple:     #VER CON PILAAAAAAAAA!!!!1 
 
     """
+    paths =[ [nombre_carpeta, id_carpeta]]
     PRE: Recibe el diccionario "paths" que tiene como claves los nombres de las carpetas por 
     las que ya se navego el usuario y como valores sus respectivos ids
     
     POST: Devuelve una tupla con los str "id_carpeta" con el id de la carpeta seleccionada
     y "nombre_carpeta" con el nombre de dicha carpeta  
     """
-    print('Ingrese el nombre de la carpeta a la que desea retroceder: ')
-    for carpeta in paths.keys():
-        print(f'-{carpeta}')
+    # print('Ingrese el nombre de la carpeta a la que desea retroceder: ')
+    # for carpeta in paths.keys():
+    #     print(f'-{carpeta}')
     
-    nombre_carpeta = input('Su ingreso: ')
-    while nombre_carpeta not in paths.keys():
-        nombre_carpeta = input('Por favor elija una carpeta de las listadas: \n')
+    # nombre_carpeta = input('Su ingreso: ')
+    # while nombre_carpeta not in paths.keys():
+    #     nombre_carpeta = input('Por favor elija una carpeta de las listadas: \n')
 
-    id_carpeta = paths[nombre_carpeta]
+    # id_carpeta = paths[nombre_carpeta]
+    #print(paths)
+    
+    ultima_carpeta = paths.pop() #saco la ultima que eleji
 
+    if paths: # si no queda vacia depues del pop
+        nombre_carpeta = paths[-1][0]   #devuelvo el nombre
+        id_carpeta = paths[-1][1] #y id de la anterior en la que estuve SIN SACARLO
+    
+    else: #si queda vacia, la cargo de nuevo
+        paths.append(['Directorio principal(root)','root'])
+        id_carpeta, nombre_carpeta = 'root', 'Directorio principal(root)'
+            
     return id_carpeta, nombre_carpeta
 
 
@@ -76,7 +88,7 @@ def seleccionar_elementos(info_elementos: dict) -> str:
     id_parents =  info_elementos[num_ele][2]
     mime_type = info_elementos[num_ele][3]
     
-    print(f'se ha seleccionado {nombre_elemento}')
+    print(f'se ha seleccionado : {nombre_elemento}\n')
 
     return id_elemento, nombre_elemento, id_parents, mime_type
 
@@ -88,6 +100,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     el str "nombre_elemento" con el nombre del elemento con el q se desea realizar 
     una operacion
     """
+    print('OPCIONES')
     print('1-Seleccionar una carpeta\n2-Seleccionar un archivo\n3-Atras')
     opc = int( validar_opcion(1,3) )
     if opc == 1 and info_carpetas:  #si hay carpetas para seleccionar
@@ -107,7 +120,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     return id_elemento, nombre_elemento, id_parents, elemento, mime_type
 
 
-def guardar_paths(info_carpetas: dict, paths: dict) -> dict: #VER CON PILAAAAAA!!!
+def guardar_paths(nombre_carpeta, id_carpeta, paths) -> dict: #VER CON PILAAAAAA!!!
     """
     PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'], 'mimeType' ] } ) es un diccionario y 
     paths ({nombre_carpeta: id_carpeta } )
@@ -116,13 +129,16 @@ def guardar_paths(info_carpetas: dict, paths: dict) -> dict: #VER CON PILAAAAAA!
     POST: No devuelve nada. Modifica por parametro el diccionario paths cargandole los datos 
     de info_carpetas, colocando como clave el nombre de la carpeta y como valor su 
     respectivo id
+    LA lista paths paths = [ [nombre_carpeta, id_carpeta] ]
+    
     """
-    for info_carpeta in info_carpetas.values():
-        nombre_carpeta = info_carpeta[0]
-        id_carpeta = info_carpeta[1]
+    # for info_carpeta in info_carpetas.values():
+    #     nombre_carpeta = info_carpeta[0]
+    #     id_carpeta = info_carpeta[1]
             #mejorar con pila LIFO con una lista usando append y pop. 
-        if nombre_carpeta not in paths.keys():
-            paths[nombre_carpeta] = id_carpeta
+    paths.append([nombre_carpeta, id_carpeta])      #paths =[ [nombre_carpeta, id_carpeta]] tipo pila lifo
+        # if nombre_carpeta not in paths.keys():           
+        #     paths[nombre_carpeta] = id_carpeta
 
 
 def mostrar_elementos(info_elementos: dict, tipo_ele: str):
@@ -179,7 +195,7 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
             #print(elemento['parents']) #testing
         else:
             archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents'], elemento['mimeType']]
-            print(elemento['parents']) #testing
+            #print(elemento['parents']) #testing
 
 
 #LISTAR ELEMENTOS EL REMOTO
@@ -229,15 +245,16 @@ def armado_de_consulta(id_elemento: str) -> str:
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
 
-    print('0- LISTA TODO MYDRIVE ')
+    print('0- Lista TODOS los archivos y carpetas en drive')
     print('1- Busqueda por numero')
     print('2- Busqueda por palabra (Escribir palabra clave : palabra COMPLETA )')
     print("----> ej - archivo -> '< nombre archivo >.< extension >' ")
-    print("----> ej - carpeta -> '< nombre carpeta >' ")
-    opc = int(validar_opcion(0,2)) 
+    print("----> ej - carpeta -> '< nombre carpeta >'")
+    opc = int(validar_opcion(0,2))
+    print() 
     #opc == o -> listar todo giuardar todo
     if opc == 0:
-        query = " mimeType = 'application/vnd.google-apps.folder' "
+        query = "not trashed"
 
     elif opc == 1:
         query = f" '{id_elemento}' in parents and (not trashed) " 
@@ -272,10 +289,12 @@ def consultar_elementos():
     Devuelve id_elemento, nombre_elemento, id_parents
     """
     print('BUSCADOR DE DRIVE'.rjust(50))
-    print('---root/Directorio principal---'.rjust(57))
+    print('---Directorio principal (root)---'.rjust(60))
     cortar = False
+    nombre_elemento = 'Directorio principal(root)'
     id_elemento = 'root'
-    paths = {'root':'root'}
+    #paths = {'root':'root'}
+    paths = [[nombre_elemento,id_elemento]]
     while not cortar:
 
         query = armado_de_consulta(id_elemento)
@@ -291,16 +310,17 @@ def consultar_elementos():
         print('ARCHIVOS')
         mostrar_elementos(info_archivos,'archivos')
 
-        guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
-                            #xa q el usario pueda volver hacia atras al navegar entre carpetas
-        
+        # guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
+        #                     #xa q el usario pueda volver hacia atras al navegar entre carpetas
+
         id_elemento, nombre_elemento, id_parents, elemento, mime_type = generador_de_id_elemento(info_carpetas, info_archivos, paths)
         
         if elemento == 'carpeta':
-            print('1-Abrir carpeta\n2-Selccionar elemento')
+            paths.append([nombre_elemento, id_elemento]) # la guardo tipo pila lifo       
+            print('1-Abrir carpeta\n2-Selccionar elemento\n')
             opc = int(validar_opcion(1,2))        
         
-        elif elemento == 'retroceder':
+        elif elemento == 'retroceder':  #si retrocedio no la guardo
             opc = 1
         
         else:           #es un archivo
@@ -310,8 +330,11 @@ def consultar_elementos():
             cortar = True
         
         else:
+            ruta =''
+            for carpeta in paths:
+                ruta += ' -> ' + carpeta[0]
+            print(f'HISTORIAL: {ruta}\n')
             print(f'---{nombre_elemento}---\n'.rjust(50))
-
 
     return id_elemento, nombre_elemento, id_parents, mime_type
 
