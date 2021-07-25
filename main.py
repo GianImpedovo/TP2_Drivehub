@@ -418,11 +418,12 @@ def main()-> None:
             crear_archivos(eleccion, ruta_actual)
             ## -> subir el archivo creado
             if eleccion == "4":
+                print(" ------ Navega por tu drive y crea la carpeta donde quiera !  ------ ")
                 print("\nIngrese el nombre de la carpeta creada recientemente")
                 nombre_carpeta = input(" -> ")
-                print("\nEliga la ubicacion donde quiera crear la carpeta en el remoto")
+                print("\n Eliga la ubicacion donde quiera crear la carpeta en el remoto")
                 id_elemento = drive.consultar_elementos()[0]
-                drive.crear_carpeta(nombre_carpeta,id_elemento)
+                drive.crea_carpetas(nombre_carpeta,id_elemento)
                 
             else :
                 ## subo el archivo a drive
@@ -436,6 +437,7 @@ def main()-> None:
         elif opcion[0] == "3":
             elegir = input("\n1 - Subir archivo\n2 - Subir carpeta\n -> ")
             if elegir == "1":
+                print(" ------ Navega por tu drive y subi el archivo a donde quieras !  ------ ")
                 nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
                 ruta_actual = RUTA + "/" + nombre_archivo
                 carpeta = RUTA.split("/")[-1]
@@ -444,7 +446,6 @@ def main()-> None:
                 carpeta_a_descargar = input("Ingrese el nombre de la carpeta que desea descargar\n -> ")
                 ruta = os.getcwd() + "/" + carpeta_a_descargar
                 drive.recorrer_carpeta(ruta)
-
 
         elif opcion[0] == "4":
             drive.menu_descargar_elementos(ruta_actual)
