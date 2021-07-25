@@ -32,7 +32,7 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
         opc = input("Por favor, ingrese una opcion valida: ")
     
     return opc
-  
+
 
 def retroceder(paths: dict) -> tuple:     #VER CON PILAAAAAAAAA!!!!1 
 
@@ -437,7 +437,7 @@ def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
  
     media = MediaFileUpload(filename = ruta_archivo)
 
-    file = service().files().create(body = file_metadata,
+    service().files().create(body = file_metadata,
                                     media_body = media,
                                     fields = 'id').execute()    #creo q esta de mas
 
@@ -636,67 +636,8 @@ def sincronizar(id_carpeta):
     else:
         pull_remoto_a_local(archivos_locales, archivos_remotos)
 
-
-
-
-
-def crear_carpeta(nombre_carpeta, id_carpeta):
-    """
-    PRE:
-    POST:    
-    """
-    file_metadata = {
-                    'name': nombre_carpeta,
-                    'mimeType': 'application/vnd.google-apps.folder',
-                    'parents': [id_carpeta]
-                        }
-
-    file = service().files().create(body = file_metadata,
-                                    fields = 'id').execute()
-        
-    id_carpeta_creada = file.get('id')
-
-    return id_carpeta_creada
-
-
-def crear_carpetas_anidadas(nombre_ev, docentes_alumnos):
-    """
-    PRE:"nomrbe_ev", "docentes_alumnos"
-    POST:
-    docentes_alumnos = { docentes: [alumno1, alumno2,etc] }
-    carpetas_docentes = { docente: id_carpeta_docente }
-    carpetas_alumnos = { nombre: id_carpeta_alumno }
-    # """
-    # nombre_ev =  'ev_1'       #parametro!!! OJO PEDIR!!!
-    
-    # docentes_alumnos = dict() #parametro!! OJO PEDIR!!!
-
-
-    carpetas_docentes =  dict()
-    carpetas_alumnos = dict()
-    
-    id_carpeta_evaluacion = crear_carpeta(nombre_ev, 'root') #creo la carepta de la evaluacion
-    
-    #creo carpetas docentes
-    print(id_carpeta_evaluacion)
-    for docente in docentes_alumnos.keys():
-        id_carpeta_docente = crear_carpeta(docente, id_carpeta_evaluacion)
-        carpetas_docentes[docente] = id_carpeta_docente  #cargo docentes y sus carpetas
-
-    crear_carpeta("Sobrante", id_carpeta_evaluacion)
-
-    #creo carpetas alumnos anidadas en las de su correspondiente docente
-    for docente, lista_alumnos in docentes_alumnos.items():
-        id_carpeta_docente = carpetas_docentes[docente]
-        for alumno in lista_alumnos:
-            id_carpeta_alumno = crear_carpeta(alumno, id_carpeta_docente)  #creo la carpeta dentro de la de su docente
-            carpetas_alumnos[alumno] = id_carpeta_alumno    #cargo alumnos con sus carpetas
-
-
-#crear_carpetas_anidadas()
-
-
 def mover_archivos():
+
     """
     PRE:
     POST:
@@ -718,3 +659,34 @@ def mover_archivos():
                         ).execute()    
     
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
+
+## ----- AÑADI PARA SUBIR CARPETAS AL DRIVE ---------------
+def crea_carpetas(nombre_carpeta, parent = ""):
+    if parent == "":
+        file_metadata = {
+            "name": nombre_carpeta,
+            "mimeType": "application/vnd.google-apps.folder",
+            'parents': [] 
+        }
+    else:
+        file_metadata = {
+            "name": nombre_carpeta,
+            "mimeType": "application/vnd.google-apps.folder",
+            'parents': [parent] 
+        }
+    folder = service().files().create(body = file_metadata).execute()
+    id_carpeta = folder.get("id")
+
+    return id_carpeta
+
+def recorrer_carpeta(ruta_actual, parent = ""):
+    contenido = os.listdir(ruta_actual)
+    nombre_carpeta = ruta_actual.split("/")[-1]
+    id_carpeta = crea_carpetas(nombre_carpeta, parent)
+    for ficheros in contenido :
+        if os.path.isfile(ruta_actual + "/" + ficheros):
+            ruta_archivo = ruta_actual + "/" + ficheros
+            subir_archivos(ficheros, ruta_archivo, id_carpeta)
+        else:
+            ruta_fichero = ruta_actual + "/" + ficheros
+            recorrer_carpeta(ruta_fichero, id_carpeta)
