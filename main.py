@@ -434,10 +434,17 @@ def main()-> None:
                 drive.opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
 
         elif opcion[0] == "3":
-            nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
-            ruta_actual = RUTA + "/" + nombre_archivo
-            carpeta = RUTA.split("/")[-1]
-            drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta)
+            elegir = input("\n1 - Subir archivo\n2 - Subir carpeta\n -> ")
+            if elegir == "1":
+                nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
+                ruta_actual = RUTA + "/" + nombre_archivo
+                carpeta = RUTA.split("/")[-1]
+                drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta)
+            elif elegir == "2":
+                carpeta_a_descargar = input("Ingrese el nombre de la carpeta que desea descargar\n -> ")
+                ruta = os.getcwd() + "/" + carpeta_a_descargar
+                drive.recorrer_carpeta(ruta)
+
 
         elif opcion[0] == "4":
             drive.menu_descargar_elementos(ruta_actual)
@@ -457,6 +464,7 @@ def main()-> None:
         elif opcion[0] == "6":
             email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
             enviar_email_instrucciones(email_usuario)
+
         elif opcion[0] == "7":
             crear_carpeta_evaluacion(ruta_actual)
 
