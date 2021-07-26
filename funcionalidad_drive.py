@@ -1,4 +1,5 @@
 
+#from TP2_Drivehub.main import recorrer_directorio
 import os
 import io
 from typing import Text
@@ -444,7 +445,7 @@ def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     file = service().files().create(body = file_metadata,
                                     media_body = media,
                                     fields = 'id').execute()    #creo q esta de mas
-
+    print(f'se subio bien {nombre_archivo}')
 
 def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     """
@@ -538,6 +539,7 @@ def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict, carpeta_i
     Reemplaza los archivos en el remoto que sufireron modificaciones en el local
     """
     #arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
+    #arch_remotos = { nombre_arch: [id_carpeta, fecha_modif] }
 
     for arch_local, info_local in archivos_locales.items():
         if arch_local in archivos_remotos.keys(): #si el nombre del archivo esta en el remoto            
@@ -560,7 +562,10 @@ def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict, carpeta_i
             ## SOLO DESCARGA ARCHIVOS 
             print(f'El archivo {arch_local} no se encuentra en el remoto')
             if arch_local != ".git" and arch_local != "__pycache__" :
+                #recorrer_carpeta() --> esta llama a la otra q las crea
+
                 subir_archivos(arch_local, info_local[1], carpeta_id)
+
 
 
 def modificar_dic_arch_remoto(archivos_remotos):
@@ -603,8 +608,95 @@ def cargar_dic_arch_local(archivos_locales):
         # ruta
         archivos_locales[str(arch.name)] = [fecha_local, arch]
     
+# def recorrer_carpeta(ruta_actual, parent = ""):
+#     contenido = os.listdir(ruta_actual)
+#     nombre_carpeta = ruta_actual.split("\\")[-1]
+#     #id_carpeta = crea_carpetas(nombre_carpeta, parent)
+#     for ficheros in contenido :
+#         if os.path.isfile(ruta_actual + "\\" + ficheros):
+#             ruta_archivo = ruta_actual + "\\" + ficheros
+#             #subir_archivos(ficheros, ruta_archivo, id_carpeta)
+#         else:
+#             ruta_fichero = ruta_actual + "/" + ficheros
+#             recorrer_carpeta(ruta_fichero, id_carpeta)
 
-def sincronizar(id_carpeta):
+def comparar_local_remoto(info_local, archivos_remotos):
+    """
+    info_local = [ficheros, ruta_actual, fecha_local]
+    """
+    for arch_remoto in archivos_remotos.keys():
+        if info_local[0] == arch_remoto:                 
+            fecha_remoto = archivos_remotos[arch_remoto][1]
+            fecha_local = info_local[2] #la fecha es el elemento 0 de la lista 
+            #FALTARIA COMPRARA LINEA A LINEA. Asi no habria q esperar 1 min
+            # pues al comparar linea a linea no deberia saltar => no se modifica
+            if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta  
+                print('loc/remoto',fecha_local, fecha_remoto)                      
+                id_arch = archivos_remotos[arch_remoto][0]
+                remplazar_archivos(info_local[1], id_arch)
+                            #la ruta es el elemento 1 de info_local
+                print(f'--El archivo {info_local[0]} se actualizo correctamente--')
+            else:
+                print(f'***El archivo {info_local[0]} no se actualizo ***')        
+
+
+def crear_hora_modif_local(ruta_archivo):
+    """
+    POST: devuelve el str "fecha_local" ultima hora modif local
+    """
+    
+    hora_local = datetime.datetime.fromtimestamp(os.stat(ruta_archivo).st_mtime)
+    
+    #Sumo + 3 HORAS a hora LOCAL usando el objeto datetime
+    horas = 3
+    horas_sumadas = datetime.timedelta(hours = horas)
+    nueva_hora_local = hora_local + horas_sumadas # sumo 3 horas
+
+    #Convierto el objeto datetime en str
+    fecha_local = str(nueva_hora_local)
+    #le rcorto hasta los segundos inclusive por un tema de error
+    fecha_local = fecha_local[:16]  
+    
+    #uso como clave el nombre del arch, y como valor una lista la fecha de mofi y la 
+    # ruta
+    #archivos_locales[str(arch.name)] = [fecha_local, arch]
+
+    return fecha_local
+
+
+def crea_carpetas(nombre_carpeta, parent = ""):
+    if parent == "":
+        file_metadata = {
+            "name": nombre_carpeta,
+            "mimeType": "application/vnd.google-apps.folder",
+            'parents': [] 
+        }
+    else:
+        file_metadata = {
+            "name": nombre_carpeta,
+            "mimeType": "application/vnd.google-apps.folder",
+            'parents': [parent] 
+        }
+    folder = service().files().create(body = file_metadata).execute()
+    id_carpeta = folder.get("id")
+
+    return id_carpeta
+
+def recorrer_carpeta(ruta_actual, parent = ""):
+    contenido = os.listdir(ruta_actual)
+    print(contenido)
+    nombre_carpeta = ruta_actual.split("\\")[-1]
+    print(nombre_carpeta)
+    id_carpeta = crea_carpetas(nombre_carpeta, parent)
+    for ficheros in contenido :
+        if os.path.isfile(ruta_actual + "\\" + ficheros):
+            ruta_archivo = ruta_actual + "\\" + ficheros
+            subir_archivos(ficheros, ruta_archivo, id_carpeta)
+        else:
+            ruta_fichero = ruta_actual + "\\" + ficheros
+            recorrer_carpeta(ruta_fichero, id_carpeta)
+
+def sincronizar(id_carpeta, ruta_actual):
     """
     PRE: Recibe el dict/ list "" con los nombres de los archivos de la carpeta 
     q se esta sincronizando
@@ -620,28 +712,77 @@ def sincronizar(id_carpeta):
     #SOLUCION: Renviar parametros invertidos a comparar_info_archivos()
 
     #arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
-    archivos_locales = dict()
+    # archivos_locales = dict()
     
-    cargar_dic_arch_local(archivos_locales)
+    # cargar_dic_arch_local(archivos_locales)
     
     #Traigo archivos de drive y cargo el diccionario archivos_remotos
+    #arch_remotos = { nombre_arch: [id_carpeta, fecha_modif] }
     query = f"'{id_carpeta}' in parents and not trashed"   #esto es un win win porque solo archivos, ninguna carpeta
-    carpetas, archivos_remotos = listar_elementos(query)
+    carpetas_remotas, archivos_remotos = listar_elementos(query)
     
     #Modifico en el dict archivos_remotos la "modifiedTime" por referencia de
     #xa q coincida con la local
     modificar_dic_arch_remoto(archivos_remotos)
+    modificar_dic_arch_remoto(carpetas_remotas)
+
+    print(carpetas_remotas.keys())
+    print(archivos_remotos.keys())
+
+    contenido = os.listdir(ruta_actual)
+    nombre_carpeta = ruta_actual.split("\\")[-1]
+    #id_carpeta = crea_carpetas(nombre_carpeta, parent)
+    for ficheros in contenido: 
+        #print(ficheros)
+        if ficheros != ".git" and ficheros != "__pycache__":
+            #print(ficheros)      
+            ruta_archivo = ruta_actual + "\\" + ficheros
+            #print(ruta_archivo)
+            #nombre_carpeta = ruta_actual.split("\\")[-1]  #si existe la carpeta o archivo en la nube      
+            if ficheros in archivos_remotos.keys() or ficheros in carpetas_remotas.keys(): 
+                print(ficheros)
+                
+                if os.path.isfile(ruta_archivo):    #si es un archivo
+                    # fecha_local = crear_hora_modif_local(ruta_archivo)
+                    # info_local = [ficheros, ruta_archivo, fecha_local]
+                    # #print(info_local[1])
+                    # comparar_local_remoto(info_local, archivos_remotos)
+                    # #subir_archivos(ficheros, ruta_archivo, id_carpeta)
+                    # #print(os.stat(ruta_archivo))
+                    # #push_local_a_remoto(ruta_archivo, archivos_remotos,id_carpeta)
+                    print('archivo')
+                else:   # si es una carpeta
+                    print('sincronizar recursiva')
+                    id_carpeta, nombre_carpeta = encontrar_carpeta_upstream(ficheros)
+                    sincronizar(id_carpeta, ruta_archivo)
+                    #ruta_fichero = ruta_actual + "/" + ficheros
+                    #id_carpeta = crea_carpetas(nombre_carpeta, parent)
+                    #recorrer_carpeta(ruta_fichero, id_carpeta)
+            else:  # no existe lo creamos de nascar
+                if os.path.isfile(ruta_actual + "\\" + ficheros):
+                    subir_archivos(ficheros, ruta_archivo, id_carpeta)
+                else:
+                    recorrer_carpeta(ruta_archivo, id_carpeta)
     
+    #push_local_a_remoto(archivos_locales, archivos_remotos,id_carpeta)
+
     #Sync remoto con local (modifico remoto)
-    print('1-Push (Modifica remoto, con cambios locales)\n2-pull(modifica local con cambios remotos')
-    opc = int(validar_opcion(1,2))
-    if opc == 1:
-        push_local_a_remoto(archivos_locales, archivos_remotos,id_carpeta)
-    else:
-        pull_remoto_a_local(archivos_locales, archivos_remotos)
+    # print('1-Push (Modifica remoto, con cambios locales)\n2-pull(modifica local con cambios remotos')
+    # opc = int(validar_opcion(1,2))
+    # if opc == 1:
+    #     push_local_a_remoto(archivos_locales, archivos_remotos,id_carpeta)
+    # else:
+    #     pull_remoto_a_local(archivos_locales, archivos_remotos)
 
+# with open('some_file_1.txt', 'r') as file1:
+#     with open('some_file_2.txt', 'r') as file2:
+#         same = set(file1).intersection(file2)
 
+# same.discard('\n')
 
+# with open('some_output_file.txt', 'w') as file_out:
+#     for line in same:
+#         file_out.write(line)
 
 
 def crear_carpeta(nombre_carpeta, id_carpeta):
