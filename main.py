@@ -442,10 +442,15 @@ def main()-> None:
                 ruta_actual = RUTA + "/" + nombre_archivo
                 carpeta = RUTA.split("/")[-1]
                 drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta)
+                print(f" ### El archivo {nombre_archivo} subio exitosamente ### ")
+
             elif elegir == "2":
-                carpeta_a_descargar = input("Ingrese el nombre de la carpeta que desea descargar\n -> ")
-                ruta = os.getcwd() + "/" + carpeta_a_descargar
-                drive.recorrer_carpeta(ruta)
+
+                carpeta_a_subir = input("Ingrese el nombre de la carpeta que desea subir\n -> ")
+                ruta = os.getcwd() + "/" + carpeta_a_subir
+                id_carpeta = drive.consultar_elementos()[0]
+                drive.recorrer_carpeta(ruta, id_carpeta)
+                print(f" ### La carpeta {carpeta_a_subir} se subio exitosamente ### ")
 
         elif opcion[0] == "4":
             drive.menu_descargar_elementos(ruta_actual)
