@@ -1,7 +1,7 @@
 
 import os
 import io
-from typing import Text
+from typing import Dict, Text
 #from typing import overload, union
 import typing
 from service_drive import obtener_servicio as service
@@ -557,7 +557,11 @@ def mover_archivos():
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
 ## ----- SUBIR CARPETAS AL DRIVE ---------------
-def crea_carpetas(nombre_carpeta, parent = ""):
+def crea_carpetas(nombre_carpeta: str, parent: str = "")->str:
+    """
+    PRE: Recibo la carpeta que quiero subir
+    POST: Creo la carpeta en remoto y retorno su id 
+    """
     if parent == "":
         file_metadata = {
             "name": nombre_carpeta,
@@ -575,7 +579,12 @@ def crea_carpetas(nombre_carpeta, parent = ""):
 
     return id_carpeta
 
-def recorrer_carpeta(ruta_actual, parent = ""):
+def recorrer_carpeta(ruta_actual: str, parent: str = "")->None:
+    """
+    PRE: Recorro la carpeta en el local
+    POST: En caso de leer un archivo lo subo , en caso de leer una carpeta 
+          repito el proceso de crear carpeta
+    """
     contenido = os.listdir(ruta_actual)
     nombre_carpeta = ruta_actual.split("/")[-1]
     id_carpeta = crea_carpetas(nombre_carpeta, parent)
@@ -589,7 +598,11 @@ def recorrer_carpeta(ruta_actual, parent = ""):
 
 ## ----- SINCRONIZAR 
 
-def fecha_modificacion_remoto(id_carpeta):
+def fecha_modificacion_remoto(id_carpeta: str)->dict:
+    """
+    PRE: Recibo el id de la carpeta 
+    POST: Retorno un dicc con la informacion de cuando fue modificada la carpeta
+    """
     ## drive = {nombre fichero = [id fichero , fecha de modificacion]]}
     page_token = None
     drive = dict() # diccionario con {nombre carpeta : [id, mimetype, parent]}
@@ -602,7 +615,12 @@ def fecha_modificacion_remoto(id_carpeta):
 
     return drive
 
-def fecha_modificacion_local(ruta_actual):
+def fecha_modificacion_local(ruta_actual: str)->tuple:
+    """
+    PRE: Recibo la ruta donde el usuario esta ubicado
+    POST: Retorno una tupla con dos dic, uno que contiene las fechas de modificacion 
+        de cada archivo y otra con la modificacion de las carpetas
+    """
     ## archivo_fecha_local = {nombre fichero = fecha_modificacion}
     archivos_fechas_local = dict()
     carpetas_fechas_local = dict()
@@ -623,7 +641,11 @@ def fecha_modificacion_local(ruta_actual):
 
     return archivos_fechas_local , carpetas_fechas_local
 
-def descargar_archivo(archivo_id, ruta):
+def descargar_archivo(archivo_id: str, ruta: str)->None:
+    """
+    PRE: Recibo el id del archivo 
+    POST: Descargo el archivo
+    """
 
     print("ruta en funcion descargar_archivo : ", ruta)
     nombre_archivo = ruta
@@ -643,7 +665,11 @@ def descargar_archivo(archivo_id, ruta):
         f.write(fh.read())
         f.close()
 
-def sincronizar(archivos_drive, archivos_local, carpeta_local, ruta):
+def sincronizar(archivos_drive: dict, archivos_local: dict, carpeta_local: dict, ruta: str)->None:
+    """
+    PRE: Recibo los diccionarios con informacion del remoto y del local 
+    POST: Sincronizo cada archivo segun su horario de modificacion
+    """
 
     for archivo , fecha in archivos_local.items():
         if archivo in archivos_drive.keys():
