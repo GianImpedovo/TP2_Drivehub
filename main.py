@@ -11,6 +11,11 @@ from zipfile import ZipFile
 import shutil
 from zipfile import ZipFile
 import pprint
+from datetime import datetime, date, time, timedelta
+import mimetypes
+from email.mime.base import MIMEBase
+from email import encoders
+from email.mime.application import MIMEApplication
 import funcionalidad_drive as drive
 
 RUTA = os.getcwd()
@@ -315,29 +320,56 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
 
 # --------------------- RECEPCION DE EVALUACIONES ---------- (CODIGO ADO)
-def obtener_email(id_mensaje):
+def obtener_email( id_mensaje:str ):
     servicio = service_gmail.obtener_servicio()
     mensaje = servicio.users().messages().get(userId='me',id=id_mensaje).execute()
     return mensaje
 
 def obtener_lista_email():
+    fecha = obtener_fecha() 
     servicio = service_gmail.obtener_servicio()
-    resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread').execute()
+    resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread ' + fecha).execute()
+    pprint.pprint(resultados)
     return resultados.get('messages',[])
 
-def enviar_email(email,msj):
+def enviar_email( email:str, msj:str):
     try:
-    servicio = service_gmail.obtener_servicio()
-    mime_mensaje = MIMEMultipart()
-    mime_mensaje['subject'] = 'EVALUACION'
-    mime_mensaje['to'] = email
-    mime_mensaje.attach(MIMEText(msj, 'plain'))
-    raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
-    mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+        servicio = service_gmail.obtener_servicio()
+        mime_mensaje = MIMEMultipart()
+        mime_mensaje['subject'] = 'EVALUACION'
+        mime_mensaje['to'] = email
+        mime_mensaje.attach(MIMEText(msj, 'plain'))
+        raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
+        mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
     except:
         print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
         print(msj)
 
+
+def enviar_email_adjunto( email:str, msj:str, adjunto):
+    try:
+        servicio = service_gmail.obtener_servicio()
+        mime_mensaje = MIMEMultipart()
+        mime_mensaje['subject'] = 'EVALUACION'
+        mime_mensaje['to'] = email
+        mime_mensaje.attach(MIMEText(msj, 'plain'))
+        
+        temp = open(adjunto, 'rb')
+        attachement = MIMEApplication(temp.read(), _subtype="pdf")
+        temp.close()
+        
+        encoders.encode_base64(attachement)
+        filename = os.path.basename(adjunto)
+        attachement.add_header('Content-Disposition', 'attachment', filename=filename)
+        mime_mensaje.attach(attachement) 
+
+        mensaje_bytes = mime_mensaje.as_bytes() 
+        mensaje_base64 = base64.urlsafe_b64encode(mensaje_bytes)
+        raw = mensaje_base64.decode() 
+        mensaje = servicio.users().messages().send(userId='me', body={'raw': raw}).execute()
+    except:
+        print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
+        print(msj)
 
 
 def descomprimir_archivo(name,email):
@@ -366,7 +398,7 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
     msj_email = ""
     msj_error = ""
     servicio = service_gmail.obtener_servicio()
-    if 'parts' in email['payload']:        
+    if 'parts' in email['payload' ]:        
         for adjunto in email['payload']['parts']:
             mime_type = adjunto['mimeType']
             nombre_archivo = adjunto['filename']
@@ -398,17 +430,42 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
     enviar_email(email_alumno,msj_email)    
     return validar        
 
+def validar_fecha():
+    hoy = date.today()
+    query = "before: {0} after: {1}".format(today.strftime('%Y/%m/%d'),
+                                            yesterday.strftime('%Y/%m/%d'))  
+
+def validate_opcion(limite:int,text) -> int :
+    opcion = input(text)
+    
+    while not opcion.isnumeric() or not (0 < int(opcion) <= limite) :      
+        print("La opción ingresada, no es valida")
+        opcion = input(text)
+
+    return int(opcion)   
+
+def obtener_fecha():
+    print("A continuacion ingresaras la fecha de las evaluacionesa a obtener")
+    mes = validate_opcion(12,"Ingrese mes ( 1 al 12 ) :")
+    dia = validate_opcion(31,"Ingrese dia ( 1 al 31 ) :")
+    fecha = str(dia) + "-" + str(mes) + "-" + "2021"
+    formato_fecha = "%d-%m-%Y"
+    fecha_inicial = datetime.strptime(fecha, formato_fecha)
+    fecha_antes = fecha_inicial + timedelta(days=1)
+    fecha_despues = fecha_inicial - timedelta(days=1)
+    return "after:2021/"+str(fecha_despues.month)+"/"+str(fecha_despues.day)+" before:2021/"+str(fecha_antes.month)+"/"+str(fecha_antes.day)
+
 def obtener_evaluaciones():
     mensajes = obtener_lista_email()
     email = ''
     titulo = ''
+    fecha = ''  
     validar = True
     for msj in mensajes:
         msj_id = msj['id']
         msj_detalles = obtener_email(msj_id)
         if 'payload' in msj_detalles:
             for msj_detalle in msj_detalles["payload"]["headers"]: 
-                print("msj_detalle",msj_detalle) 
                 if msj_detalle["name"].lower() == 'to':
                     email = msj_detalle["value"]
                 if msj_detalle["name"].lower() == 'subject':   
@@ -511,9 +568,11 @@ def main()-> None:
 
         elif opcion[0] == "6":
             email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
+            #enviar_email_adjunto("email_usuario","INSTRUCCIONES","instrucciones.pdf")
             enviar_email_instrucciones(email_usuario)
 
         elif opcion[0] == "7":
+            obtener_evaluaciones()
             crear_carpeta_evaluacion(ruta_actual)
 
         mostrar_menu(ruta_actual)
