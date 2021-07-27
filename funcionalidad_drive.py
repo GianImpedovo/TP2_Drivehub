@@ -495,16 +495,13 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
 
 def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora):
     print('Seleccione el archivo o carpeta de su computadora que desea subir')
-    #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA:
-    #OSEA, VUELVO AL MAIN, y dsps vuelvo xa ca
-    # nombre_archivo = 'prueba_xa_subir_2.txt'
-    # ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
-    # ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
-    # #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
-    # carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
-    opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
-    #de aca va al menu ppal de nuevo
-    pass
+    eleccion = input("1 - MyDrive\n2 - Otra Carpeta \n ->  ")
+
+    if eleccion == "1":
+        subir_archivos(nombre_archivo, ruta_archivo, "root")
+    elif eleccion == "2":
+        opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
+
 
 #menu_subir_archivos()
 

@@ -327,13 +327,13 @@ def obtener_lista_email():
 
 def enviar_email(email,msj):
     try:
-    servicio = service_gmail.obtener_servicio()
-    mime_mensaje = MIMEMultipart()
-    mime_mensaje['subject'] = 'EVALUACION'
-    mime_mensaje['to'] = email
-    mime_mensaje.attach(MIMEText(msj, 'plain'))
-    raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
-    mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+        servicio = service_gmail.obtener_servicio()
+        mime_mensaje = MIMEMultipart()
+        mime_mensaje['subject'] = 'EVALUACION'
+        mime_mensaje['to'] = email
+        mime_mensaje.attach(MIMEText(msj, 'plain'))
+        raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
+        mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
     except:
         print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
         print(msj)
@@ -468,7 +468,7 @@ def main()-> None:
                 id_elemento = drive.consultar_elementos()[0]
                 drive.crea_carpetas(nombre_carpeta,id_elemento)
                 
-            else :
+            elif eleccion != "5":
                 ## subo el archivo a drive
                 print("\n --- Suba el archivo recien creado a su drive ---  ")
                 print("Ingrese el nombre del archivo recien creado con la extension -> ej: texto.txt")
@@ -478,6 +478,9 @@ def main()-> None:
                 drive.opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
 
         elif opcion[0] == "3":
+
+            #  VALIDAR EL FICHERO PASADO POR EL USUARIO []
+
             elegir = input("\n1 - Subir archivo\n2 - Subir carpeta\n -> ")
             if elegir == "1":
                 print(" ------ Navega por tu drive y subi el archivo a donde quieras !  ------ ")
@@ -491,7 +494,7 @@ def main()-> None:
 
                 carpeta_a_subir = input("Ingrese el nombre de la carpeta que desea subir\n -> ")
                 ruta = os.getcwd() + "/" + carpeta_a_subir
-                id_carpeta = drive.consultar_elementos()[0]
+                id_carpeta = drive.validar_elemento("carpeta")[0]
                 drive.recorrer_carpeta(ruta, id_carpeta)
                 print(f" ### La carpeta {carpeta_a_subir} se subio exitosamente ### ")
 
