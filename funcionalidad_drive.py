@@ -518,47 +518,6 @@ def remplazar_archivos(ruta_arch, id_arch):
     service().files().update(fileId = id_arch,
                             media_body = media).execute()
 
-
-def pull_remoto_a_local(archivos_locales:dict, archivos_remotos: dict):
-    """
-    PRE: 
-    POST:TODAVIA NO FUNCIONA Compara fecha de modif y dsps cambios
-    """
-    pass
-
-
-def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict, carpeta_id = "root"):
-    """
-    PRE:
-    POST: No devuelve nada.
-    Reemplaza los archivos en el remoto que sufireron modificaciones en el local
-    """
-    #arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
-
-    for arch_local, info_local in archivos_locales.items():
-        if arch_local in archivos_remotos.keys(): #si el nombre del archivo esta en el remoto            
-        
-            for arch_remoto in archivos_remotos.keys():                
-                if arch_local == arch_remoto:   #si coincide el nombre del arch                        
-                    fecha_remoto = archivos_remotos[arch_remoto][1]
-                    fecha_local = info_local[0] #la fecha es el elemento 0 de la lista 
-                    #FALTARIA COMPRARA LINEA A LINEA. Asi no habria q esperar 1 min
-                    # pues al comparar linea a linea no deberia saltar => no se modifica
-                    if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta                        
-                        id_arch = archivos_remotos[arch_remoto][0]
-                        remplazar_archivos(info_local[1], id_arch)
-                                    #la ruta es el elemento 1 de info_local
-                        print(f'--El archivo {arch_local} se actualizo correctamente--')
-                    else:
-                        print(f'***El archivo {arch_local} no se actualizo ***')        
-        else:                               #clave es el nombre
-
-            ## SOLO DESCARGA ARCHIVOS 
-            print(f'El archivo {arch_local} no se encuentra en el remoto')
-            if arch_local != ".git" and arch_local != "__pycache__" :
-                subir_archivos(arch_local, info_local[1], carpeta_id)
-
-
 def modificar_dic_arch_remoto(archivos_remotos):
     """
     PRE:
@@ -572,69 +531,6 @@ def modificar_dic_arch_remoto(archivos_remotos):
         #Modifico la fecha del remoto xa poderla comparar con la local (tambien hasta seg inclusive)
         nueva_fecha_remoto = info_archivo[1][:16].replace('T',' ')          #por error
         archivos_remotos[archivo_remoto][1] = nueva_fecha_remoto
-
-
-def cargar_dic_arch_local(archivos_locales):
-    """
-    PRE:
-    POST: No devuelve nada. Modufico por referencia el dict "archivos_locales"
-    con las sig estructura arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
-    """
-    for arch in list(pathlib.Path().glob('**/*')):  #recorro todooo
-        
-        #obtengo hora de modif de cada archivo usando el objeto datetime
-        hora_local = datetime.datetime.fromtimestamp(arch.stat().st_mtime)
-        
-        #Sumo + 3 HORAS a hora LOCAL usando el objeto datetime
-        horas = 3
-        horas_sumadas = datetime.timedelta(hours = horas)
-        nueva_hora_local = hora_local + horas_sumadas # sumo 3 horas
-
-        #Convierto el objeto datetime en str
-        fecha_local = str(nueva_hora_local)
-        #le rcorto hasta los segundos inclusive por un tema de error
-        fecha_local = fecha_local[:16]  
-        
-        #uso como clave el nombre del arch, y como valor una lista la fecha de mofi y la 
-        # ruta
-        archivos_locales[str(arch.name)] = [fecha_local, arch]
-    
-
-def sincronizar(id_carpeta):
-    """
-    PRE: Recibe el dict/ list "" con los nombres de los archivos de la carpeta 
-    q se esta sincronizando
-    POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
-    OJO!
-    1 - las fechas de modif se aproximaron a los minutos por lo que si se modifica dentro del 
-    #mismo minuto y se sincroiza no se matienen los cambios. OJO, una vez cometido el error,
-    es necesario, esperar 1 minuto, modificar, actualizar. y recien 1 min dsps no se actualizara 
-    mas.
-    """
-    #FALTA COMPARAR LINEA A LINEA !!!!!
-    #Y EL DOWNSTREAM!!! (X AHORA SOLO CHEQUEO Q LA MODIF DE ABAJO ESTE ARRIBA.)
-    #SOLUCION: Renviar parametros invertidos a comparar_info_archivos()
-
-    #arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
-    archivos_locales = dict()
-    
-    cargar_dic_arch_local(archivos_locales)
-    
-    #Traigo archivos de drive y cargo el diccionario archivos_remotos
-    query = f"'{id_carpeta}' in parents and not trashed"   #esto es un win win porque solo archivos, ninguna carpeta
-    carpetas, archivos_remotos = listar_elementos(query)
-    
-    #Modifico en el dict archivos_remotos la "modifiedTime" por referencia de
-    #xa q coincida con la local
-    modificar_dic_arch_remoto(archivos_remotos)
-    
-    #Sync remoto con local (modifico remoto)
-    print('1-Push (Modifica remoto, con cambios locales)\n2-pull(modifica local con cambios remotos')
-    opc = int(validar_opcion(1,2))
-    if opc == 1:
-        push_local_a_remoto(archivos_locales, archivos_remotos,id_carpeta)
-    else:
-        pull_remoto_a_local(archivos_locales, archivos_remotos)
 
 def mover_archivos():
 
@@ -660,7 +556,7 @@ def mover_archivos():
     
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
-## ----- AÑADI PARA SUBIR CARPETAS AL DRIVE ---------------
+## ----- SUBIR CARPETAS AL DRIVE ---------------
 def crea_carpetas(nombre_carpeta, parent = ""):
     if parent == "":
         file_metadata = {
@@ -690,3 +586,91 @@ def recorrer_carpeta(ruta_actual, parent = ""):
         else:
             ruta_fichero = ruta_actual + "/" + ficheros
             recorrer_carpeta(ruta_fichero, id_carpeta)
+
+## ----- SINCRONIZAR 
+
+def fecha_modificacion_remoto(id_carpeta):
+    ## drive = {nombre fichero = [id fichero , fecha de modificacion]]}
+    page_token = None
+    drive = dict() # diccionario con {nombre carpeta : [id, mimetype, parent]}
+                   # lista_padres es una lista [(padre1, id ), (padre2, id) ... ]
+    response = service().files().list(q = f" '{id_carpeta}' in parents and (not trashed) ",
+                                    fields='nextPageToken, files(id, name, mimeType,modifiedTime)').execute()
+    for file in response.get('files', []):
+        file_date = file.get("modifiedTime")[:18].replace('T', ' ')
+        drive[file.get("name")] = [file.get("id"),file_date]
+
+    return drive
+
+def fecha_modificacion_local(ruta_actual):
+    ## archivo_fecha_local = {nombre fichero = fecha_modificacion}
+    archivos_fechas_local = dict()
+    carpetas_fechas_local = dict()
+    with os.scandir(ruta_actual) as ficheros:
+        for fichero in ficheros:
+            if os.path.isfile(fichero):
+                fecha_modificacion_archivo = datetime.datetime.fromtimestamp(os.path.getmtime(fichero))
+                horas_sumadas = datetime.timedelta(hours = 3)
+                fecha_modificacion_archivo += horas_sumadas
+                fecha_modificacion_archivo = str(fecha_modificacion_archivo)[:18]
+                archivos_fechas_local[fichero.name] = fecha_modificacion_archivo
+            elif os.path.isdir(fichero):
+                fecha_modificacion_carpeta = datetime.datetime.fromtimestamp(os.path.getmtime(fichero))
+                horas_sumadas = datetime.timedelta(hours = 3)
+                fecha_modificacion_carpeta += horas_sumadas
+                fecha_modificacion_carpeta = str(fecha_modificacion_carpeta)[:18]
+                carpetas_fechas_local[fichero.name] = fecha_modificacion_carpeta
+
+    return archivos_fechas_local , carpetas_fechas_local
+
+def descargar_archivo(archivo_id, ruta):
+
+    print("ruta en funcion descargar_archivo : ", ruta)
+    nombre_archivo = ruta
+
+    file_id = archivo_id
+    request = service().files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
+        print(f"Descarga progres {status.progress() * 100}")
+
+    fh.seek(0)
+
+    with open(nombre_archivo, "wb") as f:
+        f.write(fh.read())
+        f.close()
+
+def sincronizar(archivos_drive, archivos_local, carpeta_local, ruta):
+
+    for archivo , fecha in archivos_local.items():
+        if archivo in archivos_drive.keys():
+            ruta_archivo = ruta + "/" + archivo
+            print(ruta_archivo)
+            # comparo fechas 
+            if fecha > archivos_drive[archivo][1]:
+                print(fecha)
+                print(archivos_drive[archivo][1])
+                # actualizo el archivo al remoto
+                print(ruta_archivo)
+                print(archivos_drive[archivo][0])
+                remplazar_archivos(ruta_archivo, archivos_drive[archivo][0])
+            elif fecha < archivos_drive[archivo][1]:
+                print(fecha)
+                print(archivos_drive[archivo][1])
+                # actualizo archivo al local
+                os.remove(ruta_archivo)
+                descargar_archivo(archivos_drive[archivo][0], ruta_archivo)
+
+    for carpeta , fecha in carpeta_local.items():
+        if carpeta in archivos_drive.keys():
+            ruta_archivo = ruta + "/" + carpeta
+            # actualizo los archivos dentro de la carpeta
+            carpeta_id = encontrar_carpeta_upstream(carpeta)[0]
+            archivos_r = fecha_modificacion_remoto(carpeta_id)
+            archivos_l = fecha_modificacion_local(ruta_archivo)[0]
+            carpeta_l = fecha_modificacion_local(ruta_archivo)[1]
+            sincronizar(archivos_r, archivos_l, carpeta_l, ruta_archivo)
+
