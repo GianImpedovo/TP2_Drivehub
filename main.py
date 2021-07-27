@@ -1,6 +1,5 @@
 
 import os
-import service_drive
 import service_gmail
 from pathlib import Path
 import csv
@@ -12,7 +11,6 @@ from zipfile import ZipFile
 import shutil
 from zipfile import ZipFile
 import pprint
-
 import funcionalidad_drive as drive
 
 RUTA = os.getcwd()
@@ -456,16 +454,15 @@ def main()-> None:
             drive.menu_descargar_elementos(ruta_actual)
 
         elif opcion[0] == "5":
-            directorio_actual = RUTA.split("/")[-1]
-            print(f"\n Sincroniza {directorio_actual}")
-            sincronizacion = input(f"Desea sincronizar la carpeta {directorio_actual} (s/n): ")
+            nombre_carpeta = RUTA.split("/")[-1]
+            print(f"\n Sincroniza {nombre_carpeta}")
+            sincronizacion = input(f"Desea sincronizar la carpeta {nombre_carpeta} (s/n): ")
             if sincronizacion == "s":
-                carpeta_id = drive.encontrar_carpeta_upstream(directorio_actual)[0]
-                drive.sincronizar(carpeta_id)
-                ## drive.sincronizar()
-                pass
-            ## sincronizar la carpeta en donde estoy parado
-            pass
+                    c_id = drive.encontrar_carpeta_upstream(nombre_carpeta)[0]
+                    archivos_remoto = drive.fecha_modificacion_remoto(c_id)
+                    archivos_local = drive.fecha_modificacion_local(ruta_actual)[0]
+                    carpeta_local = drive.fecha_modificacion_local(ruta_actual)[1]
+                    drive.sincronizar(archivos_remoto,archivos_local, carpeta_local, ruta_actual)
 
         elif opcion[0] == "6":
             email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
