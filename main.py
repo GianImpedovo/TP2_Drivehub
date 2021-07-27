@@ -11,6 +11,11 @@ from zipfile import ZipFile
 import shutil
 from zipfile import ZipFile
 import pprint
+from datetime import datetime, date, time, timedelta
+import mimetypes
+from email.mime.base import MIMEBase
+from email import encoders
+from email.mime.application import MIMEApplication
 import funcionalidad_drive as drive
 
 RUTA = os.getcwd()
