@@ -439,11 +439,6 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
     enviar_email(email_alumno,msj_email)    
     return validar        
 
-def validar_fecha():
-    hoy = date.today()
-    query = "before: {0} after: {1}".format(today.strftime('%Y/%m/%d'),
-                                            yesterday.strftime('%Y/%m/%d'))  
-
 def validate_opcion(limite:int,text) -> int :
     opcion = input(text)
     
@@ -583,6 +578,7 @@ def main()-> None:
             obtener_evaluaciones()
 
         elif opcion[0] == "7":
+            obtener_evaluaciones()
             crear_carpeta_evaluacion(ruta_actual)
 
         mostrar_menu(ruta_actual)
