@@ -21,25 +21,26 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     
     return opc
 
-def retroceder(paths: dict) -> tuple:     #VER CON PILAAAAAAAAA!!!!1 
+def retroceder(paths: list) -> tuple:
 
     """
+    paths =[ [nombre_carpeta, id_carpeta]]
     PRE: Recibe el diccionario "paths" que tiene como claves los nombres de las carpetas por 
     las que ya se navego el usuario y como valores sus respectivos ids
     
     POST: Devuelve una tupla con los str "id_carpeta" con el id de la carpeta seleccionada
     y "nombre_carpeta" con el nombre de dicha carpeta  
-    """
-    print('Ingrese el nombre de la carpeta a la que desea retroceder: ')
-    for carpeta in paths.keys():
-        print(f'-{carpeta}')
+    """  
+    ultima_carpeta = paths.pop() #saco la ultima que eleji
+
+    if paths: # si no queda vacia depues del pop
+        nombre_carpeta = paths[-1][0]   #devuelvo el nombre
+        id_carpeta = paths[-1][1] #y id de la anterior en la que estuve SIN SACARLO
     
-    nombre_carpeta = input('Su ingreso: ')
-    while nombre_carpeta not in paths.keys():
-        nombre_carpeta = input('Por favor elija una carpeta de las listadas: \n')
-
-    id_carpeta = paths[nombre_carpeta]
-
+    else: #si queda vacia, la cargo de nuevo
+        paths.append(['Directorio principal(root)','root'])
+        id_carpeta, nombre_carpeta = 'root', 'Directorio principal(root)'
+            
     return id_carpeta, nombre_carpeta
 
 def seleccionar_elementos(info_elementos: dict) -> str:
