@@ -12,6 +12,7 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
     PRE: "opc_minimas" y "opc_maximas" son dos números enteros que 
     simbolizan la cantidad de opciones posibles.
+
     POST: Devuelve en formato string la var "opc" con un número 
     entero dentro del rango de opciones.
     """
@@ -24,12 +25,11 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
 def retroceder(paths: list) -> tuple:
 
     """
-    paths =[ [nombre_carpeta, id_carpeta]]
-    PRE: Recibe el diccionario "paths" que tiene como claves los nombres de las carpetas por 
-    las que ya se navego el usuario y como valores sus respectivos ids
+    paths =[ [nombre_carpeta, id_carpeta], ]
+    PRE: Recibe la lista "paths" que tiene como elementos listas que tienen en la posicion 0
+    el nombre de la caerpeta y en la posicion 1 su repestivo id.
     
-    POST: Devuelve una tupla con los str "id_carpeta" con el id de la carpeta seleccionada
-    y "nombre_carpeta" con el nombre de dicha carpeta  
+    POST: Devuelve los str "id_carpeta" y " nombre_carpeta".
     """  
     ultima_carpeta = paths.pop() #saco la ultima que eleji
 
@@ -141,18 +141,22 @@ def ordenar_info_elementos(elementos: dict):
     
     return info_elementos
 
+
 def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     """
-    PRE: recibe los diccionarios "elementos":
-    [{id: 'id_elemento', name: 'nombre del elemento', mimeType: '(el tipo de archivo q sea'},
-    'modifiedTime': 'fecha de modif','parents': ['id_parents']]
-   
-    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', '[id_parents'], 'mimeType' ]} y
+    PRE: recibe la lista de diccionarios (cada diccionario es un elemento): 
+    
+    "elementos" = [{id: 'id_elemento', name: 'nombre del elemento', 'mimeType': 'txt/plain(por ej)', 
+    'modifiedTime': 'fecha de modif','parents': ['id_parents'] } ],
+    
+    y los diccionarios "carpetas" y archivos":
+    
+    "carpetas" = {nombre_carpeta: ['id carpeta', 'fecha_modif', '[id_parents'], 'mimeType' ]} y
     "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType' ]}.
     
-    POST: No devuelve nada. Modifica por parametro los diccionario "info_carpetas" e 
-    "info_archivos" colocando como clave los nombres de los elementos y sus id's y fecha de modif
-    en una lista como valores.
+    POST: No devuelve nada. Modifica por parametro los diccionarios "carpetas" y
+    "archivos" colocando como claves los nombres de los elementos y su informacion en una lista
+    como valores.
     """
     for elemento in elementos:
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
@@ -166,10 +170,11 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
 def listar_elementos(query: str) -> tuple:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
-    
-    POST: Devuelve los diccionarios "carpetas" y "archivos" con los nombres de los 
-    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]} y
-    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]}.
+
+    POST: Devuelve los diccionarios "carpetas" y "archivos":
+
+    "carpetas" = {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]} y
+    "archivos" = {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]}.
     """
     page_token = None
     cortar = False
@@ -185,7 +190,6 @@ def listar_elementos(query: str) -> tuple:
         #print(resultados)  #testing
         #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
         #cada diccionario es un elemento de dicha lista. Lo guardo en elementos.
-        
         elementos = resultados['files']
         
         #print(elementos) #testing
@@ -197,13 +201,13 @@ def listar_elementos(query: str) -> tuple:
         page_token = resultados.get('nextPageToken')
         if page_token is None:
             cortar = True
-
     #return info_carpetas, info_archivos
     return carpetas, archivos
 
 def armado_de_consulta(id_elemento: str) -> str:
     """
-    PRE: "id_elemento" es el id de la carpeta o archivo que selecciono el usurario
+    PRE: Recibe el str "id_elemento" con el id de la carpeta o archivo que selecciono 
+    el usurario
     
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
@@ -241,12 +245,10 @@ def armado_de_consulta(id_elemento: str) -> str:
 
 def consultar_elementos():
     """
-    PRE:
-    POST: Redirige a otras funciones de filtro y busqueda de archivos.
-    info_carpetas"  {num_carp:['nombre carpeta','id carpeta', ['id_parents'], 'mimeType' ] } y
-    "info_archivos" {num_arch: ['nombre archivo', 'id archivo', ['id_parents'], 'mimeType' ] }
-    
-    Devuelve id_elemento, nombre_elemento, id_parents
+    PRE: No recibe nada. Funciona como un menu gestor de drive
+
+    POST: Redirige a otras funciones de filtro y busqueda de archivos. 
+    Devuelve los str "id_elemento", "nombre_elemento", "id_parents", "mime_type"
     """
     print('BUSCADOR DE DRIVE'.rjust(50))
     print('--- My Drive -> Directorio principal---'.rjust(57))
@@ -307,10 +309,12 @@ def consultar_elementos():
 
 def validar_elemento(elemento):
     """
-    PRE:Recibe un str con el tipo de elemmento a validar
+    PRE:Recibe el str "elemento" con el tipo de elemento a validar. Este puede ser
+    "carpeta" o "archivo"
     
-    POST:Redirige a consultar elementos hasta devolver una carpeta o archivo segun corresponda.
-    Devuelve: id_elemento, nombre_elemento, id_parents
+    POST: Redirige a consultar elementos hasta el fin de la especie humana o hasta el 
+    devolver una carpeta o archivo segun corresponda.
+    Devuelve los str "id_elemento", "nombre_elemento", "id_parents"
     """
     mime_type_carpeta = 'application/vnd.google-apps.folder'
     id_elemento, nombre_elemento, id_parents, mime_type = consultar_elementos()
@@ -328,14 +332,21 @@ def validar_elemento(elemento):
     return id_elemento, nombre_elemento, id_parents
 
 def descargar_archivo_binario(id_elemento, nombre_elemento):
+    """
+    PRE: Recibe el str "id_elemento" con el id del archivo a descargar
+
+    POST: Descarga el archivo cuyo id es el indicado y
+    devuelve el objeto "arch" con el archivo q se descargo
+    """
      
     request = service().files().get_media(fileId = id_elemento)
     arch = io.BytesIO()
     
     return arch
 
-def descargar_carpeta(id_elemento):
-    
+def descargar_carpeta(id_elemento,nombre_elemento, ruta_actual):
+    ruta_actual = ruta_actual + "/" + nombre_elemento
+    os.mkdir(ruta_actual)
     page_token = None
     cortar = False
     while not cortar:
@@ -347,19 +358,13 @@ def descargar_carpeta(id_elemento):
         for elemento in elementos:
             id_elemento = elemento['id']
             nombre_elemento = elemento['name']
-            mimeType = elemento['mimeType']
-            ruta = os.getcwd()
-            carpeta_actual = ''
-            #request = service().files().export_media(fileId = id_elemento)
+            mimeType = elemento['mimeType']            
             fh = io.BytesIO()
 
-
             if mimeType == 'application/vnd.google-apps.folder':
-                os.mkdir( ruta + '/' + carpeta_actual)
-                carpeta_actual = nombre_elemento
-                fh = descargar_carpeta(id_elemento)
+                descargar_carpeta(id_elemento,nombre_elemento, ruta_actual)
             else:
-                with open(os.path.join(carpeta_actual,nombre_elemento), 'wb') as arch:
+                with open(os.path.join(ruta_actual,nombre_elemento), 'wb') as arch:
                     arch.write(fh.read())
 
         page_token = resultados.get('nextPageToken')
@@ -367,15 +372,14 @@ def descargar_carpeta(id_elemento):
             cortar = True
     #request = service().files().export_media(fileId = id_elemento,
     #                                        mimeType = mimeType)
-    return fh
 
 def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
-
     """
-    PRE: recibe los diccionarios info_carpetas" e "info_archivos" con el numero de elemento,
-    el nombre y su respectivo id
+    PRE: recibe el str "ruta_local" con la ruta local en la que esta paardo el usuario
+
     POST: 
-    Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
+    Redirige a otras funciones para permitir descargar el archivo o carpeta seleccionado 
+    en drive por el usuario. 
     """
     print('\n ------------- MENU DESCARGAR ------------- ')
     print('Que desea descargar?')
@@ -385,8 +389,10 @@ def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
         print('seleccione la carpeta que desea descargar')
 
         id_carpeta, nombre_elemento, id_parents = validar_elemento('carpeta')    
-        
-        arch = descargar_carpeta(id_carpeta)              
+
+        descargar_carpeta(id_carpeta,nombre_elemento,ruta_local)
+        print()
+        print(f'se descargo correctamente "{nombre_elemento}"\n')              
     
     else: #descargar un archivo
         print('seleccione el archivo que desea descargar')
@@ -394,13 +400,15 @@ def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
         id_archivo, nombre_elemento, id_parents = validar_elemento('archivo')
 
         arch = descargar_archivo_binario(id_archivo, nombre_elemento)
-    
-    #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
-    #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
-    ubicacion = ruta_local
-    # escribir todo lo q venga en arch
-    with open(os.path.join(ubicacion,nombre_elemento), 'wb') as archivo:
-        archivo.write(arch.read()) 
+        
+        print(f'se descargo correctamente "{nombre_elemento}"\n')              
+
+        #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
+        #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
+        # ubicacion = ruta_local
+        # # escribir todo lo q venga en arch
+        # with open(os.path.join(ubicacion,nombre_elemento), 'wb') as archivo:
+        #     archivo.write(arch.read()) 
 
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     """
@@ -427,6 +435,7 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     la q me encuentro localmente
     """    
     #primero listo todas las carpetas de la nube
+    print(carpeta_contenedora)
     query = f" mimeType = 'application/vnd.google-apps.folder' and name contains '{carpeta_contenedora}' and not trashed "
     
     carpetas, archivos = listar_elementos(query)
