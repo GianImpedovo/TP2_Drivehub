@@ -1,7 +1,7 @@
 
 import os
-import service_drive
-import service_gmail
+#import service_drive
+#import service_gmail
 from pathlib import Path
 import csv
 
@@ -316,122 +316,122 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     
     crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
 
-# --------------------- RECEPCION DE EVALUACIONES ---------- (CODIGO ADO)
-def obtener_email(id_mensaje):
-    servicio = service_gmail.obtener_servicio()
-    mensaje = servicio.users().messages().get(userId='me',id=id_mensaje).execute()
-    return mensaje
+# # --------------------- RECEPCION DE EVALUACIONES ---------- (CODIGO ADO)
+# def obtener_email(id_mensaje):
+#     servicio = service_gmail.obtener_servicio()
+#     mensaje = servicio.users().messages().get(userId='me',id=id_mensaje).execute()
+#     return mensaje
 
-def obtener_lista_email():
-    servicio = service_gmail.obtener_servicio()
-    resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread').execute()
-    return resultados.get('messages',[])
+# def obtener_lista_email():
+#     servicio = service_gmail.obtener_servicio()
+#     resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread').execute()
+#     return resultados.get('messages',[])
 
-def enviar_email(email,msj):
-    try:
-    servicio = service_gmail.obtener_servicio()
-    mime_mensaje = MIMEMultipart()
-    mime_mensaje['subject'] = 'EVALUACION'
-    mime_mensaje['to'] = email
-    mime_mensaje.attach(MIMEText(msj, 'plain'))
-    raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
-    mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
-    except:
-        print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
-        print(msj)
-
-
-
-def descomprimir_archivo(name,email):
-    validar = True
-    archivo = "./evaluaciones/"+name+".zip"
-    try:
-        with ZipFile(archivo, 'r') as evaluacion:
-            nombres_archivo = evaluacion.namelist()
-            for nombre_archivo in nombres_archivo: 
-                if nombre_archivo.endswith('.py'):
-                    evaluacion.extract(nombre_archivo, 'evaluaciones/'+name)
-                    print("ARCHIVO DESCOMPRIMIDO")
-                else:
-                    validar = False
-                    enviar_email(email,'FORMATO DE ARCHIVOS INCORRECTO - '+nombre_archivo)
-                    print("FORMATO DE ARCHIVOS INCORRECTO: " + email)
-    except:
-        validar = False
-        enviar_email(email,'OCURRIO UN PROBLEMA AL DESCOMPRIMIR EL ZIP')
-        print("OCURRIO UN PROBLEMA AL DESCOMPRIMIR EL ZIP: " + email)
-    return validar        
+# def enviar_email(email,msj):
+#     try:
+#     servicio = service_gmail.obtener_servicio()
+#     mime_mensaje = MIMEMultipart()
+#     mime_mensaje['subject'] = 'EVALUACION'
+#     mime_mensaje['to'] = email
+#     mime_mensaje.attach(MIMEText(msj, 'plain'))
+#     raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
+#     mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+#     except:
+#         print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
+#         print(msj)
 
 
-def obtener_adjunto(email,msj_id,titulo,email_alumno):
-    validar = True
-    msj_email = ""
-    msj_error = ""
-    servicio = service_gmail.obtener_servicio()
-    if 'parts' in email['payload']:        
-        for adjunto in email['payload']['parts']:
-            mime_type = adjunto['mimeType']
-            nombre_archivo = adjunto['filename']
-            body = adjunto['body']
 
-            if 'attachmentId' in body:
-                try:
-                    attachment_id = adjunto['body']['attachmentId']
-                    resultado = servicio.users().messages().attachments().get(userId='me', messageId=msj_id,id=attachment_id).execute()
-                    adjunto_data = resultado['data']
-                    archivo = base64.urlsafe_b64decode(adjunto_data.encode('UTF-8'))
+# def descomprimir_archivo(name,email):
+#     validar = True
+#     archivo = "./evaluaciones/"+name+".zip"
+#     try:
+#         with ZipFile(archivo, 'r') as evaluacion:
+#             nombres_archivo = evaluacion.namelist()
+#             for nombre_archivo in nombres_archivo: 
+#                 if nombre_archivo.endswith('.py'):
+#                     evaluacion.extract(nombre_archivo, 'evaluaciones/'+name)
+#                     print("ARCHIVO DESCOMPRIMIDO")
+#                 else:
+#                     validar = False
+#                     enviar_email(email,'FORMATO DE ARCHIVOS INCORRECTO - '+nombre_archivo)
+#                     print("FORMATO DE ARCHIVOS INCORRECTO: " + email)
+#     except:
+#         validar = False
+#         enviar_email(email,'OCURRIO UN PROBLEMA AL DESCOMPRIMIR EL ZIP')
+#         print("OCURRIO UN PROBLEMA AL DESCOMPRIMIR EL ZIP: " + email)
+#     return validar        
 
-                    with open("./evaluaciones/"+nombre_archivo, 'wb') as f:
-                        f.write(archivo)
-                    validar = descomprimir_archivo(titulo,email_alumno)
-                except:
-                    validar = False
-                    msj_email = "OCURRIO UN PROBLEMA AL DESCARGAR EL ZIP"
-                    msj_error = "OCURRIO UN PROBLEMA AL DESCARGAR EL ZIP: " + email_alumno    
-            else:
-                validar = False
-                msj_email = 'FALTA ADJUNTO'
-                msj_error = "FALTA ADJUNTO: " + email_alumno
-    else:
-        validar = False
-        msj_email = 'OCURRIO UN PROBLEMA CON EL CORREO'
-        msj_error = "OCURRIO UN PROBLEMA CON EL CORREO : " + email_alumno   
-    print(msj_error)
-    enviar_email(email_alumno,msj_email)    
-    return validar        
 
-def obtener_evaluaciones():
-    mensajes = obtener_lista_email()
-    email = ''
-    titulo = ''
-    validar = True
-    for msj in mensajes:
-        msj_id = msj['id']
-        msj_detalles = obtener_email(msj_id)
-        if 'payload' in msj_detalles:
-            for msj_detalle in msj_detalles["payload"]["headers"]: 
-                print("msj_detalle",msj_detalle) 
-                if msj_detalle["name"].lower() == 'to':
-                    email = msj_detalle["value"]
-                if msj_detalle["name"].lower() == 'subject':   
-                    titulo = msj_detalle["value"]
-            if validar_nombre(titulo):    
-                validar = obtener_adjunto(msj_detalles,msj_id,titulo,email)
-                if validar:
-                    enviar_email(email,'ENTREGA OK')  
-            else:
-                print("FORMATO DE NOMBRE INVALIDO: " + email)        
-                enviar_email(email,'FORMATO DE NOMBRE INVALIDO')
-        else:
-            print("OCURRIO UN PROBLEMA CON EL CORREO: " + email)        
+# def obtener_adjunto(email,msj_id,titulo,email_alumno):
+#     validar = True
+#     msj_email = ""
+#     msj_error = ""
+#     servicio = service_gmail.obtener_servicio()
+#     if 'parts' in email['payload']:        
+#         for adjunto in email['payload']['parts']:
+#             mime_type = adjunto['mimeType']
+#             nombre_archivo = adjunto['filename']
+#             body = adjunto['body']
 
-def validar_nombre(text:str) -> str :
-    validar = True
-    alumno = text.split()
-    for nombre in alumno: 
-        if not nombre.isalpha():     
-            validar = False
-    return validar
+#             if 'attachmentId' in body:
+#                 try:
+#                     attachment_id = adjunto['body']['attachmentId']
+#                     resultado = servicio.users().messages().attachments().get(userId='me', messageId=msj_id,id=attachment_id).execute()
+#                     adjunto_data = resultado['data']
+#                     archivo = base64.urlsafe_b64decode(adjunto_data.encode('UTF-8'))
+
+#                     with open("./evaluaciones/"+nombre_archivo, 'wb') as f:
+#                         f.write(archivo)
+#                     validar = descomprimir_archivo(titulo,email_alumno)
+#                 except:
+#                     validar = False
+#                     msj_email = "OCURRIO UN PROBLEMA AL DESCARGAR EL ZIP"
+#                     msj_error = "OCURRIO UN PROBLEMA AL DESCARGAR EL ZIP: " + email_alumno    
+#             else:
+#                 validar = False
+#                 msj_email = 'FALTA ADJUNTO'
+#                 msj_error = "FALTA ADJUNTO: " + email_alumno
+#     else:
+#         validar = False
+#         msj_email = 'OCURRIO UN PROBLEMA CON EL CORREO'
+#         msj_error = "OCURRIO UN PROBLEMA CON EL CORREO : " + email_alumno   
+#     print(msj_error)
+#     enviar_email(email_alumno,msj_email)    
+#     return validar        
+
+# def obtener_evaluaciones():
+#     mensajes = obtener_lista_email()
+#     email = ''
+#     titulo = ''
+#     validar = True
+#     for msj in mensajes:
+#         msj_id = msj['id']
+#         msj_detalles = obtener_email(msj_id)
+#         if 'payload' in msj_detalles:
+#             for msj_detalle in msj_detalles["payload"]["headers"]: 
+#                 print("msj_detalle",msj_detalle) 
+#                 if msj_detalle["name"].lower() == 'to':
+#                     email = msj_detalle["value"]
+#                 if msj_detalle["name"].lower() == 'subject':   
+#                     titulo = msj_detalle["value"]
+#             if validar_nombre(titulo):    
+#                 validar = obtener_adjunto(msj_detalles,msj_id,titulo,email)
+#                 if validar:
+#                     enviar_email(email,'ENTREGA OK')  
+#             else:
+#                 print("FORMATO DE NOMBRE INVALIDO: " + email)        
+#                 enviar_email(email,'FORMATO DE NOMBRE INVALIDO')
+#         else:
+#             print("OCURRIO UN PROBLEMA CON EL CORREO: " + email)        
+
+# def validar_nombre(text:str) -> str :
+#     validar = True
+#     alumno = text.split()
+#     for nombre in alumno: 
+#         if not nombre.isalpha():     
+#             validar = False
+#     return validar
 
 
 def main()-> None:
@@ -480,20 +480,23 @@ def main()-> None:
 
         elif opcion[0] == "3":
             nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
-            ruta_actual = RUTA + "/" + nombre_archivo
-            carpeta = RUTA.split("/")[-1]
+            ruta_actual = RUTA + "\\" + nombre_archivo
+            carpeta = RUTA.split("\\")[-1]
+            print(ruta_actual)
+            print(carpeta)
             drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta)
 
         elif opcion[0] == "4":
             drive.menu_descargar_elementos(ruta_actual)
 
         elif opcion[0] == "5":
-            directorio_actual = RUTA.split("/")[-1]
+            directorio_actual = RUTA.split("\\")[-1]
             print(f"\n Sincroniza {directorio_actual}")
             sincronizacion = input(f"Desea sincronizar la carpeta {directorio_actual} (s/n): ")
             if sincronizacion == "s":
                 carpeta_id = drive.encontrar_carpeta_upstream(directorio_actual)[0]
-                drive.sincronizar(carpeta_id)
+                if carpeta_id:
+                    drive.sincronizar(carpeta_id,RUTA)
                 ## drive.sincronizar()
                 pass
             ## sincronizar la carpeta en donde estoy parado
