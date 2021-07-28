@@ -22,6 +22,7 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     
     return opc
 
+
 def retroceder(paths: list) -> tuple:
 
     """
@@ -42,6 +43,7 @@ def retroceder(paths: list) -> tuple:
         id_carpeta, nombre_carpeta = 'root', 'Directorio principal(root)'
             
     return id_carpeta, nombre_carpeta
+
 
 def seleccionar_elementos(info_elementos: dict) -> str:
     """
@@ -66,6 +68,7 @@ def seleccionar_elementos(info_elementos: dict) -> str:
     print(f'se ha seleccionado {nombre_elemento}')
 
     return id_elemento, nombre_elemento, id_parents, mime_type
+
 
 def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> tuple:
     """
@@ -92,6 +95,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     
     return id_elemento, nombre_elemento, id_parents, elemento, mime_type
 
+
 def guardar_paths(info_carpetas: dict, paths: dict) -> dict: #VER CON PILAAAAAA!!!
     """
     PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'], 'mimeType' ] } ) es un diccionario y 
@@ -109,6 +113,7 @@ def guardar_paths(info_carpetas: dict, paths: dict) -> dict: #VER CON PILAAAAAA!
         if nombre_carpeta not in paths.keys():
             paths[nombre_carpeta] = id_carpeta
 
+
 def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     """
     PRE: "info_elementos" es un diccionario con numeros de elemento como clave, y con
@@ -124,6 +129,7 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
         print(f'Se encontraron {num_ele} {tipo_ele}\n')
     else:
         print(f'No se encontraron {tipo_ele}\n')
+
 
 def ordenar_info_elementos(elementos: dict):
     """
@@ -167,6 +173,7 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
             archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents'], elemento['mimeType']]
             print(elemento['parents']) #testing
 
+
 def listar_elementos(query: str) -> tuple:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
@@ -203,6 +210,7 @@ def listar_elementos(query: str) -> tuple:
             cortar = True
     #return info_carpetas, info_archivos
     return carpetas, archivos
+
 
 def armado_de_consulta(id_elemento: str) -> str:
     """
@@ -242,6 +250,7 @@ def armado_de_consulta(id_elemento: str) -> str:
 
     
     return query, cortar
+
 
 def consultar_elementos():
     """
@@ -306,6 +315,7 @@ def consultar_elementos():
 
 
     return id_elemento, nombre_elemento, id_parents, mime_type
+
 
 def validar_elemento(elemento):
     """
@@ -591,7 +601,9 @@ def recorrer_carpeta(ruta_actual: str, parent: str = "")->None:
             ruta_fichero = ruta_actual + "/" + ficheros
             recorrer_carpeta(ruta_fichero, id_carpeta)
 
+
 ## ----- SINCRONIZAR 
+
 
 def fecha_modificacion_remoto(id_carpeta: str)->dict:
     """
@@ -609,6 +621,7 @@ def fecha_modificacion_remoto(id_carpeta: str)->dict:
         drive[file.get("name")] = [file.get("id"),file_date]
 
     return drive
+
 
 def fecha_modificacion_local(ruta_actual: str)->tuple:
     """
@@ -636,6 +649,7 @@ def fecha_modificacion_local(ruta_actual: str)->tuple:
 
     return archivos_fechas_local , carpetas_fechas_local
 
+
 def descargar_archivo(archivo_id: str, ruta: str)->None:
     """
     PRE: Recibo el id del archivo 
@@ -659,6 +673,7 @@ def descargar_archivo(archivo_id: str, ruta: str)->None:
     with open(nombre_archivo, "wb") as f:
         f.write(fh.read())
         f.close()
+
 
 def sincronizar(archivos_drive: dict, archivos_local: dict, carpeta_local: dict, ruta: str)->None:
     """
