@@ -344,7 +344,13 @@ def descargar_archivo_binario(id_elemento, nombre_elemento):
     
     return arch
 
-def descargar_carpeta(id_elemento,nombre_elemento, ruta_actual):
+def descargar_carpeta(id_elemento, nombre_elemento, ruta_actual):
+    """
+    Recibe los str "id_elemento" , "nombre_elemento"  y "ruta_actual"
+
+    POST: No devuelve nada. Descarga la carpeta, subcarpetas y archivos que
+    se encuentren en la carpeta seleccionada.
+    """
     ruta_actual = ruta_actual + "/" + nombre_elemento
     os.mkdir(ruta_actual)
     page_token = None
@@ -377,9 +383,8 @@ def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
     """
     PRE: recibe el str "ruta_local" con la ruta local en la que esta paardo el usuario
 
-    POST: 
-    Redirige a otras funciones para permitir descargar el archivo o carpeta seleccionado 
-    en drive por el usuario. 
+    POST: Redirige a otras funciones para permitir descargar el archivo o carpeta
+    seleccionado en drive por el usuario. 
     """
     print('\n ------------- MENU DESCARGAR ------------- ')
     print('Que desea descargar?')
@@ -412,10 +417,9 @@ def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
 
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     """
-    PRE:
+    PRE:Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_id"
     
-    POST: No devuelve nada. Sube los archivos a la carpetas indicadas. Esta funcion
-    reemplaza crear archivos, pues crear un archivo es subir un archivo vacio.
+    POST: No devuelve nada. Sube los archivos a la carpeta indicadas.
     """    
     file_metadata = {
                     'name': nombre_archivo,
@@ -430,9 +434,12 @@ def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
 
 def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     """
-    PRE:
-    POST: Compara las carpetas de local y remoto para encontrar la q correspondiente a
-    la q me encuentro localmente
+    PRE: Recibe el str "carpeta_contenedora" con el nombre de la carpeta en
+    la que esoy parado en el local
+
+    POST: Busca entre los nombres de las carpetas del remoto la carpeta
+    correspondiente a la que me encuentro en el local y 
+    devuelve los str "carpeta_id" y "nombre_carpeta"
     """    
     #primero listo todas las carpetas de la nube
     print(carpeta_contenedora)
@@ -455,11 +462,13 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
 
 def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_contenedora: str) -> None:
     """
-    PRE:
-    POST:No devuelve nada, es un menu intermedio para subir archivos
+    PRE: Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_contenedora"
+
+    POST: No devuelve nada. Funciona como menu intermedio para permitirle subir 
+    archivos a una carpeta a eleccion del usuario.
     """    
     print('SUBIR ARCHIVOS')
-    print('1-Subir a misma carpeta en drive\n2-Elegir otra carpeta')
+    print('1-Subir a carpeta homonima en drive\n2-Elegir otra carpeta')
     opc = int(validar_opcion(1,2))
     if opc == 1:
         carpeta_id, nombre_carpeta = encontrar_carpeta_upstream(carpeta_contenedora)
@@ -479,7 +488,6 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
 
 def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora):
-    print('Seleccione el archivo o carpeta de su computadora que desea subir')
     eleccion = input("1 - MyDrive\n2 - Otra Carpeta \n ->  ")
 
     if eleccion == "1":
@@ -487,20 +495,26 @@ def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora):
     elif eleccion == "2":
         opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
 
-def remplazar_archivos(ruta_arch, id_arch):
+def remplazar_archivos(ruta_archivo, id_archivo):
     """
-    PRE: Reemplaza el archivo de string "arch" conociendo su id con el str "id_ele"
-    POST:
+    PRE: Recibe los str "ruta_arch" y "id_arch"
+    
+    POST: No devuelve nada. Reemplaza en la nube el archivo de id "id_archivo" 
+    por el archivo que se encuentra en "ruta_archivo"
     """
-    media = MediaFileUpload(filename = ruta_arch)
+    media = MediaFileUpload(filename = ruta_archivo)
 
-    service().files().update(fileId = id_arch,
+    service().files().update(fileId = id_archivo,
                             media_body = media).execute()
 
 def modificar_dic_arch_remoto(archivos_remotos):
     """
     PRE:
     
+    
+    FUNCION A ELIMINAR EN EL FUTURO
+
+
     POST:
     No devuelve nada. Modufico por referencia el dict "archivos_locales"
     con las sig estructura arch_remotos = { nombre_arch: [id_carpeta, fecha_modif] }
@@ -514,8 +528,10 @@ def modificar_dic_arch_remoto(archivos_remotos):
 def mover_archivos():
 
     """
-    PRE:
-    POST:
+    PRE: No recibe parametros.
+
+    POST: No devuelve nada. Permite mover archivos de a uno a la vez de una carpeta
+    a otra en drive
     """
     print('Seleccione el archivo que desea mover\n')    
     id_archivo, nombre_arch, id_parents = validar_elemento('archivo')
