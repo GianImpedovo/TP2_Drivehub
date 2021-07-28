@@ -668,4 +668,3 @@ def sincronizar(archivos_drive: dict, archivos_local: dict, carpeta_local: dict,
             archivos_l = fecha_modificacion_local(ruta_archivo)[0]
             carpeta_l = fecha_modificacion_local(ruta_archivo)[1]
             sincronizar(archivos_r, archivos_l, carpeta_l, ruta_archivo)
-
