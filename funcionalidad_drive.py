@@ -1,25 +1,12 @@
-
-#from TP2_Drivehub.main import recorrer_directorio
 import os
 import io
-from typing import Text
+from typing import Dict, Text
 #from typing import overload, union
 import typing
 from service_drive import obtener_servicio as service
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import pathlib
 import datetime
-
-
-#FALTA: 
-#   1)-- VALIDAR SI LO Q TRAIGO ES CARPETA O ARCHIVO ===> VOLER A MODIFCAR info_carpetas, info_archivos
-#xa q traigan el mimetype. Crear funcion, validar mimetype, q va a ser solo un ciclos que
-# llama a consultar_elementos() hasta q el mimetype deja de ser ( o es) una carpeta.
-# parametros: mimetype, y adentro llama a consultar_elementos(). Asi valido todas las cosas
-#q bajo de la nube
-#   2)Hacer menu descargar_carpeta y chequear decargar carpeta
-#   3)Chequear con csv's y dict la creacion de carpetas anidadas.
-
 
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
@@ -33,30 +20,27 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
         opc = input("Por favor, ingrese una opcion valida: ")
     
     return opc
-  
 
-def retroceder(paths: list) -> tuple:     #VER CON PILAAAAAAAAA!!!!1 
+def retroceder(paths: dict) -> tuple:     #VER CON PILAAAAAAAAA!!!!1 
 
     """
-    paths =[ [nombre_carpeta, id_carpeta]]
     PRE: Recibe el diccionario "paths" que tiene como claves los nombres de las carpetas por 
     las que ya se navego el usuario y como valores sus respectivos ids
     
     POST: Devuelve una tupla con los str "id_carpeta" con el id de la carpeta seleccionada
     y "nombre_carpeta" con el nombre de dicha carpeta  
-    """  
-    ultima_carpeta = paths.pop() #saco la ultima que eleji
-
-    if paths: # si no queda vacia depues del pop
-        nombre_carpeta = paths[-1][0]   #devuelvo el nombre
-        id_carpeta = paths[-1][1] #y id de la anterior en la que estuve SIN SACARLO
+    """
+    print('Ingrese el nombre de la carpeta a la que desea retroceder: ')
+    for carpeta in paths.keys():
+        print(f'-{carpeta}')
     
-    else: #si queda vacia, la cargo de nuevo
-        paths.append(['Directorio principal(root)','root'])
-        id_carpeta, nombre_carpeta = 'root', 'Directorio principal(root)'
-            
-    return id_carpeta, nombre_carpeta
+    nombre_carpeta = input('Su ingreso: ')
+    while nombre_carpeta not in paths.keys():
+        nombre_carpeta = input('Por favor elija una carpeta de las listadas: \n')
 
+    id_carpeta = paths[nombre_carpeta]
+
+    return id_carpeta, nombre_carpeta
 
 def seleccionar_elementos(info_elementos: dict) -> str:
     """
@@ -78,10 +62,9 @@ def seleccionar_elementos(info_elementos: dict) -> str:
     id_parents =  info_elementos[num_ele][2]
     mime_type = info_elementos[num_ele][3]
     
-    print(f'se ha seleccionado : {nombre_elemento}\n')
+    print(f'se ha seleccionado {nombre_elemento}')
 
     return id_elemento, nombre_elemento, id_parents, mime_type
-
 
 def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> tuple:
     """
@@ -89,8 +72,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     POST: Devuelve una tupla con el str "id_elemento" con el id del elemento y 
     el str "nombre_elemento" con el nombre del elemento con el q se desea realizar 
     una operacion
-    """        
-    print('OPCIONES')
+    """
     print('1-Seleccionar una carpeta\n2-Seleccionar un archivo\n3-Atras')
     opc = int( validar_opcion(1,3) )
     if opc == 1 and info_carpetas:  #si hay carpetas para seleccionar
@@ -109,6 +91,22 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     
     return id_elemento, nombre_elemento, id_parents, elemento, mime_type
 
+def guardar_paths(info_carpetas: dict, paths: dict) -> dict: #VER CON PILAAAAAA!!!
+    """
+    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'], 'mimeType' ] } ) es un diccionario y 
+    paths ({nombre_carpeta: id_carpeta } )
+    
+    
+    POST: No devuelve nada. Modifica por parametro el diccionario paths cargandole los datos 
+    de info_carpetas, colocando como clave el nombre de la carpeta y como valor su 
+    respectivo id
+    """
+    for info_carpeta in info_carpetas.values():
+        nombre_carpeta = info_carpeta[0]
+        id_carpeta = info_carpeta[1]
+            #mejorar con pila LIFO con una lista usando append y pop. 
+        if nombre_carpeta not in paths.keys():
+            paths[nombre_carpeta] = id_carpeta
 
 def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     """
@@ -126,7 +124,6 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     else:
         print(f'No se encontraron {tipo_ele}\n')
 
-
 def ordenar_info_elementos(elementos: dict):
     """
     PRE: recibe el diccionario "elementos" que puede ser:
@@ -142,7 +139,6 @@ def ordenar_info_elementos(elementos: dict):
         info_elementos[num_ele] =   [nombre_elemento, info_elemento[0], info_elemento[2], info_elemento[3]]
     
     return info_elementos
-
 
 def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     """
@@ -164,10 +160,8 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
             #print(elemento['parents']) #testing
         else:
             archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents'], elemento['mimeType']]
-            #print(elemento['parents']) #testing
+            print(elemento['parents']) #testing
 
-
-#LISTAR ELEMENTOS EL REMOTO
 def listar_elementos(query: str) -> tuple:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
@@ -206,23 +200,22 @@ def listar_elementos(query: str) -> tuple:
     #return info_carpetas, info_archivos
     return carpetas, archivos
 
-
-def armado_de_consulta(id_elemento: str) -> tuple:
+def armado_de_consulta(id_elemento: str) -> str:
     """
     PRE: "id_elemento" es el id de la carpeta o archivo que selecciono el usurario
     
     POST: devuelve el string "query" con la consulta a buscar en el drive
     """
 
-    print('0- Lista TODOS los archivos y carpetas en drive')
+    print('0- LISTA TODO MYDRIVE ')
     print('1- Busqueda por numero')
     print('2- Busqueda por palabra (Escribir palabra clave : palabra COMPLETA )')
-    print('3- Volver al menu principal')
     print("----> ej - archivo -> '< nombre archivo >.< extension >' ")
-    print("----> ej - carpeta -> '< nombre carpeta >'")
-    opc = int(validar_opcion(0,3))
-    print()
-    cortar = False 
+    print("----> ej - carpeta -> '< nombre carpeta >' ")
+    print("3 - Volver al menu principal ")
+    opc = int(validar_opcion(0,3)) 
+
+    cortar = False
     #opc == o -> listar todo giuardar todo
     if opc == 0:
         query = "not trashed"
@@ -230,29 +223,20 @@ def armado_de_consulta(id_elemento: str) -> tuple:
     elif opc == 1:
         query = f" '{id_elemento}' in parents and (not trashed) " 
 
-    elif opc == 3:
-        query = ""
-        cortar = True
-
-    else:
+    elif opc == 2:
         #print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
         #opc = int(validar_opcion(1,2))
         palabra = input('ingerse palabra clave COMPLETA: ')  #contains solo busca palabras completas no letras!
         query = f" '{id_elemento}' in parents and fullText contains '{palabra} and (not trashed)' " 
 
-        # if opc == 1:
-        #     mimeType = 'application/vnd.google-apps.folder'
-        #     print('CARPETAS SEGUN LO SOLICITADO\n')
-        #     query = f"mimeType = 'application/vnd.google-apps.folder' and fullText contains '{palabra}'"
-
-        # else:
-        #     print('ARCHIVOS SEGUN LO SOLICITADO\n')
-        #     query = f" mimeType != 'application/vnd.google-apps.folder' and fullText contains '{palabra}'"
-        
         print(query) #testing
     
-    return query, cortar
+    elif opc == 3:
+        query = ""
+        cortar = True
 
+    
+    return query, cortar
 
 def consultar_elementos():
     """
@@ -264,12 +248,15 @@ def consultar_elementos():
     Devuelve id_elemento, nombre_elemento, id_parents
     """
     print('BUSCADOR DE DRIVE'.rjust(50))
-    print('---Directorio principal (root)---'.rjust(60))
+    print('--- My Drive -> Directorio principal---'.rjust(57))
     cortar = False
-    nombre_elemento = 'Directorio principal(root)'
-    id_elemento = 'root'
-    paths = [[nombre_elemento,id_elemento]]
     
+
+    nombre_elemento = "directorio_principal('root')"
+    id_elemento = 'root'
+    paths = [[nombre_elemento, id_elemento]]
+
+
     while not cortar:
 
         query, cortar = armado_de_consulta(id_elemento)
@@ -285,19 +272,14 @@ def consultar_elementos():
             print('ARCHIVOS')
             mostrar_elementos(info_archivos,'archivos')
 
-            # guardar_paths(info_carpetas, paths) #el objeto de esta funcion es guaradr los paths
-            #                     #xa q el usario pueda volver hacia atras al navegar entre carpetas
-
             id_elemento, nombre_elemento, id_parents, elemento, mime_type = generador_de_id_elemento(info_carpetas, info_archivos, paths)
             
             if elemento == 'carpeta':
-                
-                paths.append([nombre_elemento, id_elemento]) # la guardo tipo pila lifo       
-                
-                print('1-Abrir carpeta\n2-Selccionar elemento\n')
+                paths.append([nombre_elemento, id_elemento])
+                print('1-Abrir carpeta\n2-Selccionar elemento')
                 opc = int(validar_opcion(1,2))        
             
-            elif elemento == 'retroceder':  #si retrocedio no la guardo
+            elif elemento == 'retroceder':
                 opc = 1
             
             else:           #es un archivo
@@ -307,22 +289,20 @@ def consultar_elementos():
                 cortar = True
             
             else:
-                ruta =''
+                ruta = ""
                 for carpeta in paths:
-                    ruta += ' -> ' + carpeta[0]
-                print(f'HISTORIAL: {ruta}\n')
+                    ruta += " -> " + carpeta[0]
+
+                print(f"Historial: {ruta}\n") 
                 print(f'---{nombre_elemento}---\n'.rjust(50))
-        
         else:
-            id_elemento =''
-            nombre_elemento = ''
-            id_parents = ''
-            mime_type = ''
+            id_elemento = ""
+            nombre_elemento = ""
+            id_parents = ""
+            mime_type = ""
+
 
     return id_elemento, nombre_elemento, id_parents, mime_type
-
-
-#consultar_elementos()
 
 def validar_elemento(elemento):
     """
@@ -333,6 +313,7 @@ def validar_elemento(elemento):
     """
     mime_type_carpeta = 'application/vnd.google-apps.folder'
     id_elemento, nombre_elemento, id_parents, mime_type = consultar_elementos()
+
     if elemento == 'carpeta':
         while mime_type != mime_type_carpeta:
             print('Por favor elija una carpeta')
@@ -345,23 +326,19 @@ def validar_elemento(elemento):
 
     return id_elemento, nombre_elemento, id_parents
 
-
-#validar_elementos()
-
-def descargar_archivo_binario(id_elemento):
+def descargar_archivo_binario(id_elemento, nombre_elemento):
      
     request = service().files().get_media(fileId = id_elemento)
     arch = io.BytesIO()
     
     return arch
 
-
-def descargar_carpeta(id_elemento, ruta):
+def descargar_carpeta(id_elemento):
     
     page_token = None
     cortar = False
     while not cortar:
-        resultados = service().files().list(q= f" '{id_elemento}' in parents and not trashed",
+        resultados = service().files().list(q= f" '{id_elemento}' in parents",
                                                 spaces='drive',
                                                 fields='nextPageToken, files(id, name, mimeType)',
                                                 pageToken= page_token).execute()
@@ -370,21 +347,18 @@ def descargar_carpeta(id_elemento, ruta):
             id_elemento = elemento['id']
             nombre_elemento = elemento['name']
             mimeType = elemento['mimeType']
-            #ruta = os.getcwd()
-            #carpeta_actual = ''
+            ruta = os.getcwd()
+            carpeta_actual = ''
             #request = service().files().export_media(fileId = id_elemento)
-            #fh = io.BytesIO()
+            fh = io.BytesIO()
 
 
             if mimeType == 'application/vnd.google-apps.folder':
-                print(elemento['name'])
-                os.mkdir( ruta + '\\' + nombre_elemento)
-                ruta = ruta + '\\' + nombre_elemento
-                #carpeta_actual = nombre_elemento
-                descargar_carpeta(id_elemento, ruta)
+                os.mkdir( ruta + '/' + carpeta_actual)
+                carpeta_actual = nombre_elemento
+                fh = descargar_carpeta(id_elemento)
             else:
-                fh = descargar_archivo_binario(id_elemento)
-                with open(os.path.join(ruta,nombre_elemento), 'wb') as arch:
+                with open(os.path.join(carpeta_actual,nombre_elemento), 'wb') as arch:
                     arch.write(fh.read())
 
         page_token = resultados.get('nextPageToken')
@@ -394,7 +368,6 @@ def descargar_carpeta(id_elemento, ruta):
     #                                        mimeType = mimeType)
     return fh
 
-
 def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
 
     """
@@ -403,7 +376,7 @@ def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
     POST: 
     Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
     """
-    print('MENU DESCARGAR')
+    print('\n ------------- MENU DESCARGAR ------------- ')
     print('Que desea descargar?')
     print('1-Carpeta\n2-Archivo')
     opc = int( validar_opcion(1,2))        
@@ -411,23 +384,22 @@ def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
         print('seleccione la carpeta que desea descargar')
 
         id_carpeta, nombre_elemento, id_parents = validar_elemento('carpeta')    
-        print(id_carpeta)
-        os.mkdir( ruta_local + '\\' + nombre_elemento)
-        ruta = ruta_local + '\\' + nombre_elemento
-        arch = descargar_carpeta(id_carpeta, ruta)              
+        
+        arch = descargar_carpeta(id_carpeta)              
     
     else: #descargar un archivo
         print('seleccione el archivo que desea descargar')
         
         id_archivo, nombre_elemento, id_parents = validar_elemento('archivo')
 
-        arch = descargar_archivo_binario(id_archivo)
-        with open(os.path.join(ruta_local,nombre_elemento), 'wb') as archivo:
-            archivo.write(arch.read())
-
-
-##menu_descargar_elementos()
-
+        arch = descargar_archivo_binario(id_archivo, nombre_elemento)
+    
+    #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
+    #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
+    ubicacion = ruta_local
+    # escribir todo lo q venga en arch
+    with open(os.path.join(ubicacion,nombre_elemento), 'wb') as archivo:
+        archivo.write(arch.read()) 
 
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     """
@@ -443,10 +415,9 @@ def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
  
     media = MediaFileUpload(filename = ruta_archivo)
 
-    file = service().files().create(body = file_metadata,
+    service().files().create(body = file_metadata,
                                     media_body = media,
                                     fields = 'id').execute()    #creo q esta de mas
-    print(f'se subio bien {nombre_archivo}')
 
 def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     """
@@ -471,7 +442,6 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
         nombre_carpeta = '' #xa q no falle
 
     return carpeta_id, nombre_carpeta
-
 
 def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_contenedora: str) -> None:
     """
@@ -498,21 +468,14 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         
         print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
 
-
 def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora):
-    #print('Seleccione el archivo o carpeta de su computadora que desea subir')
-    #MODULO DE ALGUIEN XA BUSCAR ARCHUVOS EN LOCAL QUE ME TRAIGA:
-    #OSEA, VUELVO AL MAIN, y dsps vuelvo xa ca
-    # nombre_archivo = 'prueba_xa_subir_2.txt'
-    # ruta ='C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14/Tp-drive-Hub/TP2_Drivehub/'
-    # ruta_archivo = ruta + 'prueba_xa_subir_2.txt'
-    # #C:/Users/German/Documents/archivos german/Algortimos y Programacion I 95.14
-    # carpeta_contenedora = 'hola' #OJO NECESITO ESTO!!
-    opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
-    #de aca va al menu ppal de nuevo
-    pass
+    print('Seleccione el archivo o carpeta de su computadora que desea subir')
+    eleccion = input("1 - MyDrive\n2 - Otra Carpeta \n ->  ")
 
-#menu_subir_archivos()
+    if eleccion == "1":
+        subir_archivos(nombre_archivo, ruta_archivo, "root")
+    elif eleccion == "2":
+        opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
 
 def remplazar_archivos(ruta_arch, id_arch):
     """
@@ -523,51 +486,6 @@ def remplazar_archivos(ruta_arch, id_arch):
 
     service().files().update(fileId = id_arch,
                             media_body = media).execute()
-
-
-def pull_remoto_a_local(archivos_locales:dict, archivos_remotos: dict):
-    """
-    PRE: 
-    POST:TODAVIA NO FUNCIONA Compara fecha de modif y dsps cambios
-    """
-    pass
-
-
-def push_local_a_remoto(archivos_locales:dict, archivos_remotos: dict, carpeta_id = "root"):
-    """
-    PRE:
-    POST: No devuelve nada.
-    Reemplaza los archivos en el remoto que sufireron modificaciones en el local
-    """
-    #arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
-    #arch_remotos = { nombre_arch: [id_carpeta, fecha_modif] }
-
-    for arch_local, info_local in archivos_locales.items():
-        if arch_local in archivos_remotos.keys(): #si el nombre del archivo esta en el remoto            
-        
-            for arch_remoto in archivos_remotos.keys():                
-                if arch_local == arch_remoto:   #si coincide el nombre del arch                        
-                    fecha_remoto = archivos_remotos[arch_remoto][1]
-                    fecha_local = info_local[0] #la fecha es el elemento 0 de la lista 
-                    #FALTARIA COMPRARA LINEA A LINEA. Asi no habria q esperar 1 min
-                    # pues al comparar linea a linea no deberia saltar => no se modifica
-                    if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta                        
-                        id_arch = archivos_remotos[arch_remoto][0]
-                        remplazar_archivos(info_local[1], id_arch)
-                                    #la ruta es el elemento 1 de info_local
-                        print(f'--El archivo {arch_local} se actualizo correctamente--')
-                    else:
-                        print(f'***El archivo {arch_local} no se actualizo ***')        
-        else:                               #clave es el nombre
-
-            ## SOLO DESCARGA ARCHIVOS 
-            print(f'El archivo {arch_local} no se encuentra en el remoto')
-            if arch_local != ".git" and arch_local != "__pycache__" :
-                #recorrer_carpeta() --> esta llama a la otra q las crea
-
-                subir_archivos(arch_local, info_local[1], carpeta_id)
-
-
 
 def modificar_dic_arch_remoto(archivos_remotos):
     """
@@ -583,89 +501,36 @@ def modificar_dic_arch_remoto(archivos_remotos):
         nueva_fecha_remoto = info_archivo[1][:16].replace('T',' ')          #por error
         archivos_remotos[archivo_remoto][1] = nueva_fecha_remoto
 
+def mover_archivos():
 
-def cargar_dic_arch_local(archivos_locales):
     """
     PRE:
-    POST: No devuelve nada. Modufico por referencia el dict "archivos_locales"
-    con las sig estructura arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
+    POST:
     """
-    for arch in list(pathlib.Path().glob('**/*')):  #recorro todooo
-        
-        #obtengo hora de modif de cada archivo usando el objeto datetime
-        hora_local = datetime.datetime.fromtimestamp(arch.stat().st_mtime)
-        
-        #Sumo + 3 HORAS a hora LOCAL usando el objeto datetime
-        horas = 3
-        horas_sumadas = datetime.timedelta(hours = horas)
-        nueva_hora_local = hora_local + horas_sumadas # sumo 3 horas
-
-        #Convierto el objeto datetime en str
-        fecha_local = str(nueva_hora_local)
-        #le rcorto hasta los segundos inclusive por un tema de error
-        fecha_local = fecha_local[:16]  
-        
-        #uso como clave el nombre del arch, y como valor una lista la fecha de mofi y la 
-        # ruta
-        archivos_locales[str(arch.name)] = [fecha_local, arch]
+    print('Seleccione el archivo que desea mover\n')    
+    id_archivo, nombre_arch, id_parents = validar_elemento('archivo')
     
-# def recorrer_carpeta(ruta_actual, parent = ""):
-#     contenido = os.listdir(ruta_actual)
-#     nombre_carpeta = ruta_actual.split("\\")[-1]
-#     #id_carpeta = crea_carpetas(nombre_carpeta, parent)
-#     for ficheros in contenido :
-#         if os.path.isfile(ruta_actual + "\\" + ficheros):
-#             ruta_archivo = ruta_actual + "\\" + ficheros
-#             #subir_archivos(ficheros, ruta_archivo, id_carpeta)
-#         else:
-#             ruta_fichero = ruta_actual + "/" + ficheros
-#             recorrer_carpeta(ruta_fichero, id_carpeta)
-
-def comparar_local_remoto(info_local, archivos_remotos):
-    """
-    info_local = [ficheros, ruta_actual, fecha_local]
-    """
-    for arch_remoto in archivos_remotos.keys():
-        if info_local[0] == arch_remoto:                 
-            fecha_remoto = archivos_remotos[arch_remoto][1]
-            fecha_local = info_local[2] #la fecha es el elemento 0 de la lista 
-            #FALTARIA COMPRARA LINEA A LINEA. Asi no habria q esperar 1 min
-            # pues al comparar linea a linea no deberia saltar => no se modifica
-            if fecha_remoto != fecha_local:  #chequeo la fecha, si es distinta  
-                print('loc/remoto',fecha_local, fecha_remoto)                      
-                id_arch = archivos_remotos[arch_remoto][0]
-                remplazar_archivos(info_local[1], id_arch)
-                            #la ruta es el elemento 1 de info_local
-                print(f'--El archivo {info_local[0]} se actualizo correctamente--')
-            else:
-                print(f'***El archivo {info_local[0]} no se actualizo ***')        
-
-
-def crear_hora_modif_local(ruta_archivo):
-    """
-    POST: devuelve el str "fecha_local" ultima hora modif local
-    """
+    #id_archivo, nombre_arch, id_parents, mime_type = consultar_elementos()
     
-    hora_local = datetime.datetime.fromtimestamp(os.stat(ruta_archivo).st_mtime)
+    id_carpeta_salida = id_parents[0]  #ojo q parents es una lista    
+
+    print('\nSeleccione la carpeta a la que desea mover el archivo')
+    id_carpeta_destino, nombre_carpeta, id_parents = validar_elemento('carpeta')
+    #id_carpeta_destino, nombre_carpeta, id_parents, mime_type = consultar_elementos() 
+
+    service().files().update(fileId = id_archivo,
+                        addParents = id_carpeta_destino,
+                        removeParents = id_carpeta_salida
+                        ).execute()    
     
-    #Sumo + 3 HORAS a hora LOCAL usando el objeto datetime
-    horas = 3
-    horas_sumadas = datetime.timedelta(hours = horas)
-    nueva_hora_local = hora_local + horas_sumadas # sumo 3 horas
+    print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
-    #Convierto el objeto datetime en str
-    fecha_local = str(nueva_hora_local)
-    #le rcorto hasta los segundos inclusive por un tema de error
-    fecha_local = fecha_local[:16]  
-    
-    #uso como clave el nombre del arch, y como valor una lista la fecha de mofi y la 
-    # ruta
-    #archivos_locales[str(arch.name)] = [fecha_local, arch]
-
-    return fecha_local
-
-
-def crea_carpetas(nombre_carpeta, parent = ""):
+## ----- SUBIR CARPETAS AL DRIVE ---------------
+def crea_carpetas(nombre_carpeta: str, parent: str = "")->str:
+    """
+    PRE: Recibo la carpeta que quiero subir
+    POST: Creo la carpeta en remoto y retorno su id 
+    """
     if parent == "":
         file_metadata = {
             "name": nombre_carpeta,
@@ -683,195 +548,123 @@ def crea_carpetas(nombre_carpeta, parent = ""):
 
     return id_carpeta
 
-def recorrer_carpeta(ruta_actual, parent = ""):
+def recorrer_carpeta(ruta_actual: str, parent: str = "")->None:
+    """
+    PRE: Recorro la carpeta en el local
+    POST: En caso de leer un archivo lo subo , en caso de leer una carpeta 
+          repito el proceso de crear carpeta
+    """
     contenido = os.listdir(ruta_actual)
-    #print(contenido)
-    nombre_carpeta = ruta_actual.split("\\")[-1]
-    #print(nombre_carpeta)
+    nombre_carpeta = ruta_actual.split("/")[-1]
     id_carpeta = crea_carpetas(nombre_carpeta, parent)
     for ficheros in contenido :
-        if os.path.isfile(ruta_actual + "\\" + ficheros):
-            ruta_archivo = ruta_actual + "\\" + ficheros
+        if os.path.isfile(ruta_actual + "/" + ficheros):
+            ruta_archivo = ruta_actual + "/" + ficheros
             subir_archivos(ficheros, ruta_archivo, id_carpeta)
         else:
-            ruta_fichero = ruta_actual + "\\" + ficheros
+            ruta_fichero = ruta_actual + "/" + ficheros
             recorrer_carpeta(ruta_fichero, id_carpeta)
 
-def sincronizar(id_carpeta, ruta_actual):
+## ----- SINCRONIZAR 
+
+def fecha_modificacion_remoto(id_carpeta: str)->dict:
     """
-    PRE: Recibe el dict/ list "" con los nombres de los archivos de la carpeta 
-    q se esta sincronizando
-    POST: No devuelve nada. Actualiza los archivos de la nube, reemplanzadolos por los locales.
-    OJO!
-    1 - las fechas de modif se aproximaron a los minutos por lo que si se modifica dentro del 
-    #mismo minuto y se sincroiza no se matienen los cambios. OJO, una vez cometido el error,
-    es necesario, esperar 1 minuto, modificar, actualizar. y recien 1 min dsps no se actualizara 
-    mas.
+    PRE: Recibo el id de la carpeta 
+    POST: Retorno un dicc con la informacion de cuando fue modificada la carpeta
     """
-    #FALTA COMPARAR LINEA A LINEA !!!!!
-    #Y EL DOWNSTREAM!!! (X AHORA SOLO CHEQUEO Q LA MODIF DE ABAJO ESTE ARRIBA.)
-    #SOLUCION: Renviar parametros invertidos a comparar_info_archivos()
+    ## drive = {nombre fichero = [id fichero , fecha de modificacion]]}
+    page_token = None
+    drive = dict() # diccionario con {nombre carpeta : [id, mimetype, parent]}
+                   # lista_padres es una lista [(padre1, id ), (padre2, id) ... ]
+    response = service().files().list(q = f" '{id_carpeta}' in parents and (not trashed) ",
+                                    fields='nextPageToken, files(id, name, mimeType,modifiedTime)').execute()
+    for file in response.get('files', []):
+        file_date = file.get("modifiedTime")[:18].replace('T', ' ')
+        drive[file.get("name")] = [file.get("id"),file_date]
 
-    #arch_locales = { nombre_arch: [modifiedTime, ruta_local] }
-    # archivos_locales = dict()
-    
-    # cargar_dic_arch_local(archivos_locales)
-    
-    #Traigo archivos de drive y cargo el diccionario archivos_remotos
-    #arch_remotos = { nombre_arch: [id_carpeta, fecha_modif] }
-    query = f"'{id_carpeta}' in parents and not trashed"   #esto es un win win porque solo archivos, ninguna carpeta
-    carpetas_remotas, archivos_remotos = listar_elementos(query)
-    
-    #Modifico en el dict archivos_remotos la "modifiedTime" por referencia de
-    #xa q coincida con la local
-    modificar_dic_arch_remoto(archivos_remotos)
-    modificar_dic_arch_remoto(carpetas_remotas)
+    return drive
 
-    print(carpetas_remotas.keys())
-    print(archivos_remotos.keys())
-
-    contenido = os.listdir(ruta_actual)
-    #print(contenido)
-    #id_carpeta = crea_carpetas(nombre_carpeta, parent)
-    for ficheros in contenido: 
-        #print(ficheros)
-        if ficheros != ".git" and ficheros != "__pycache__":
-            #print(ficheros)      
-            #print(ruta_archivo)
-            #nombre_carpeta = ruta_actual.split("\\")[-1]  #si existe la carpeta o archivo en la nube      
-            if ficheros in archivos_remotos.keys() or ficheros in carpetas_remotas.keys(): 
-                ruta_actual = ruta_actual + "\\" + ficheros
-                print(ruta_actual)
-                if os.path.isfile(ruta_actual):    #si es un archivo
-                    fecha_local = crear_hora_modif_local(ruta_actual)
-                    info_local = [ficheros, ruta_actual, fecha_local]
-                    #print(info_local[1])
-                    comparar_local_remoto(info_local, archivos_remotos)
-
-                    print('archivo')
-                else:   # si es una carpeta
-                    print('sincronizar recursiva')
-                    print('a',ficheros)
-                    #ruta_fichero = ruta_actual + "\\" + ficheros # entro en el local
-                    #print(ruta_fichero)
-                    id_carpeta, nombre_carpeta = encontrar_carpeta_upstream(ficheros) #busco la carpeta
-                    sincronizar(id_carpeta, ruta_actual)   #y la sincronizo
-
-            else:  # no existe lo creamos de nascar
-                if os.path.isfile(ruta_actual):
-                    subir_archivos(ficheros, ruta_actual, id_carpeta)
-                else:
-                    recorrer_carpeta(ruta_actual, id_carpeta)
-
-
-    #push_local_a_remoto(archivos_locales, archivos_remotos,id_carpeta)
-
-    #Sync remoto con local (modifico remoto)
-    # print('1-Push (Modifica remoto, con cambios locales)\n2-pull(modifica local con cambios remotos')
-    # opc = int(validar_opcion(1,2))
-    # if opc == 1:
-    #     push_local_a_remoto(archivos_locales, archivos_remotos,id_carpeta)
-    # else:
-    #     pull_remoto_a_local(archivos_locales, archivos_remotos)
-
-# with open('some_file_1.txt', 'r') as file1:
-#     with open('some_file_2.txt', 'r') as file2:
-#         same = set(file1).intersection(file2)
-
-# same.discard('\n')
-
-# with open('some_output_file.txt', 'w') as file_out:
-#     for line in same:
-#         file_out.write(line)
-# import pickle
-# import hashlib #instead of md5
-# try:
-#     l = pickle.load(open("db"))
-# except IOError:
-#     l = []
-# db = dict(l)
-# path = "/etc/hosts"
-# #this converts the hash to text
-# checksum = hashlib.md5(open(path).read()).hexdigest() 
-# if db.get(path, None) != checksum:
-#     print "file changed"
-#     db[path] = checksum
-# pickle.dump(db.items(), open("db", "w"))
-
-def crear_carpeta(nombre_carpeta, id_carpeta):
+def fecha_modificacion_local(ruta_actual: str)->tuple:
     """
-    PRE:
-    POST:    
+    PRE: Recibo la ruta donde el usuario esta ubicado
+    POST: Retorno una tupla con dos dic, uno que contiene las fechas de modificacion 
+        de cada archivo y otra con la modificacion de las carpetas
     """
-    file_metadata = {
-                    'name': nombre_carpeta,
-                    'mimeType': 'application/vnd.google-apps.folder',
-                    'parents': [id_carpeta]
-                        }
+    ## archivo_fecha_local = {nombre fichero = fecha_modificacion}
+    archivos_fechas_local = dict()
+    carpetas_fechas_local = dict()
+    with os.scandir(ruta_actual) as ficheros:
+        for fichero in ficheros:
+            if os.path.isfile(fichero):
+                fecha_modificacion_archivo = datetime.datetime.fromtimestamp(os.path.getmtime(fichero))
+                horas_sumadas = datetime.timedelta(hours = 3)
+                fecha_modificacion_archivo += horas_sumadas
+                fecha_modificacion_archivo = str(fecha_modificacion_archivo)[:18]
+                archivos_fechas_local[fichero.name] = fecha_modificacion_archivo
+            elif os.path.isdir(fichero):
+                fecha_modificacion_carpeta = datetime.datetime.fromtimestamp(os.path.getmtime(fichero))
+                horas_sumadas = datetime.timedelta(hours = 3)
+                fecha_modificacion_carpeta += horas_sumadas
+                fecha_modificacion_carpeta = str(fecha_modificacion_carpeta)[:18]
+                carpetas_fechas_local[fichero.name] = fecha_modificacion_carpeta
 
-    file = service().files().create(body = file_metadata,
-                                    fields = 'id').execute()
-        
-    id_carpeta_creada = file.get('id')
+    return archivos_fechas_local , carpetas_fechas_local
 
-    return id_carpeta_creada
-
-
-def crear_carpetas_anidadas(nombre_ev, docentes_alumnos):
+def descargar_archivo(archivo_id: str, ruta: str)->None:
     """
-    PRE:"nomrbe_ev", "docentes_alumnos"
-    POST:
-    docentes_alumnos = { docentes: [alumno1, alumno2,etc] }
-    carpetas_docentes = { docente: id_carpeta_docente }
-    carpetas_alumnos = { nombre: id_carpeta_alumno }
-    # """
-    # nombre_ev =  'ev_1'       #parametro!!! OJO PEDIR!!!
-    
-    # docentes_alumnos = dict() #parametro!! OJO PEDIR!!!
-
-
-    carpetas_docentes =  dict()
-    carpetas_alumnos = dict()
-    
-    id_carpeta_evaluacion = crear_carpeta(nombre_ev, 'root') #creo la carepta de la evaluacion
-    
-    #creo carpetas docentes
-    print(id_carpeta_evaluacion)
-    for docente in docentes_alumnos.keys():
-        id_carpeta_docente = crear_carpeta(docente, id_carpeta_evaluacion)
-        carpetas_docentes[docente] = id_carpeta_docente  #cargo docentes y sus carpetas
-
-    crear_carpeta("Sobrante", id_carpeta_evaluacion)
-
-    #creo carpetas alumnos anidadas en las de su correspondiente docente
-    for docente, lista_alumnos in docentes_alumnos.items():
-        id_carpeta_docente = carpetas_docentes[docente]
-        for alumno in lista_alumnos:
-            id_carpeta_alumno = crear_carpeta(alumno, id_carpeta_docente)  #creo la carpeta dentro de la de su docente
-            carpetas_alumnos[alumno] = id_carpeta_alumno    #cargo alumnos con sus carpetas
-
-
-#crear_carpetas_anidadas()
-
-
-def mover_archivos():
+    PRE: Recibo el id del archivo 
+    POST: Descargo el archivo
     """
-    PRE:
-    POST:
+
+    print("ruta en funcion descargar_archivo : ", ruta)
+    nombre_archivo = ruta
+
+    file_id = archivo_id
+    request = service().files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
+        print(f"Descarga progres {status.progress() * 100}")
+
+    fh.seek(0)
+
+    with open(nombre_archivo, "wb") as f:
+        f.write(fh.read())
+        f.close()
+
+def sincronizar(archivos_drive: dict, archivos_local: dict, carpeta_local: dict, ruta: str)->None:
     """
-    print('Seleccione el archivo que desea mover\n')    
-    id_archivo, nombre_arch, id_parents = validar_elemento('archivo')
-    
-    #id_archivo, nombre_arch, id_parents, mime_type = consultar_elementos()
-    id_carpeta_salida = id_parents[0]  #ojo q parents es una lista    
+    PRE: Recibo los diccionarios con informacion del remoto y del local 
+    POST: Sincronizo cada archivo segun su horario de modificacion
+    """
 
-    print('\nSeleccione la carpeta a la que desea mover el archivo')
-    id_carpeta_destino, nombre_carpeta, id_parents = validar_elemento('carpeta')
-    #id_carpeta_destino, nombre_carpeta, id_parents, mime_type = consultar_elementos() 
+    for archivo , fecha in archivos_local.items():
+        if archivo in archivos_drive.keys():
+            ruta_archivo = ruta + "/" + archivo
+            print(ruta_archivo)
+            # comparo fechas 
+            if fecha > archivos_drive[archivo][1]:
+                print(fecha)
+                print(archivos_drive[archivo][1])
+                # actualizo el archivo al remoto
+                print(ruta_archivo)
+                print(archivos_drive[archivo][0])
+                remplazar_archivos(ruta_archivo, archivos_drive[archivo][0])
+            elif fecha < archivos_drive[archivo][1]:
+                print(fecha)
+                print(archivos_drive[archivo][1])
+                # actualizo archivo al local
+                os.remove(ruta_archivo)
+                descargar_archivo(archivos_drive[archivo][0], ruta_archivo)
 
-    service().files().update(fileId = id_archivo,
-                        addParents = id_carpeta_destino,
-                        removeParents = id_carpeta_salida
-                        ).execute()    
-    
-    print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
+    for carpeta , fecha in carpeta_local.items():
+        if carpeta in archivos_drive.keys():
+            ruta_archivo = ruta + "/" + carpeta
+            # actualizo los archivos dentro de la carpeta
+            carpeta_id = encontrar_carpeta_upstream(carpeta)[0]
+            archivos_r = fecha_modificacion_remoto(carpeta_id)
+            archivos_l = fecha_modificacion_local(ruta_archivo)[0]
+            carpeta_l = fecha_modificacion_local(ruta_archivo)[1]
+            sincronizar(archivos_r, archivos_l, carpeta_l, ruta_archivo)
