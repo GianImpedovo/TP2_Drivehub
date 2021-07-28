@@ -277,8 +277,109 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     return carpeta_id, nombre_carpeta
 
 
-ruta_actual = os.getcwd()
-nombre_carpeta = ruta_actual.split("\\")[-1]
-id_carpeta = encontrar_carpeta_upstream(nombre_carpeta)[0]
+# ruta_actual = os.getcwd()
+# nombre_carpeta = ruta_actual.split("\\")[-1]
+# id_carpeta = encontrar_carpeta_upstream(nombre_carpeta)[0]
 
-sincronizar(id_carpeta, ruta_actual)
+#sincronizar(id_carpeta, ruta_actual)
+
+
+
+
+####----------------------------------------------------
+
+def fecha_modificacion_remoto(id_carpeta: str)->dict:
+    """
+    PRE: Recibo el id de la carpeta 
+    POST: Retorno un dicc con la informacion de cuando fue modificada la carpeta
+    """
+    ## drive = {nombre fichero = [id fichero , fecha de modificacion]]}
+    page_token = None
+    drive = dict() # diccionario con {nombre carpeta : [id, mimetype, parent]}
+                   # lista_padres es una lista [(padre1, id ), (padre2, id) ... ]
+    response = service().files().list(q = f" '{id_carpeta}' in parents and (not trashed) ",
+                                    fields='nextPageToken, files(id, name, mimeType,modifiedTime)').execute()
+    for file in response.get('files', []):
+        file_date = file.get("modifiedTime")[:18].replace('T', ' ')
+        drive[file.get("name")] = [file.get("id"),file_date]
+
+    return drive
+
+def fecha_modificacion_local(ruta_actual: str)->tuple:
+    """
+    PRE: Recibo la ruta donde el usuario esta ubicado
+    POST: Retorno una tupla con dos dic, uno que contiene las fechas de modificacion 
+        de cada archivo y otra con la modificacion de las carpetas
+    """
+    ## archivo_fecha_local = {nombre fichero = fecha_modificacion}
+    archivos_fechas_local = dict()
+    carpetas_fechas_local = dict()
+    with os.scandir(ruta_actual) as ficheros:
+        for fichero in ficheros:
+            if os.path.isfile(fichero):
+                fecha_modificacion_archivo = datetime.datetime.fromtimestamp(os.path.getmtime(fichero))
+                horas_sumadas = datetime.timedelta(hours = 3)
+                fecha_modificacion_archivo += horas_sumadas
+                fecha_modificacion_archivo = str(fecha_modificacion_archivo)[:18]
+                archivos_fechas_local[fichero.name] = fecha_modificacion_archivo
+            elif os.path.isdir(fichero):
+                fecha_modificacion_carpeta = datetime.datetime.fromtimestamp(os.path.getmtime(fichero))
+                horas_sumadas = datetime.timedelta(hours = 3)
+                fecha_modificacion_carpeta += horas_sumadas
+                fecha_modificacion_carpeta = str(fecha_modificacion_carpeta)[:18]
+                carpetas_fechas_local[fichero.name] = fecha_modificacion_carpeta
+
+    return archivos_fechas_local , carpetas_fechas_local
+
+def sincronizar(archivos_drive: dict, archivos_local: dict, carpeta_local: dict, ruta: str)->None:
+    """
+    PRE: Recibo los diccionarios con informacion del remoto y del local 
+    POST: Sincronizo cada archivo segun su horario de modificacion
+    """
+
+    for archivo , fecha in archivos_local.items():
+        if archivo in archivos_drive.keys():
+            ruta_archivo = ruta + "/" + archivo
+            print(ruta_archivo)
+            # comparo fechas 
+            if fecha > archivos_drive[archivo][1]:
+                print(fecha)
+                print(archivos_drive[archivo][1])
+                # actualizo el archivo al remoto
+                print(ruta_archivo)
+                print(archivos_drive[archivo][0])
+                remplazar_archivos(ruta_archivo, archivos_drive[archivo][0])
+            elif fecha < archivos_drive[archivo][1]:
+                print(fecha)
+                print(archivos_drive[archivo][1])
+                # actualizo archivo al local
+                os.remove(ruta_archivo)
+                descargar_archivo(archivos_drive[archivo][0], ruta_archivo)
+
+    for carpeta , fecha in carpeta_local.items():
+        if carpeta in archivos_drive.keys():
+            ruta_archivo = ruta + "/" + carpeta
+            # actualizo los archivos dentro de la carpeta
+            carpeta_id = encontrar_carpeta_upstream(carpeta)[0]
+            archivos_r = fecha_modificacion_remoto(carpeta_id)
+            archivos_l = fecha_modificacion_local(ruta_archivo)[0]
+            carpeta_l = fecha_modificacion_local(ruta_archivo)[1]
+            sincronizar(archivos_r, archivos_l, carpeta_l, ruta_archivo)
+
+'''
+import pickle
+import hashlib #instead of md5
+
+try:
+    l = pickle.load(open("db"))
+except IOError:
+    l = []
+db = dict(l)
+path = "/etc/hosts"
+#this converts the hash to text
+checksum = hashlib.md5(open(path).read()).hexdigest() 
+if db.get(path, None) != checksum:
+    print ("file changed")
+    db[path] = checksum
+pickle.dump(db.items(), open("db", "w"))
+'''
