@@ -578,7 +578,6 @@ def main()-> None:
             obtener_evaluaciones()
 
         elif opcion[0] == "7":
-            obtener_evaluaciones()
             crear_carpeta_evaluacion(ruta_actual)
 
         mostrar_menu(ruta_actual)
