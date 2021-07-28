@@ -248,7 +248,7 @@ def consultar_elementos():
     Devuelve id_elemento, nombre_elemento, id_parents
     """
     print('BUSCADOR DE DRIVE'.rjust(50))
-    print('---root/Directorio principal---'.rjust(57))
+    print('--- My Drive -> Directorio principal---'.rjust(57))
     cortar = False
     
 
@@ -376,7 +376,7 @@ def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
     POST: 
     Permite descargar el archivo o carpeta seleccionado en drive por el usuario. 
     """
-    print('MENU DESCARGAR')
+    print('\n ------------- MENU DESCARGAR ------------- ')
     print('Que desea descargar?')
     print('1-Carpeta\n2-Archivo')
     opc = int( validar_opcion(1,2))        

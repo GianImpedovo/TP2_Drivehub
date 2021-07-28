@@ -539,24 +539,27 @@ def main()-> None:
 
         elif opcion[0] == "3":
 
-            #  VALIDAR EL FICHERO PASADO POR EL USUARIO []
-
             elegir = input("\n1 - Subir archivo\n2 - Subir carpeta\n -> ")
             if elegir == "1":
                 print(" ------ Navega por tu drive y subi el archivo a donde quieras !  ------ ")
                 nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
                 ruta_actual = RUTA + "/" + nombre_archivo
-                carpeta = RUTA.split("/")[-1]
-                drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta)
-                print(f" ### El archivo {nombre_archivo} subio exitosamente ### ")
+                try: 
+                    carpeta = RUTA.split("/")[-1]
+                    drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta)
+                    print(f" ### El archivo {nombre_archivo} subio exitosamente ### ")
+                except :
+                    print("\n ### No se puede subir un archivo inexistene ### ")
 
             elif elegir == "2":
-
-                carpeta_a_subir = input("Ingrese el nombre de la carpeta que desea subir\n -> ")
-                ruta = os.getcwd() + "/" + carpeta_a_subir
-                id_carpeta = drive.validar_elemento("carpeta")[0]
-                drive.recorrer_carpeta(ruta, id_carpeta)
-                print(f" ### La carpeta {carpeta_a_subir} se subio exitosamente ### ")
+                try: 
+                    carpeta_a_subir = input("Ingrese el nombre de la carpeta que desea subir\n -> ")
+                    ruta = os.getcwd() + "/" + carpeta_a_subir
+                    id_carpeta = drive.validar_elemento("carpeta")[0]
+                    drive.recorrer_carpeta(ruta, id_carpeta)
+                    print(f" ### La carpeta {carpeta_a_subir} se subio exitosamente ### ")
+                except :
+                    print("\n ### No se puede subir una carpeta inexistene ### ")
 
         elif opcion[0] == "4":
             drive.menu_descargar_elementos(ruta_actual)
