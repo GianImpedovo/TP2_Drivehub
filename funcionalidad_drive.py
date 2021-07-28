@@ -1,7 +1,6 @@
 import os
 import io
 from typing import Dict, Text
-#from typing import overload, union
 import typing
 from service_drive import obtener_servicio as service
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
@@ -10,7 +9,7 @@ import datetime
 
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
-    PRE: "opc_minimas" y "opc_maximas" son dos números enteros que 
+    PRE: Recibe los int "opc_minimas" y "opc_maximas" que 
     simbolizan la cantidad de opciones posibles.
 
     POST: Devuelve en formato string la var "opc" con un número 
@@ -26,11 +25,12 @@ def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
 def retroceder(paths: list) -> tuple:
 
     """
-    paths =[ [nombre_carpeta, id_carpeta], ]
-    PRE: Recibe la lista "paths" que tiene como elementos listas que tienen en la posicion 0
-    el nombre de la caerpeta y en la posicion 1 su repestivo id.
+    PRE: Recibe la lista "paths" con info sobre las carpetas por las que
+    ya navego el usuario:
+    "paths" =[ [nombre_carpeta, id_carpeta], ]
     
-    POST: Devuelve los str "id_carpeta" y " nombre_carpeta".
+    POST: Devuelve los str "id_carpeta" y " nombre_carpeta" para retroceder
+    a dicha carpeta.
     """  
     ultima_carpeta = paths.pop() #saco la ultima que eleji
 
@@ -47,13 +47,12 @@ def retroceder(paths: list) -> tuple:
 
 def seleccionar_elementos(info_elementos: dict) -> str:
     """
-    PRE: "info_elementos"  es un dict con los datos de las carpetas o archivos segun 
-    corresponda
-    
-    POST: devuelve el string "id_elemento" con id del elemento y el str "nomrbe_elemento" 
-    con su nombre
-    
-    info_carpetas = {num_carp:['nombre carpeta','id carpeta', ['id parents'], 'mimeType' ]}
+    PRE: Recibe el diccionario "info_elementos" con info sobre
+    carpetas o archivos segun corresponda:
+    info_elementos = { num_elemento: ['nombre elemento', 'id elemento', ['id parents'], 
+    'mimeType' ] }
+
+    POST: devuelve los str "id_elemento", "nombre_elemento", "id_parents", "mime_type" 
     
     """
     texto = 'cual?: '
@@ -72,10 +71,17 @@ def seleccionar_elementos(info_elementos: dict) -> str:
 
 def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict) -> tuple:
     """
-    PRE:
-    POST: Devuelve una tupla con el str "id_elemento" con el id del elemento y 
-    el str "nombre_elemento" con el nombre del elemento con el q se desea realizar 
-    una operacion
+    PRE: Recibe los diccionarios "info_carpetas" e "info_archivos":
+    info_carpetas = { num_carpeta: ['nombre carpeta', 'id carpeta', ['id parents'], 
+    'mimeType' ] }
+    info_archivos = { num_archivo: ['nombre archivo', 'id elemento', ['id parents'], 
+    'mimeType' ] }
+    y la lista "paths":
+    paths =[ [nombre_carpeta, id_carpeta], ]
+
+    POST: Permite retroceder a la carpeta si se elije esa opcion.
+    Devuelve una 4-upla con 4 str: "id_elemento", "id_elemento", "nombre_elemento",
+    "id_parents", "elemento", "mime_type".
     """
     print('1-Seleccionar una carpeta\n2-Seleccionar un archivo\n3-Atras')
     opc = int( validar_opcion(1,3) )
@@ -96,31 +102,14 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     return id_elemento, nombre_elemento, id_parents, elemento, mime_type
 
 
-def guardar_paths(info_carpetas: dict, paths: dict) -> dict: #VER CON PILAAAAAA!!!
-    """
-    PRE: "info_carpetas" ( {num_ele: [nombre_carpeta, id_carpeta, ['id_parents'], 'mimeType' ] } ) es un diccionario y 
-    paths ({nombre_carpeta: id_carpeta } )
-    
-    
-    POST: No devuelve nada. Modifica por parametro el diccionario paths cargandole los datos 
-    de info_carpetas, colocando como clave el nombre de la carpeta y como valor su 
-    respectivo id
-    """
-    for info_carpeta in info_carpetas.values():
-        nombre_carpeta = info_carpeta[0]
-        id_carpeta = info_carpeta[1]
-            #mejorar con pila LIFO con una lista usando append y pop. 
-        if nombre_carpeta not in paths.keys():
-            paths[nombre_carpeta] = id_carpeta
-
-
 def mostrar_elementos(info_elementos: dict, tipo_ele: str):
     """
-    PRE: "info_elementos" es un diccionario con numeros de elemento como clave, y con
-    listas como valores que contienen en la primera posicion los nombres de los elementos
-    y en las segunda, sus respectivos.
-    
-    POST: No devuelve nada solo muestra por panatalla los elementos solicitados.
+    PRE: Recibe el diccionario "info_elementos" que puede contener informacion
+    de carpetas o archivos:
+    info_elementos = { num_elemento: ['nombre elemento', 'id elemento', ['id parents'], 
+    'mimeType' ] }
+
+    POST: No devuelve nada solo muestra por panatalla los elementos del diccionario.
     """
     for num_ele, elemento in info_elementos.items():
         print (f'{num_ele}-{elemento[0]}')
@@ -131,13 +120,17 @@ def mostrar_elementos(info_elementos: dict, tipo_ele: str):
         print(f'No se encontraron {tipo_ele}\n')
 
 
-def ordenar_info_elementos(elementos: dict):
+def ordenar_info_elementos(elementos: dict) -> dict:
     """
-    PRE: recibe el diccionario "elementos" que puede ser:
-    "carpetas"  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType'  ]} y
-    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType' ]}.
-    POST: Crear y devuelve el diccionario "info_elementos" con esta etsructura:
-    {num_carp:['nombre carpeta','id carpeta', ['id parents'], 'mimeType' ]}
+    PRE: Recibe el diccionario "elementos" que puede conetener 
+    "carpetas" o "archivos":
+    elementos = {nombre_elemento: ['id elemento', 'fecha_modif', ['id_parents'], 'mimeType'] }
+
+    POST: Crea y devuelve el diccionario "info_elementos" que
+    puede contener "carpetas" o "archivos":
+    info_elementos = {num_elemento: ['nombre elemento','id elemento', ['id parents'], 
+    'mimeType' ]}
+    
     """
     info_elementos = dict()
     num_ele = 0
@@ -150,15 +143,13 @@ def ordenar_info_elementos(elementos: dict):
 
 def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
     """
-    PRE: recibe la lista de diccionarios (cada diccionario es un elemento): 
-    
-    "elementos" = [{id: 'id_elemento', name: 'nombre del elemento', 'mimeType': 'txt/plain(por ej)', 
+    PRE: Recibe la lista de diccionarios (cada diccionario es un elemento): 
+    elementos = [{id: 'id_elemento', name: 'nombre del elemento', 'mimeType': 'txt/plain(por ej)', 
     'modifiedTime': 'fecha de modif','parents': ['id_parents'] } ],
     
-    y los diccionarios "carpetas" y archivos":
-    
-    "carpetas" = {nombre_carpeta: ['id carpeta', 'fecha_modif', '[id_parents'], 'mimeType' ]} y
-    "archivos" {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType' ]}.
+    y los diccionarios "carpetas" y "archivos":
+    carpetas = {nombre_carpeta: ['id carpeta', 'fecha_modif', '[id_parents'], 'mimeType' ]} y
+    archivos =  {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], 'mimeType' ]}.
     
     POST: No devuelve nada. Modifica por parametro los diccionarios "carpetas" y
     "archivos" colocando como claves los nombres de los elementos y su informacion en una lista
@@ -179,9 +170,8 @@ def listar_elementos(query: str) -> tuple:
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
 
     POST: Devuelve los diccionarios "carpetas" y "archivos":
-
-    "carpetas" = {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]} y
-    "archivos" = {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]}.
+    carpetas = {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]} y
+    archivos = {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]}.
     """
     page_token = None
     cortar = False
@@ -470,6 +460,7 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
 
     return carpeta_id, nombre_carpeta
 
+
 def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_contenedora: str) -> None:
     """
     PRE: Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_contenedora"
@@ -497,6 +488,7 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         
         print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
 
+
 def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora):
     eleccion = input("1 - MyDrive\n2 - Otra Carpeta \n ->  ")
 
@@ -504,6 +496,7 @@ def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora):
         subir_archivos(nombre_archivo, ruta_archivo, "root")
     elif eleccion == "2":
         opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
+
 
 def remplazar_archivos(ruta_archivo, id_archivo):
     """
@@ -517,23 +510,6 @@ def remplazar_archivos(ruta_archivo, id_archivo):
     service().files().update(fileId = id_archivo,
                             media_body = media).execute()
 
-def modificar_dic_arch_remoto(archivos_remotos):
-    """
-    PRE:
-    
-    
-    FUNCION A ELIMINAR EN EL FUTURO
-
-
-    POST:
-    No devuelve nada. Modufico por referencia el dict "archivos_locales"
-    con las sig estructura arch_remotos = { nombre_arch: [id_carpeta, fecha_modif] }
-    """
-    for archivo_remoto, info_archivo in archivos_remotos.items():
-        
-        #Modifico la fecha del remoto xa poderla comparar con la local (tambien hasta seg inclusive)
-        nueva_fecha_remoto = info_archivo[1][:16].replace('T',' ')          #por error
-        archivos_remotos[archivo_remoto][1] = nueva_fecha_remoto
 
 def mover_archivos():
 
@@ -561,7 +537,10 @@ def mover_archivos():
     
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
+
 ## ----- SUBIR CARPETAS AL DRIVE ---------------
+
+
 def crea_carpetas(nombre_carpeta: str, parent: str = "")->str:
     """
     PRE: Recibo la carpeta que quiero subir
@@ -583,6 +562,7 @@ def crea_carpetas(nombre_carpeta: str, parent: str = "")->str:
     id_carpeta = folder.get("id")
 
     return id_carpeta
+
 
 def recorrer_carpeta(ruta_actual: str, parent: str = "")->None:
     """
