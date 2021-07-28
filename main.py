@@ -11,6 +11,11 @@ from zipfile import ZipFile
 import shutil
 from zipfile import ZipFile
 import pprint
+from datetime import datetime, date, time, timedelta
+import mimetypes
+from email.mime.base import MIMEBase
+from email import encoders
+from email.mime.application import MIMEApplication
 import funcionalidad_drive as drive
 
 RUTA = os.getcwd()
@@ -27,6 +32,10 @@ MENU = ["COMANDOS : 'cd + < nombre_directorio >' (avanzo directorio), '..' (retr
         ]
 
 def mostrar_menu(ruta: str)->None:
+    """
+    PRE: Recibo la ruta actual
+    POST: Imprime el menu y la ruta donde el usuario se encuentra
+    """
     print()
     for x in MENU:
         print(x)
@@ -80,6 +89,10 @@ def recorrer_directorio(ruta_actual: str, comando: str)->None:
         return ruta_actual
 
 def directorio_actual(ruta: str)->str:
+    """
+    PRE: Recibe la ruta actual
+    POST: Retorna el directorio y la ruta del directorio
+    """
     ruta_actual = ruta
     ruta = ruta.split("/")
     directorio_actual = ruta[-1]
@@ -88,16 +101,28 @@ def directorio_actual(ruta: str)->str:
 # ---------------- CREAR CARPETA/ARCHIVO ------------------(CODIGO ANTO)
 # -------> Carpetas
 def crear_carpetas(nombre: str, ruta: str)->None:
+    """
+    PRE : Ingresa el nombre de la carpeta nueva
+    POST : Crea la carpeta 
+    """
     os.mkdir(ruta + "/" + nombre)
     print(f"Carpeta: {nombre} fue creada con exito")
 
 # -------> Archivos
 def crear_txt(nombre: str, ruta : str)->None:
+    """
+    PRE: Recibe el nombre del nuevo archivo txt
+    POST: Crea el archivo
+    """
     file = open(ruta + "/" + nombre, "w")
     file.close()
     print(f"Archivo: {nombre} fue creada con exito")
 
-def crear_csv():
+def crear_csv()->None:
+    """
+    PRE: No recibe ningun parametro , todo se crea dentro de la funcion
+    POST:  Crea un archivo csv
+    """
     nombre = input('Ingrese nombre para crear archivo .csv: ')
     with open(nombre+'.csv', 'w', newline='') as csvfile:
         salir = 0
@@ -118,7 +143,11 @@ def crear_csv():
             if salir != "s": salir = True
             else : salir = False
 
-def modificar_csv(archivo: str):
+def modificar_csv(archivo: str)->None:
+    """
+    PRE: Recibe el nombre del archivo
+    POST: Le permite al usuario modificar el archivo
+    """
     
     with open(archivo) as csv_file:
         csv_reader = csv.DictReader(csv_file)
@@ -139,6 +168,10 @@ def modificar_csv(archivo: str):
             else : salir = False
 
 def crear_archivos(elegir: str, ruta: str)->None:
+    """
+    PRE: Recibe la ruta actual
+    POST: Muestra el menu para que el usuario decida lo que quiera crear
+    """
     if elegir == '1':
         nombre = input('Ingrese un nombre para el archivo .txt: ')
         crear_txt(nombre+'.txt', ruta)
@@ -233,22 +266,6 @@ def diccionario_docentes(archivo_docente_alumno: str)->dict:
 
 # ---------------- CREAR CARPETA DE EVALUACION (LOCAL)------------------
 # ---> envio mail de instrucciones :
-INSTRUCCIONES = "crear carpeta evaluacion\ncrear otras carpetas"
-
-def enviar_email_instrucciones(email: str)->None:
-    '''
-    PRE: Recibe el mail del docente que desea crear una carpeta de evaluacion
-    POST: Envia mail al docente con las instrucciones
-    '''
-    servicio = service_gmail.obtener_servicio()
-    msj = INSTRUCCIONES
-    mime_mensaje = MIMEMultipart()
-    mime_mensaje['subject'] = 'Instrucciones para crear carpeta Evaluacion'
-    mime_mensaje['to'] = email
-    mime_mensaje.attach(MIMEText(msj, 'plain'))
-    raw_string = base64.urlsafe_b64encode(mime_mensaje.as_bytes()).decode()
-    mensaje = servicio.users().messages().send(userId='me', body={'raw': raw_string}).execute()
-    print(mensaje) 
 
 def crear_carpeta_sobrantes(directorio_evaluacion: str)->None:
     '''
@@ -315,17 +332,19 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
 
 # --------------------- RECEPCION DE EVALUACIONES ---------- (CODIGO ADO)
-def obtener_email(id_mensaje):
+def obtener_email( id_mensaje:str ):
     servicio = service_gmail.obtener_servicio()
     mensaje = servicio.users().messages().get(userId='me',id=id_mensaje).execute()
     return mensaje
 
 def obtener_lista_email():
+    fecha = obtener_fecha() 
     servicio = service_gmail.obtener_servicio()
-    resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread').execute()
+    resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread ' + fecha).execute()
+    pprint.pprint(resultados)
     return resultados.get('messages',[])
 
-def enviar_email(email,msj):
+def enviar_email( email:str, msj:str):
     try:
         servicio = service_gmail.obtener_servicio()
         mime_mensaje = MIMEMultipart()
@@ -338,7 +357,30 @@ def enviar_email(email,msj):
         print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
         print(msj)
 
+def enviar_email_adjunto( email:str, msj:str, adjunto):
+    try:
+        servicio = service_gmail.obtener_servicio()
+        mime_mensaje = MIMEMultipart()
+        mime_mensaje['subject'] = 'EVALUACION'
+        mime_mensaje['to'] = email
+        mime_mensaje.attach(MIMEText(msj, 'plain'))
+        
+        temp = open(adjunto, 'rb')
+        attachement = MIMEApplication(temp.read(), _subtype="pdf")
+        temp.close()
+        
+        encoders.encode_base64(attachement)
+        filename = os.path.basename(adjunto)
+        attachement.add_header('Content-Disposition', 'attachment', filename=filename)
+        mime_mensaje.attach(attachement) 
 
+        mensaje_bytes = mime_mensaje.as_bytes() 
+        mensaje_base64 = base64.urlsafe_b64encode(mensaje_bytes)
+        raw = mensaje_base64.decode() 
+        mensaje = servicio.users().messages().send(userId='me', body={'raw': raw}).execute()
+    except:
+        print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
+        print(msj)
 
 def descomprimir_archivo(name,email):
     validar = True
@@ -360,13 +402,12 @@ def descomprimir_archivo(name,email):
         print("OCURRIO UN PROBLEMA AL DESCOMPRIMIR EL ZIP: " + email)
     return validar        
 
-
 def obtener_adjunto(email,msj_id,titulo,email_alumno):
     validar = True
     msj_email = ""
     msj_error = ""
     servicio = service_gmail.obtener_servicio()
-    if 'parts' in email['payload']:        
+    if 'parts' in email['payload' ]:        
         for adjunto in email['payload']['parts']:
             mime_type = adjunto['mimeType']
             nombre_archivo = adjunto['filename']
@@ -398,17 +439,42 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
     enviar_email(email_alumno,msj_email)    
     return validar        
 
+def validar_fecha():
+    hoy = date.today()
+    query = "before: {0} after: {1}".format(today.strftime('%Y/%m/%d'),
+                                            yesterday.strftime('%Y/%m/%d'))  
+
+def validate_opcion(limite:int,text) -> int :
+    opcion = input(text)
+    
+    while not opcion.isnumeric() or not (0 < int(opcion) <= limite) :      
+        print("La opción ingresada, no es valida")
+        opcion = input(text)
+
+    return int(opcion)   
+
+def obtener_fecha():
+    print("A continuacion ingresaras la fecha de las evaluacionesa a obtener")
+    mes = validate_opcion(12,"Ingrese mes ( 1 al 12 ) :")
+    dia = validate_opcion(31,"Ingrese dia ( 1 al 31 ) :")
+    fecha = str(dia) + "-" + str(mes) + "-" + "2021"
+    formato_fecha = "%d-%m-%Y"
+    fecha_inicial = datetime.strptime(fecha, formato_fecha)
+    fecha_antes = fecha_inicial + timedelta(days=1)
+    fecha_despues = fecha_inicial - timedelta(days=1)
+    return "after:2021/"+str(fecha_despues.month)+"/"+str(fecha_despues.day)+" before:2021/"+str(fecha_antes.month)+"/"+str(fecha_antes.day)
+
 def obtener_evaluaciones():
     mensajes = obtener_lista_email()
     email = ''
     titulo = ''
+    fecha = ''  
     validar = True
     for msj in mensajes:
         msj_id = msj['id']
         msj_detalles = obtener_email(msj_id)
         if 'payload' in msj_detalles:
             for msj_detalle in msj_detalles["payload"]["headers"]: 
-                print("msj_detalle",msj_detalle) 
                 if msj_detalle["name"].lower() == 'to':
                     email = msj_detalle["value"]
                 if msj_detalle["name"].lower() == 'subject':   
@@ -430,7 +496,6 @@ def validar_nombre(text:str) -> str :
         if not nombre.isalpha():     
             validar = False
     return validar
-
 
 def main()-> None:
     ruta_actual = RUTA
@@ -514,7 +579,8 @@ def main()-> None:
 
         elif opcion[0] == "6":
             email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
-            enviar_email_instrucciones(email_usuario)
+            enviar_email_adjunto(email_usuario,"INSTRUCCIONES",ruta_actual + "/" + "instrucciones.txt")
+            obtener_evaluaciones()
 
         elif opcion[0] == "7":
             crear_carpeta_evaluacion(ruta_actual)
