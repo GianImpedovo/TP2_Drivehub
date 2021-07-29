@@ -7,6 +7,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import pathlib
 import datetime
 
+
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
     PRE: Recibe los int "opc_minimas" y "opc_maximas" que 
@@ -29,7 +30,7 @@ def retroceder(paths: list) -> tuple:
     ya navego el usuario:
     "paths" =[ [nombre_carpeta, id_carpeta], ]
     
-    POST: Devuelve los str "id_carpeta" y " nombre_carpeta" para retroceder
+    POST: Devuelve en un tupla los str "id_carpeta" y " nombre_carpeta" para retroceder
     a dicha carpeta.
     """  
     ultima_carpeta = paths.pop() #saco la ultima que eleji
@@ -45,14 +46,16 @@ def retroceder(paths: list) -> tuple:
     return id_carpeta, nombre_carpeta
 
 
-def seleccionar_elementos(info_elementos: dict) -> str:
+##---------- SELECCIONAR CARPETAS O ARCHIVOS ---------------
+def seleccionar_elementos(info_elementos: dict) -> tuple:
     """
     PRE: Recibe el diccionario "info_elementos" con info sobre
     carpetas o archivos segun corresponda:
     info_elementos = { num_elemento: ['nombre elemento', 'id elemento', ['id parents'], 
     'mimeType' ] }
 
-    POST: devuelve los str "id_elemento", "nombre_elemento", "id_parents", "mime_type" 
+    POST: devuelve en una 4-upla los str
+    "id_elemento", "nombre_elemento", "id_parents", "mime_type" 
     
     """
     texto = 'cual?: '
@@ -80,7 +83,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     paths =[ [nombre_carpeta, id_carpeta], ]
 
     POST: Permite retroceder a la carpeta si se elije esa opcion.
-    Devuelve una 4-upla con 4 str: "id_elemento", "id_elemento", "nombre_elemento",
+    Devuelve en una 4-upla los str: "id_elemento", "id_elemento", "nombre_elemento",
     "id_parents", "elemento", "mime_type".
     """
     print('1-Seleccionar una carpeta\n2-Seleccionar un archivo\n3-Atras')
@@ -102,7 +105,8 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     return id_elemento, nombre_elemento, id_parents, elemento, mime_type
 
 
-def mostrar_elementos(info_elementos: dict, tipo_ele: str):
+##---------- GUARDADO Y ORGANIZACION DE ARCHIVOS Y CARPETAS DE LA DRIVE ---------------
+def mostrar_elementos(info_elementos: dict, tipo_ele: str) -> None:
     """
     PRE: Recibe el diccionario "info_elementos" que puede contener informacion
     de carpetas o archivos:
@@ -141,7 +145,7 @@ def ordenar_info_elementos(elementos: dict) -> dict:
     return info_elementos
 
 
-def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict):
+def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict) -> None:
     """
     PRE: Recibe la lista de diccionarios (cada diccionario es un elemento): 
     elementos = [{id: 'id_elemento', name: 'nombre del elemento', 'mimeType': 'txt/plain(por ej)', 
@@ -169,7 +173,7 @@ def listar_elementos(query: str) -> tuple:
     """
     PRE: Recibe el string "query" con la consulta a enviar a la API de drive.
 
-    POST: Devuelve los diccionarios "carpetas" y "archivos":
+    POST: Devuelve en una tupla los diccionarios "carpetas" y "archivos":
     carpetas = {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]} y
     archivos = {nombre_carpeta: ['id carpeta', 'fecha_modif', ['id_parents'], mimetype ]}.
     """
@@ -184,13 +188,12 @@ def listar_elementos(query: str) -> tuple:
                                             spaces='drive',
                                             fields='nextPageToken, files(id, name, mimeType, modifiedTime, parents)',
                                             pageToken=page_token).execute()
-        #print(resultados)  #testing
-        #En el dict resultados, una clave es 'files', que es una lista de diccionarios donde 
-        #cada diccionario es un elemento de dicha lista. Lo guardo en elementos.
+
+        #En el dict resultados, una clave es "files", que es una lista de diccionarios donde 
+        #cada diccionario es un elemento de dicha lista. (NB: xa google, todo son archivos, 
+        #incluso las carpetas: mimType = 'application/vnd.google-apps.folder')
+        #Guardo la lista de dicts "files" en elementos.
         elementos = resultados['files']
-        
-        #print(elementos) #testing
-        #guardar_info_elementos(elementos, info_carpetas, info_archivos)
 
         guardar_info_elementos(elementos, carpetas, archivos)
         
@@ -198,16 +201,17 @@ def listar_elementos(query: str) -> tuple:
         page_token = resultados.get('nextPageToken')
         if page_token is None:
             cortar = True
-    #return info_carpetas, info_archivos
+    
     return carpetas, archivos
 
 
-def armado_de_consulta(id_elemento: str) -> str:
+def armado_de_consulta(id_elemento: str) -> tuple:
     """
     PRE: Recibe el str "id_elemento" con el id de la carpeta o archivo que selecciono 
-    el usurario
+    el usurario.
     
-    POST: devuelve el string "query" con la consulta a buscar en el drive
+    POST: devuelve una tupla con los str "query" con la consulta a buscar en el drive
+    y "cortar" que es una variable de control para el menu.
     """
 
     print('0- LISTA TODO MYDRIVE ')
@@ -217,9 +221,8 @@ def armado_de_consulta(id_elemento: str) -> str:
     print("----> ej - carpeta -> '< nombre carpeta >' ")
     print("3 - Volver al menu principal ")
     opc = int(validar_opcion(0,3)) 
-
     cortar = False
-    #opc == o -> listar todo giuardar todo
+
     if opc == 0:
         query = "not trashed"
 
@@ -238,10 +241,10 @@ def armado_de_consulta(id_elemento: str) -> str:
         query = ""
         cortar = True
 
-    
     return query, cortar
 
 
+##---------- ESPECIE DE MENU DE DRIVE ---------------
 def consultar_elementos():
     """
     PRE: No recibe nada. Funciona como un menu gestor de drive
@@ -307,14 +310,14 @@ def consultar_elementos():
     return id_elemento, nombre_elemento, id_parents, mime_type
 
 
-def validar_elemento(elemento):
+def validar_elemento(elemento) -> tuple:
     """
     PRE:Recibe el str "elemento" con el tipo de elemento a validar. Este puede ser
     "carpeta" o "archivo"
     
     POST: Redirige a consultar elementos hasta el fin de la especie humana o hasta el 
     devolver una carpeta o archivo segun corresponda.
-    Devuelve los str "id_elemento", "nombre_elemento", "id_parents"
+    Devuelve una 3-upla con los str "id_elemento", "nombre_elemento", "id_parents"
     """
     mime_type_carpeta = 'application/vnd.google-apps.folder'
     id_elemento, nombre_elemento, id_parents, mime_type = consultar_elementos()
@@ -331,10 +334,15 @@ def validar_elemento(elemento):
 
     return id_elemento, nombre_elemento, id_parents
 
+
+##---------- DESCARGAR CARPETAS O ARCHIVOS ---------------
+#REEEMPLAZAR POR DESCARGAR_ARCHIVO()!!!!!!!!!!!!
 def descargar_archivo_binario(id_elemento, nombre_elemento):
     """
     PRE: Recibe el str "id_elemento" con el id del archivo a descargar
-
+    
+    REEEMPLAZAR POR DESCARGAR_ARCHIVO()!!!!!!!!!!!!
+    
     POST: Descarga el archivo cuyo id es el indicado y
     devuelve el objeto "arch" con el archivo q se descargo
     """
@@ -344,7 +352,8 @@ def descargar_archivo_binario(id_elemento, nombre_elemento):
     
     return arch
 
-def descargar_carpeta(id_elemento, nombre_elemento, ruta_actual):
+
+def descargar_carpeta(id_elemento, nombre_elemento, ruta_actual) ->None:
     """
     Recibe los str "id_elemento" , "nombre_elemento"  y "ruta_actual"
 
@@ -376,10 +385,9 @@ def descargar_carpeta(id_elemento, nombre_elemento, ruta_actual):
         page_token = resultados.get('nextPageToken')
         if page_token is None:
             cortar = True
-    #request = service().files().export_media(fileId = id_elemento,
-    #                                        mimeType = mimeType)
 
-def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
+
+def menu_descargar_elementos(ruta_local) -> None:
     """
     PRE: recibe el str "ruta_local" con la ruta local en la que esta paardo el usuario
 
@@ -404,17 +412,14 @@ def menu_descargar_elementos(ruta_local) -> None: #en proceso......!!!!!!
         
         id_archivo, nombre_elemento, id_parents = validar_elemento('archivo')
 
+        #OJO REEMPLAZARRRR!!!
         arch = descargar_archivo_binario(id_archivo, nombre_elemento)
         
         print(f'se descargo correctamente "{nombre_elemento}"\n')              
 
-        #!!!!!!FUNCION DD ALGUIEN XA NAVEGAR X ARCHIVOS LOCALES!!!!
-        #ubicacion = input ('Ingrese la direccion en la que desea guardar el archivo: ')
-        # ubicacion = ruta_local
-        # # escribir todo lo q venga en arch
-        # with open(os.path.join(ubicacion,nombre_elemento), 'wb') as archivo:
-        #     archivo.write(arch.read()) 
 
+##---------- SUBIR CARPETAS O ARCHIVOS ---------------
+#OJO AGREGAR REECORRER CARPETAS Y CREAR CARPETAS
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     """
     PRE:Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_id"
@@ -430,7 +435,8 @@ def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
 
     service().files().create(body = file_metadata,
                                     media_body = media,
-                                    fields = 'id').execute()    #creo q esta de mas
+                                    fields = 'id').execute()
+
 
 def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
     """
@@ -439,7 +445,7 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
 
     POST: Busca entre los nombres de las carpetas del remoto la carpeta
     correspondiente a la que me encuentro en el local y 
-    devuelve los str "carpeta_id" y "nombre_carpeta"
+    devuelve los str "carpeta_id" y "nombre_carpeta".
     """    
     #primero listo todas las carpetas de la nube
     print(carpeta_contenedora)
@@ -454,7 +460,7 @@ def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
                 carpeta_id = info_carpeta[0]
     else:
         print('La carpeta no existe con este mismo nombre en la nube')
-        print('Por favor elija otra carpeta, o cree una nueva')
+        print('Por favor elija otra carpeta')
         carpeta_id = '' #xa q no falle
         nombre_carpeta = '' #xa q no falle
 
@@ -475,30 +481,41 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         carpeta_id, nombre_carpeta = encontrar_carpeta_upstream(carpeta_contenedora)
         if carpeta_id != '' and nombre_carpeta != '': #si encontro la carpeta
             subir_archivos(nombre_archivo, ruta_archivo, carpeta_id)
-        #else no va, vuelve al menu ppal y da 2 opc. 
-        # 1) crear carpeta con 
-        # mismo nombre ojo, todavia no puedo subir todos loas archivos. 
-        # 2)(pedir nombre y dsps consultar_elmentos(), xa elegir donde crearla
-        # y recien manda a crear_carpeta)  
     else:
         print('Selccione la carpeta a la que desea subir el archivo')
         carpeta_id, nombre_carpeta, id_parents = validar_elemento('carpeta')
-        #carpeta_id, nombre_carpeta, id_parents, mime_type = consultar_elementos()
         subir_archivos(nombre_archivo, ruta_archivo, carpeta_id)
         
         print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
 
 
-def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora):
+#OJO AGREGAR PARAMETRO 'ELEMENTO' EN EL MENU PARA PODER SUBIR AL ROOT
+# OJO LINEAS 558 Y 559 MAIN.py
+def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora, elemento) -> None:
+    """
+    PRE: Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_contenedora"
+
+    POST: No devuelve nada. Funciona como menu intermedio para permitirle subir 
+    archivos a una carpeta a eleccion del usuario.    
+    """
     eleccion = input("1 - MyDrive\n2 - Otra Carpeta \n ->  ")
+    if elemento == 'archivo':
+        if eleccion == "1":
+            subir_archivos(nombre_archivo, ruta_archivo, "root")
+        elif eleccion == "2":
+            opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
+    else: #osea subo una carpeta        # OJO AGREGO permitir subirla a el root
+        if eleccion == "1":                         #subi directamente
+            recorrer_carpeta(ruta_archivo, "root")  
+        elif eleccion == "2":               #le doy a elegir una carpeta de drive y dsp subo
+            carpeta_id = validar_elemento('carpeta')[0]
+            recorrer_carpeta(ruta_archivo, carpeta_id)  
 
-    if eleccion == "1":
-        subir_archivos(nombre_archivo, ruta_archivo, "root")
-    elif eleccion == "2":
-        opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
 
+## ---------- REEMPLAZAR ARCHIVOS REMOTOS POR LOCALES ---------------
+#OJO MOVER A SINCRONIZAR !!!
 
-def remplazar_archivos(ruta_archivo, id_archivo):
+def remplazar_archivos(ruta_archivo, id_archivo) -> None:
     """
     PRE: Recibe los str "ruta_arch" y "id_arch"
     
@@ -511,8 +528,10 @@ def remplazar_archivos(ruta_archivo, id_archivo):
                             media_body = media).execute()
 
 
-def mover_archivos():
+## ---------- MOVER ARCHIVOS ENTRE CARPETAS DE DRIVE ---------------
+#OJO FALTA OPCION EN MENU
 
+def mover_archivos() -> None:
     """
     PRE: No recibe parametros.
 
@@ -521,14 +540,11 @@ def mover_archivos():
     """
     print('Seleccione el archivo que desea mover\n')    
     id_archivo, nombre_arch, id_parents = validar_elemento('archivo')
-    
-    #id_archivo, nombre_arch, id_parents, mime_type = consultar_elementos()
-    
-    id_carpeta_salida = id_parents[0]  #ojo q parents es una lista    
+        
+    id_carpeta_salida = id_parents[0]  #cuidado! parents es una lista    
 
     print('\nSeleccione la carpeta a la que desea mover el archivo')
     id_carpeta_destino, nombre_carpeta, id_parents = validar_elemento('carpeta')
-    #id_carpeta_destino, nombre_carpeta, id_parents, mime_type = consultar_elementos() 
 
     service().files().update(fileId = id_archivo,
                         addParents = id_carpeta_destino,
@@ -538,8 +554,9 @@ def mover_archivos():
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
 
-## ----- SUBIR CARPETAS AL DRIVE ---------------
-
+## ---------- SUBIR CARPETAS AL DRIVE ---------------
+#OJO MOVER A seccion ----SUBIR CARPETAS O ARCHIVOS -----
+#LLAMAR DESDE SINCRONIZAR PARA BAJAR LO Q NO ESTE!!! (O NO(???))
 
 def crea_carpetas(nombre_carpeta: str, parent: str = "")->str:
     """
@@ -582,8 +599,7 @@ def recorrer_carpeta(ruta_actual: str, parent: str = "")->None:
             recorrer_carpeta(ruta_fichero, id_carpeta)
 
 
-## ----- SINCRONIZAR 
-
+## ---------- SINCRONIZAR ---------------
 
 def fecha_modificacion_remoto(id_carpeta: str)->dict:
     """
