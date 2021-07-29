@@ -319,9 +319,10 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     POST: usando las distintas funciones para anidar crea la carpeta de la evaluacion
     '''
     nombre_ev = input("Nombre de la evalucaion: ")
-    archivo_alumnos = "alumnos.csv"
-    archivo_docentes = "docentes.csv"
-    archivo_docente_alumno = "relacion"
+    archivo_alumnos = input("\nIngrese el nombre del archivo de los alumnos con su extension: ")
+    archivo_docentes = input("\nIngrese el nombre del archivo de los docentes con su extension: ")
+    print("\nIngrese el nombre del nuevo archivo que se creara con la relacion docentes/alumnos")
+    archivo_docente_alumno = input(" -> ")
 
     nombre_csv_DA = archivo_docente_alumno + ".csv"
     crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes,nombre_csv_DA)
