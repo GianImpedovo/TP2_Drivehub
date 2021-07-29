@@ -6,7 +6,19 @@ from service_drive import obtener_servicio as service
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import pathlib
 import datetime
+from platform import system
 
+def definir_sistema():
+    sistema = system()
+    if sistema == "Windows":
+        sep = "\\"
+    else:
+        sep = "/"
+    
+    return sep
+
+
+SEP = definir_sistema()
 
 def validar_opcion(opc_minimas: int, opc_maximas: int, texto: str = '') -> str:
     """
@@ -163,10 +175,10 @@ def guardar_info_elementos(elementos: dict, carpetas:dict, archivos:dict) -> Non
         if elemento['mimeType'] == 'application/vnd.google-apps.folder':
             #chequea q no existe
             carpetas[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents'], elemento['mimeType']]
-            #print(elemento['parents']) #testing
+
         else:
             archivos[ elemento['name'] ] = [elemento['id'], elemento['modifiedTime'], elemento['parents'], elemento['mimeType']]
-            print(elemento['parents']) #testing
+
 
 
 def listar_elementos(query: str) -> tuple:
@@ -230,12 +242,10 @@ def armado_de_consulta(id_elemento: str) -> tuple:
         query = f" '{id_elemento}' in parents and (not trashed) " 
 
     elif opc == 2:
-        #print('\nQue desea buscar?\n1-Carpetas\n2-Archivos')
-        #opc = int(validar_opcion(1,2))
+
         palabra = input('ingerse palabra clave COMPLETA: ')  #contains solo busca palabras completas no letras!
         query = f" '{id_elemento}' in parents and fullText contains '{palabra} and (not trashed)' " 
 
-        print(query) #testing
     
     elif opc == 3:
         query = ""
@@ -360,7 +370,8 @@ def descargar_carpeta(id_elemento, nombre_elemento, ruta_actual) ->None:
     POST: No devuelve nada. Descarga la carpeta, subcarpetas y archivos que
     se encuentren en la carpeta seleccionada.
     """
-    ruta_actual = ruta_actual + "/" + nombre_elemento
+
+    ruta_actual = ruta_actual + SEP + nombre_elemento
     os.mkdir(ruta_actual)
     page_token = None
     cortar = False
@@ -521,14 +532,14 @@ def recorrer_carpeta(ruta_actual: str, parent: str = "")->None:
           repito el proceso de crear carpeta
     """
     contenido = os.listdir(ruta_actual)
-    nombre_carpeta = ruta_actual.split("/")[-1]
+    nombre_carpeta = ruta_actual.split(SEP)[-1]
     id_carpeta = crea_carpetas(nombre_carpeta, parent)
     for ficheros in contenido :
-        if os.path.isfile(ruta_actual + "/" + ficheros):
-            ruta_archivo = ruta_actual + "/" + ficheros
+        if os.path.isfile(ruta_actual + SEP + ficheros):
+            ruta_archivo = ruta_actual + SEP + ficheros
             subir_archivos(ficheros, ruta_archivo, id_carpeta)
         else:
-            ruta_fichero = ruta_actual + "/" + ficheros
+            ruta_fichero = ruta_actual + SEP + ficheros
             recorrer_carpeta(ruta_fichero, id_carpeta)
 
 
@@ -670,7 +681,7 @@ def sincronizar(archivos_drive: dict, archivos_local: dict, carpeta_local: dict,
 
     for archivo , fecha in archivos_local.items():
         if archivo in archivos_drive.keys():
-            ruta_archivo = ruta + "/" + archivo
+            ruta_archivo = ruta + SEP + archivo
             print(ruta_archivo)
             # comparo fechas 
             if fecha > archivos_drive[archivo][1]:
@@ -689,7 +700,7 @@ def sincronizar(archivos_drive: dict, archivos_local: dict, carpeta_local: dict,
 
     for carpeta , fecha in carpeta_local.items():
         if carpeta in archivos_drive.keys():
-            ruta_archivo = ruta + "/" + carpeta
+            ruta_archivo = ruta + SEP + carpeta
             # actualizo los archivos dentro de la carpeta
             carpeta_id = encontrar_carpeta_upstream(carpeta)[0]
             archivos_r = fecha_modificacion_remoto(carpeta_id)

@@ -31,6 +31,8 @@ MENU = ["COMANDOS : 'cd + < nombre_directorio >' (avanzo directorio), '..' (retr
         "8 - Salir"
         ]
 
+SEP = drive.definir_sistema()
+
 def mostrar_menu(ruta: str)->None:
     """
     PRE: Recibo la ruta actual
@@ -52,14 +54,14 @@ def mostrar_directorio_actual(ruta_actual: str)->None:
     print("--> DIRECTORIO : ",ruta_actual)
     contenido = os.listdir(ruta_actual)
     for fichero in contenido:
-        if os.path.isfile(ruta_actual + "/" + fichero):
+        if os.path.isfile(ruta_actual + SEP + fichero):
             print("Archivo - ",fichero)
         else:
             print("Carpeta - ",fichero)
-            contenido_carpeta = os.listdir(ruta_actual + "/" + fichero)
+            contenido_carpeta = os.listdir(ruta_actual + SEP + fichero)
 
             for contenido in contenido_carpeta:
-                if os.path.isdir(ruta_actual + "/" + fichero + "/" + contenido):
+                if os.path.isdir(ruta_actual + SEP + fichero + SEP + contenido):
                     print(" -> carpeta: ", contenido)
                 else:
                     print(" -> archivo:  ",contenido)
@@ -74,15 +76,15 @@ def recorrer_directorio(ruta_actual: str, comando: str)->None:
         ", ".join(filenames)
 
         if "cd" == comando[0]:
-            if os.path.isdir(ruta_actual + "/" + comando[1]):
-                ruta_actual = (ruta_actual + "/" + comando[1])
+            if os.path.isdir(ruta_actual + SEP + comando[1]):
+                ruta_actual = (ruta_actual + SEP + comando[1])
             else:
                 print(f"\t --- La carpeta: '{comando[1]}' NO existe --- \t")
         elif ".." == comando[0]:
             print("\n",ruta_actual)
-            actual = ruta_actual.split("/")
+            actual = ruta_actual.split(SEP)
             actual.pop(-1)
-            actual = "/".join(actual)
+            actual = SEP.join(actual)
             print(actual)
             ruta_actual = actual
 
@@ -94,7 +96,7 @@ def directorio_actual(ruta: str)->str:
     POST: Retorna el directorio y la ruta del directorio
     """
     ruta_actual = ruta
-    ruta = ruta.split("/")
+    ruta = ruta.split(SEP)
     directorio_actual = ruta[-1]
     return ruta_actual, directorio_actual
 
@@ -105,7 +107,7 @@ def crear_carpetas(nombre: str, ruta: str)->None:
     PRE : Ingresa el nombre de la carpeta nueva
     POST : Crea la carpeta 
     """
-    os.mkdir(ruta + "/" + nombre)
+    os.mkdir(ruta + SEP + nombre)
     print(f"Carpeta: {nombre} fue creada con exito")
 
 # -------> Archivos
@@ -114,7 +116,7 @@ def crear_txt(nombre: str, ruta : str)->None:
     PRE: Recibe el nombre del nuevo archivo txt
     POST: Crea el archivo
     """
-    file = open(ruta + "/" + nombre, "w")
+    file = open(ruta + SEP + nombre, "w")
     file.close()
     print(f"Archivo: {nombre} fue creada con exito")
 
@@ -272,9 +274,9 @@ def crear_carpeta_sobrantes(directorio_evaluacion: str)->None:
     PRE: Recibo el directorio donde estan las evaluaciones
     POST: Para los alumnos no matcheados se les crea una carpeta aparte donde seran guardados sus examenes
     '''
-    os.mkdir(directorio_evaluacion + "/" + "sobrantes")
-    alumnos_sobrantes = directorio_evaluacion + "/" + "sobrantes" + "/"
-    ruta_alumnos_sobrantes = os.getcwd() + "/" + "evaluacion" + "/"
+    os.mkdir(directorio_evaluacion + SEP + "sobrantes")
+    alumnos_sobrantes = directorio_evaluacion + SEP + "sobrantes" + SEP
+    ruta_alumnos_sobrantes = os.getcwd() + SEP + "evaluacion" + SEP
     lista_sobrantes = os.listdir(ruta_alumnos_sobrantes)
     for sobrante in lista_sobrantes:
         ruta_alumnos_sobrantes += sobrante
@@ -288,8 +290,8 @@ def crear_carpeta_alumnos(dict_docentes: dict(),directorio_evaluacion: str, prof
     
     lista_alumnos = dict_docentes[profesor]
     for alumno in lista_alumnos:
-        ruta_alumno = directorio_evaluacion + "/" + profesor + "/"
-        ruta_evaluaciones = os.getcwd() + "/" + "evaluacion" + "/" + alumno + "/"
+        ruta_alumno = directorio_evaluacion + SEP + profesor + SEP
+        ruta_evaluaciones = os.getcwd() + SEP + "evaluacion" + SEP + alumno + SEP
         if os.path.isdir(ruta_evaluaciones):
             shutil.move(ruta_evaluaciones, ruta_alumno)
     
@@ -304,12 +306,12 @@ def crear_carpeta_profesores(archivo_docente_alumno: str, ruta_ev: str)->None:
 
     directorio_evaluacion = ruta_ev
     for profesor in dict_docentes.keys():
-        os.mkdir(directorio_evaluacion + "/" + profesor)
+        os.mkdir(directorio_evaluacion + SEP + profesor)
 
         crear_carpeta_alumnos(dict_docentes,directorio_evaluacion, profesor)
 
     crear_carpeta_sobrantes(directorio_evaluacion)
-    shutil.rmtree(os.getcwd() + "/" + "evaluacion")
+    shutil.rmtree(os.getcwd() + SEP + "evaluacion")
 
 def crear_carpeta_evaluacion(ruta: str)->None: 
     '''
@@ -324,7 +326,7 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     nombre_csv_DA = archivo_docente_alumno + ".csv"
     crear_archivo_alumnos_docentes(archivo_alumnos, archivo_docentes,nombre_csv_DA)
 
-    ruta_ev = ruta + "/" + nombre_ev
+    ruta_ev = ruta + SEP + nombre_ev
     os.mkdir(ruta_ev)
 
     os.getcwd()
@@ -457,7 +459,7 @@ def obtener_fecha():
     fecha_inicial = datetime.strptime(fecha, formato_fecha)
     fecha_antes = fecha_inicial + timedelta(days=1)
     fecha_despues = fecha_inicial - timedelta(days=1)
-    return "after:2021/"+str(fecha_despues.month)+"/"+str(fecha_despues.day)+" before:2021/"+str(fecha_antes.month)+"/"+str(fecha_antes.day)
+    return "after:2021/"+str(fecha_despues.month)+SEP+str(fecha_despues.day)+" before:2021/"+str(fecha_antes.month)+SEP+str(fecha_antes.day)
 
 def obtener_evaluaciones():
     mensajes = obtener_lista_email()
@@ -497,6 +499,7 @@ def main()-> None:
     mostrar_menu(ruta_actual)
     opcion = input("opcion : ")
 
+
     while (opcion[0] != "8"):
         opcion = opcion.split(" ")
         # --------  Navegacion :
@@ -534,18 +537,18 @@ def main()-> None:
                 print("\n --- Suba el archivo recien creado a su drive ---  ")
                 print("Ingrese el nombre del archivo recien creado con la extension -> ej: texto.txt")
                 nombre_archivo = input("Archivo: ")
-                ruta_archivo = RUTA + "/" + nombre_archivo
-                carpeta_contenedora = ruta_actual.split("/")[-1]
+                ruta_archivo = RUTA + SEP + nombre_archivo
+                carpeta_contenedora = ruta_actual.split(SEP)[-1]
                 drive.opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
 
         elif opcion[0] == "3":
 
             elegir = input("\n1 - Subir archivo\n2 - Subir carpeta\n -> ")
-            carpeta = RUTA.split("/")[-1]
+            carpeta = RUTA.split(SEP)[-1]
             if elegir == "1":
                 print(" ------ Navega por tu drive y subi el archivo a donde quieras !  ------ ")
                 nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
-                ruta_actual = RUTA + "/" + nombre_archivo
+                ruta_actual = RUTA + SEP + nombre_archivo
                 try: 
                     
                     drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta, 'archivo')
@@ -555,7 +558,7 @@ def main()-> None:
             elif elegir == "2":
                 try: 
                     carpeta_a_subir = input("Ingrese el nombre de la carpeta que desea subir\n -> ")
-                    ruta = os.getcwd() + "/" + carpeta_a_subir
+                    ruta = os.getcwd() + SEP + carpeta_a_subir
                     drive.menu_subir_archivos(ruta, carpeta_a_subir, carpeta, 'carpeta')
                     print(f" ### La carpeta {carpeta_a_subir} se subio exitosamente ### ")
                 except :
@@ -565,7 +568,7 @@ def main()-> None:
             drive.menu_descargar_elementos(ruta_actual)
 
         elif opcion[0] == "5":
-            nombre_carpeta = RUTA.split("/")[-1]
+            nombre_carpeta = RUTA.split(SEP)[-1]
             print(f"\n Sincroniza {nombre_carpeta}")
             sincronizacion = input(f"Desea sincronizar la carpeta {nombre_carpeta} (s/n): ")
             if sincronizacion == "s":
@@ -577,7 +580,7 @@ def main()-> None:
 
         elif opcion[0] == "6":
             email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
-            enviar_email_adjunto(email_usuario,"INSTRUCCIONES",ruta_actual + "/" + "instrucciones.txt")
+            enviar_email_adjunto(email_usuario,"INSTRUCCIONES",ruta_actual + SEP + "instrucciones.txt")
             obtener_evaluaciones()
 
         elif opcion[0] == "7":
