@@ -623,6 +623,7 @@ def main()-> None:
         elif opcion[0] == "6":
             email_usuario = input("Introduzca su email para enviarle las instrucciones: ")
             enviar_email_adjunto(email_usuario,"INSTRUCCIONES",ruta_actual + SEP + "instrucciones.pdf")
+            crear_carpetas("evaluacion", ruta_actual)
             obtener_evaluaciones()
 
         elif opcion[0] == "7":
