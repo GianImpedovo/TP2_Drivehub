@@ -20,7 +20,7 @@ import funcionalidad_drive as drive
 
 RUTA = os.getcwd()
 
-MENU = ["COMANDOS : 'cd + < nombre_directorio >' (avanzo directorio), '..' (retrocedo)",
+MENU = ["COMANDOS : 'cd + < nombre_directorio >' (avanzo directorio), '..' (retrocedo), 'mv.remoto' (mueve archivos desde el remoto)",
         "1 - Listar archivos de la carpeta actual",
         "2 - Crear archivos",
         "3 - Subir archivos",
@@ -331,7 +331,7 @@ def crear_carpeta_evaluacion(ruta: str)->None:
     
     crear_carpeta_profesores(nombre_csv_DA, ruta_ev)
 
-# --------------------- RECEPCION DE EVALUACIONES ---------- (CODIGO ADO)
+# --------------------- RECEPCION DE EVALUACIONES ---------- 
 def obtener_email( id_mensaje:str ):
     servicio = service_gmail.obtener_servicio()
     mensaje = servicio.users().messages().get(userId='me',id=id_mensaje).execute()
@@ -500,10 +500,11 @@ def main()-> None:
     while (opcion[0] != "8"):
         opcion = opcion.split(" ")
         # --------  Navegacion :
-        if opcion[0] == "cd" or opcion[0] == "..":
+        if opcion[0] == "cd" or opcion[0] == ".." :
             comando = opcion
             ruta_actual = recorrer_directorio(ruta_actual, comando)
-
+        elif opcion[0] == "mv.remoto":
+            drive.mover_archivos()
         # Acciones para realizar dentro del directorio: 
         elif opcion[0] == "1":
             elegir = input("1 - Local\n2 - Remoto\n -> ")
@@ -540,23 +541,22 @@ def main()-> None:
         elif opcion[0] == "3":
 
             elegir = input("\n1 - Subir archivo\n2 - Subir carpeta\n -> ")
+            carpeta = RUTA.split("/")[-1]
             if elegir == "1":
                 print(" ------ Navega por tu drive y subi el archivo a donde quieras !  ------ ")
                 nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
                 ruta_actual = RUTA + "/" + nombre_archivo
                 try: 
-                    carpeta = RUTA.split("/")[-1]
-                    drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta)
+                    
+                    drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta, 'archivo')
                     print(f" ### El archivo {nombre_archivo} subio exitosamente ### ")
                 except :
                     print("\n ### No se puede subir un archivo inexistene ### ")
-
             elif elegir == "2":
                 try: 
                     carpeta_a_subir = input("Ingrese el nombre de la carpeta que desea subir\n -> ")
                     ruta = os.getcwd() + "/" + carpeta_a_subir
-                    id_carpeta = drive.validar_elemento("carpeta")[0]
-                    drive.recorrer_carpeta(ruta, id_carpeta)
+                    drive.menu_subir_archivos(ruta, carpeta_a_subir, carpeta, 'carpeta')
                     print(f" ### La carpeta {carpeta_a_subir} se subio exitosamente ### ")
                 except :
                     print("\n ### No se puede subir una carpeta inexistene ### ")

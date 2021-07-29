@@ -105,7 +105,7 @@ def generador_de_id_elemento(info_carpetas: dict, info_archivos:dict, paths:dict
     return id_elemento, nombre_elemento, id_parents, elemento, mime_type
 
 
-##---------- GUARDADO Y ORGANIZACION DE ARCHIVOS Y CARPETAS DE LA DRIVE ---------------
+##---------- GUARDADO Y ORGANIZACION DE ARCHIVOS Y CARPETAS DE DRIVE ---------------
 def mostrar_elementos(info_elementos: dict, tipo_ele: str) -> None:
     """
     PRE: Recibe el diccionario "info_elementos" que puede contener informacion
@@ -244,7 +244,7 @@ def armado_de_consulta(id_elemento: str) -> tuple:
     return query, cortar
 
 
-##---------- ESPECIE DE MENU DE DRIVE ---------------
+##----------  MENU DE DRIVE ---------------
 def consultar_elementos():
     """
     PRE: No recibe nada. Funciona como un menu gestor de drive
@@ -336,7 +336,7 @@ def validar_elemento(elemento) -> tuple:
 
 
 ##---------- DESCARGAR CARPETAS O ARCHIVOS ---------------
-#REEEMPLAZAR POR DESCARGAR_ARCHIVO()!!!!!!!!!!!!
+
 def descargar_archivo_binario(id_elemento, nombre_elemento):
     """
     PRE: Recibe el str "id_elemento" con el id del archivo a descargar
@@ -419,7 +419,8 @@ def menu_descargar_elementos(ruta_local) -> None:
 
 
 ##---------- SUBIR CARPETAS O ARCHIVOS ---------------
-#OJO AGREGAR REECORRER CARPETAS Y CREAR CARPETAS
+
+## -----> SUBIR ARCHIVOS AL DRIVE 
 def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
     """
     PRE:Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_id"
@@ -488,75 +489,7 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         
         print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
 
-
-#OJO AGREGAR PARAMETRO 'ELEMENTO' EN EL MENU PARA PODER SUBIR AL ROOT
-# OJO LINEAS 558 Y 559 MAIN.py
-def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora, elemento) -> None:
-    """
-    PRE: Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_contenedora"
-
-    POST: No devuelve nada. Funciona como menu intermedio para permitirle subir 
-    archivos a una carpeta a eleccion del usuario.    
-    """
-    eleccion = input("1 - MyDrive\n2 - Otra Carpeta \n ->  ")
-    if elemento == 'archivo':
-        if eleccion == "1":
-            subir_archivos(nombre_archivo, ruta_archivo, "root")
-        elif eleccion == "2":
-            opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
-    else: #osea subo una carpeta        # OJO AGREGO permitir subirla a el root
-        if eleccion == "1":                         #subi directamente
-            recorrer_carpeta(ruta_archivo, "root")  
-        elif eleccion == "2":               #le doy a elegir una carpeta de drive y dsp subo
-            carpeta_id = validar_elemento('carpeta')[0]
-            recorrer_carpeta(ruta_archivo, carpeta_id)  
-
-
-## ---------- REEMPLAZAR ARCHIVOS REMOTOS POR LOCALES ---------------
-#OJO MOVER A SINCRONIZAR !!!
-
-def remplazar_archivos(ruta_archivo, id_archivo) -> None:
-    """
-    PRE: Recibe los str "ruta_arch" y "id_arch"
-    
-    POST: No devuelve nada. Reemplaza en la nube el archivo de id "id_archivo" 
-    por el archivo que se encuentra en "ruta_archivo"
-    """
-    media = MediaFileUpload(filename = ruta_archivo)
-
-    service().files().update(fileId = id_archivo,
-                            media_body = media).execute()
-
-
-## ---------- MOVER ARCHIVOS ENTRE CARPETAS DE DRIVE ---------------
-#OJO FALTA OPCION EN MENU
-
-def mover_archivos() -> None:
-    """
-    PRE: No recibe parametros.
-
-    POST: No devuelve nada. Permite mover archivos de a uno a la vez de una carpeta
-    a otra en drive
-    """
-    print('Seleccione el archivo que desea mover\n')    
-    id_archivo, nombre_arch, id_parents = validar_elemento('archivo')
-        
-    id_carpeta_salida = id_parents[0]  #cuidado! parents es una lista    
-
-    print('\nSeleccione la carpeta a la que desea mover el archivo')
-    id_carpeta_destino, nombre_carpeta, id_parents = validar_elemento('carpeta')
-
-    service().files().update(fileId = id_archivo,
-                        addParents = id_carpeta_destino,
-                        removeParents = id_carpeta_salida
-                        ).execute()    
-    
-    print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
-
-
-## ---------- SUBIR CARPETAS AL DRIVE ---------------
-#OJO MOVER A seccion ----SUBIR CARPETAS O ARCHIVOS -----
-#LLAMAR DESDE SINCRONIZAR PARA BAJAR LO Q NO ESTE!!! (O NO(???))
+## -----> SUBIR CARPETAS AL DRIVE 
 
 def crea_carpetas(nombre_carpeta: str, parent: str = "")->str:
     """
@@ -599,7 +532,65 @@ def recorrer_carpeta(ruta_actual: str, parent: str = "")->None:
             recorrer_carpeta(ruta_fichero, id_carpeta)
 
 
+# --------> MENU PARA SUBIR CARPETAS/ARCHIVOS
+def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora, elemento) -> None:
+    """
+    PRE: Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_contenedora"
+
+    POST: No devuelve nada. Funciona como menu intermedio para permitirle subir 
+    archivos a una carpeta a eleccion del usuario.    
+    """
+    eleccion = input("1 - MyDrive\n2 - Otra Carpeta \n ->  ")
+    if elemento == 'archivo':
+        if eleccion == "1":
+            subir_archivos(nombre_archivo, ruta_archivo, "root")
+        elif eleccion == "2":
+            opciones_subir_archivos(nombre_archivo, ruta_archivo, carpeta_contenedora)
+    else: #osea subo una carpeta        # OJO AGREGO permitir subirla a el root
+        if eleccion == "1":                         #subi directamente
+            recorrer_carpeta(ruta_archivo, "root")  
+        elif eleccion == "2":               #le doy a elegir una carpeta de drive y dsp subo
+            carpeta_id = validar_elemento('carpeta')[0]
+            recorrer_carpeta(ruta_archivo, carpeta_id)  
+
+
+## ---------- MOVER ARCHIVOS ENTRE CARPETAS DE DRIVE ---------------
+
+def mover_archivos() -> None:
+    """
+    PRE: No recibe parametros.
+
+    POST: No devuelve nada. Permite mover archivos de a uno a la vez de una carpeta
+    a otra en drive
+    """
+    print('\n\t### Seleccione el archivo que desea mover ###\t\n')    
+    id_archivo, nombre_arch, id_parents = validar_elemento('archivo')
+        
+    id_carpeta_salida = id_parents[0]  #cuidado! parents es una lista    
+
+    print('\nSeleccione la carpeta a la que desea mover el archivo')
+    id_carpeta_destino, nombre_carpeta, id_parents = validar_elemento('carpeta')
+
+    service().files().update(fileId = id_archivo,
+                        addParents = id_carpeta_destino,
+                        removeParents = id_carpeta_salida
+                        ).execute()    
+    
+    print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
+
 ## ---------- SINCRONIZAR ---------------
+def remplazar_archivos(ruta_archivo, id_archivo) -> None:
+    """
+    PRE: Recibe los str "ruta_arch" y "id_arch"
+    
+    POST: No devuelve nada. Reemplaza en la nube el archivo de id "id_archivo" 
+    por el archivo que se encuentra en "ruta_archivo"
+    """
+    media = MediaFileUpload(filename = ruta_archivo)
+
+    service().files().update(fileId = id_archivo,
+                            media_body = media).execute()
+
 
 def fecha_modificacion_remoto(id_carpeta: str)->dict:
     """
