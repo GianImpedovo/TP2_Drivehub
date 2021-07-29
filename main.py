@@ -335,18 +335,29 @@ def crear_carpeta_evaluacion(ruta: str)->None:
 
 # --------------------- RECEPCION DE EVALUACIONES ---------- 
 def obtener_email( id_mensaje:str ):
+    '''
+    PRE: recibe id de un correo en especifico 
+    POST: obtiene desde gmail un correo en especifico 
+    '''
     servicio = service_gmail.obtener_servicio()
     mensaje = servicio.users().messages().get(userId='me',id=id_mensaje).execute()
     return mensaje
 
 def obtener_lista_email():
+    '''
+    PRE: obtiene los filtros para la busqueda de los correos 
+    POST: obtiene desde gmail todos los correos segun los filtros aplicados 
+    '''
     fecha = obtener_fecha() 
     servicio = service_gmail.obtener_servicio()
     resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread ' + fecha).execute()
-    pprint.pprint(resultados)
     return resultados.get('messages',[])
 
 def enviar_email( email:str, msj:str):
+    '''
+    PRE: recibe un email y un mensaje string
+    POST: envia un correo a email ingresado con el mensaje que pasa por parametro 
+    '''
     try:
         servicio = service_gmail.obtener_servicio()
         mime_mensaje = MIMEMultipart()
@@ -359,7 +370,11 @@ def enviar_email( email:str, msj:str):
         print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
         print(msj)
 
-def enviar_email_adjunto( email:str, msj:str, adjunto):
+def enviar_email_adjunto( email:str, msj:str, adjunto:str):
+    '''
+    PRE: recibe un email y un mensaje string y un archivo pdf 
+    POST: envia un correo a email ingresado con el mensaje que pasa por parametro y el archivo 
+    '''
     try:
         servicio = service_gmail.obtener_servicio()
         mime_mensaje = MIMEMultipart()
@@ -371,6 +386,7 @@ def enviar_email_adjunto( email:str, msj:str, adjunto):
         attachement = MIMEApplication(temp.read(), _subtype="pdf")
         temp.close()
         
+        # se codifica el archivo para su envio 
         encoders.encode_base64(attachement)
         filename = os.path.basename(adjunto)
         attachement.add_header('Content-Disposition', 'attachment', filename=filename)
@@ -384,7 +400,11 @@ def enviar_email_adjunto( email:str, msj:str, adjunto):
         print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
         print(msj)
 
-def descomprimir_archivo(name,email):
+def descomprimir_archivo(name:str,email:str):
+    '''
+    PRE: recibe un el nombre de un archivo y el email de el usuario
+    POST: descomprime un archivo zip para luego ponerle el nombre en los parametros 
+    '''
     validar = True
     archivo = "./evaluaciones/"+name+".zip"
     try:
@@ -405,6 +425,10 @@ def descomprimir_archivo(name,email):
     return validar        
 
 def obtener_adjunto(email,msj_id,titulo,email_alumno):
+    '''
+    PRE: recibe un email y la informacion del usuario 
+    POST: obtiene un archivo de un correo en especifico
+    '''
     validar = True
     msj_email = ""
     msj_error = ""
@@ -414,7 +438,7 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
             mime_type = adjunto['mimeType']
             nombre_archivo = adjunto['filename']
             body = adjunto['body']
-
+            # si viene un archivo adjunto lo obtenemos 
             if 'attachmentId' in body:
                 try:
                     attachment_id = adjunto['body']['attachmentId']
@@ -422,6 +446,7 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
                     adjunto_data = resultado['data']
                     archivo = base64.urlsafe_b64decode(adjunto_data.encode('UTF-8'))
 
+                    #creamos el archivo en local 
                     with open("./evaluaciones/"+nombre_archivo, 'wb') as f:
                         f.write(archivo)
                     validar = descomprimir_archivo(titulo,email_alumno)
@@ -437,11 +462,14 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
         validar = False
         msj_email = 'OCURRIO UN PROBLEMA CON EL CORREO'
         msj_error = "OCURRIO UN PROBLEMA CON EL CORREO : " + email_alumno   
-    print(msj_error)
     enviar_email(email_alumno,msj_email)    
     return validar        
 
-def validate_opcion(limite:int,text) -> int :
+def validate_opcion(limite:int,text:str) -> int :
+    '''
+    PRE: recibe un limite para un numero y una opcion que deberia ser un numero  
+    POST: valida que la opcion sea numerica y entre en el limite definido  
+    '''
     opcion = input(text)
     
     while not opcion.isnumeric() or not (0 < int(opcion) <= limite) :      
@@ -451,6 +479,10 @@ def validate_opcion(limite:int,text) -> int :
     return int(opcion)   
 
 def obtener_fecha():
+    '''
+    PRE: se ingresa la fecha con sus respectivas validaciones 
+    POST: se obtiene una fecha con el formato para filtrar en gmail 
+    '''
     print("A continuacion ingresaras la fecha de las evaluacionesa a obtener")
     mes = validate_opcion(12,"Ingrese mes ( 1 al 12 ) :")
     dia = validate_opcion(31,"Ingrese dia ( 1 al 31 ) :")
@@ -462,6 +494,11 @@ def obtener_fecha():
     return "after:2021/"+str(fecha_despues.month)+SEP+str(fecha_despues.day)+" before:2021/"+str(fecha_antes.month)+SEP+str(fecha_antes.day)
 
 def obtener_evaluaciones():
+    '''
+    PRE: recibe los emails de una fecha en especifico  
+    POST: se operan por separado cada correo y se validad los formatos necesarios para obtener archivos y crear las
+    carpetas de evaluaciones 
+    '''
     mensajes = obtener_lista_email()
     email = ''
     titulo = ''
@@ -476,6 +513,7 @@ def obtener_evaluaciones():
                     email = msj_detalle["value"]
                 if msj_detalle["name"].lower() == 'subject':   
                     titulo = msj_detalle["value"]
+            #validamos formato [nombre] [apellido]
             if validar_nombre(titulo):    
                 validar = obtener_adjunto(msj_detalles,msj_id,titulo,email)
                 if validar:
@@ -487,6 +525,10 @@ def obtener_evaluaciones():
             print("OCURRIO UN PROBLEMA CON EL CORREO: " + email)        
 
 def validar_nombre(text:str) -> str :
+    '''
+    PRE: se obtiene nombre del titulo del gmail  
+    POST: se valida el formato de el titulo que sean solo letras 
+    '''
     validar = True
     alumno = text.split()
     for nombre in alumno: 
