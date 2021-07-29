@@ -22,8 +22,8 @@ RUTA = os.getcwd()
 
 MENU = ["COMANDOS : 'cd + < nombre_directorio >' (avanzo directorio), '..' (retrocedo), 'mv.remoto' (mueve archivos desde el remoto)",
         "1 - Listar archivos de la carpeta actual",
-        "2 - Crear archivos",
-        "3 - Subir archivos",
+        "2 - Crear archivos/carpeta",
+        "3 - Subir archivos/carpeta",
         "4 - Descargar un archivo",
         "5 - Sincronizar",
         "6 - Generar carpeta de una evaluacion",
@@ -274,13 +274,16 @@ def crear_carpeta_sobrantes(directorio_evaluacion: str)->None:
     PRE: Recibo el directorio donde estan las evaluaciones
     POST: Para los alumnos no matcheados se les crea una carpeta aparte donde seran guardados sus examenes
     '''
-    os.mkdir(directorio_evaluacion + SEP + "sobrantes")
-    alumnos_sobrantes = directorio_evaluacion + SEP + "sobrantes" + SEP
-    ruta_alumnos_sobrantes = os.getcwd() + SEP + "evaluacion" + SEP
-    lista_sobrantes = os.listdir(ruta_alumnos_sobrantes)
-    for sobrante in lista_sobrantes:
-        ruta_alumnos_sobrantes += sobrante
-        shutil.move(ruta_alumnos_sobrantes, alumnos_sobrantes)
+    try :
+        os.mkdir(directorio_evaluacion + SEP + "sobrantes")
+        alumnos_sobrantes = directorio_evaluacion + SEP + "sobrantes" + SEP
+        ruta_alumnos_sobrantes = os.getcwd() + SEP + "evaluacion" + SEP
+        lista_sobrantes = os.listdir(ruta_alumnos_sobrantes)
+        for sobrante in lista_sobrantes:
+            ruta_alumnos_sobrantes += sobrante
+            shutil.move(ruta_alumnos_sobrantes, alumnos_sobrantes)
+    except:
+        print()
 
 def crear_carpeta_alumnos(dict_docentes: dict(),directorio_evaluacion: str, profesor: str)->None:
     '''
@@ -590,11 +593,11 @@ def main()-> None:
             if elegir == "1":
                 print(" ------ Navega por tu drive y subi el archivo a donde quieras !  ------ ")
                 nombre_archivo = input("Ingrese el nombre del archivo que quiera subir : ")
-                ruta_actual = RUTA + SEP + nombre_archivo
+                ruta_archivo = RUTA + SEP + nombre_archivo
                 try: 
                     
-                    drive.menu_subir_archivos(ruta_actual, nombre_archivo, carpeta, 'archivo')
-                    print(f" ### El archivo {nombre_archivo} subio exitosamente ### ")
+                    drive.menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta, 'archivo')
+                    
                 except :
                     print("\n ### No se puede subir un archivo inexistene ### ")
             elif elegir == "2":
@@ -610,15 +613,18 @@ def main()-> None:
             drive.menu_descargar_elementos(ruta_actual)
 
         elif opcion[0] == "5":
-            nombre_carpeta = RUTA.split(SEP)[-1]
-            print(f"\n Sincroniza {nombre_carpeta}")
-            sincronizacion = input(f"Desea sincronizar la carpeta {nombre_carpeta} (s/n): ")
-            if sincronizacion == "s":
-                    c_id = drive.encontrar_carpeta_upstream(nombre_carpeta)[0]
-                    archivos_remoto = drive.fecha_modificacion_remoto(c_id)
-                    archivos_local = drive.fecha_modificacion_local(ruta_actual)[0]
-                    carpeta_local = drive.fecha_modificacion_local(ruta_actual)[1]
-                    drive.sincronizar(archivos_remoto,archivos_local, carpeta_local, ruta_actual)
+            try:
+                nombre_carpeta = ruta_actual.split(SEP)[-1]
+                print(f"\n Sincroniza {nombre_carpeta}")
+                sincronizacion = input(f"Desea sincronizar la carpeta {nombre_carpeta} (s/n): ")
+                if sincronizacion == "s":
+                        c_id = drive.encontrar_carpeta_upstream(nombre_carpeta)[0]
+                        archivos_remoto = drive.fecha_modificacion_remoto(c_id)
+                        archivos_local = drive.fecha_modificacion_local(ruta_actual)[0]
+                        carpeta_local = drive.fecha_modificacion_local(ruta_actual)[1]
+                        drive.sincronizar(archivos_remoto,archivos_local, carpeta_local, ruta_actual)
+            except :
+                print("\n ----- La carpeta no existe en el remoto ----- ")
 
         elif opcion[0] == "6":
             email_usuario = input("Introduzca su email para enviarle las instrucciones: ")

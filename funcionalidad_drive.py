@@ -456,6 +456,7 @@ def subir_archivos(nombre_archivo:str, ruta_archivo: str, carpeta_id: str) -> No
     service().files().create(body = file_metadata,
                                     media_body = media,
                                     fields = 'id').execute()
+    print(f" --- El archivo {nombre_archivo} se subio exitosamete --- ")
 
 
 def encontrar_carpeta_upstream(carpeta_contenedora: str) -> tuple:
@@ -505,8 +506,6 @@ def opciones_subir_archivos( nombre_archivo: str, ruta_archivo: str, carpeta_con
         print('Selccione la carpeta a la que desea subir el archivo')
         carpeta_id, nombre_carpeta, id_parents = validar_elemento('carpeta')
         subir_archivos(nombre_archivo, ruta_archivo, carpeta_id)
-        
-        print (f'Se subio correctamente: {nombre_archivo} a {nombre_carpeta}')
 
 ## -----> SUBIR CARPETAS AL DRIVE 
 
