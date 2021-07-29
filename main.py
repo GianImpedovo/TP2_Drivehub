@@ -351,7 +351,7 @@ def obtener_lista_email():
     '''
     fecha = obtener_fecha() 
     servicio = service_gmail.obtener_servicio()
-    resultados = servicio.users().messages().list(userId='me', q='in:inbox is:unread ' + fecha).execute()
+    resultados = servicio.users().messages().list(userId='me', q='in:inbox ' + fecha).execute()
     return resultados.get('messages',[])
 
 def enviar_email( email:str, msj:str):
@@ -401,20 +401,20 @@ def enviar_email_adjunto( email:str, msj:str, adjunto:str):
         print("OCURRIO UN PROBLEMA AL ENVIAR EL SIGUIENTE MENSAJE: ")
         print(msj)
 
-def descomprimir_archivo(name:str,email:str):
+def descomprimir_archivo(name:str,email:str,titulo:str):
     '''
     PRE: recibe un el nombre de un archivo y el email de el usuario
     POST: descomprime un archivo zip para luego ponerle el nombre en los parametros 
     '''
     validar = True
-    archivo = "./evaluacion/"+name+".zip"
+    archivo = "./evaluacion/"+name
     try:
         with ZipFile(archivo, 'r') as evaluacion:
             nombres_archivo = evaluacion.namelist()
             for nombre_archivo in nombres_archivo: 
                 if nombre_archivo.endswith('.py'):
-                    evaluacion.extract(nombre_archivo, 'evaluacion/'+name)
-                    print("ARCHIVO DESCOMPRIMIDO")
+                    evaluacion.extract(nombre_archivo, 'evaluacion/'+titulo)
+                    print("ARCHIVO DESCOMPRIMIDO ",name,nombre_archivo)
                 else:
                     validar = False
                     enviar_email(email,'FORMATO DE ARCHIVOS INCORRECTO - '+nombre_archivo)
@@ -434,7 +434,7 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
     msj_email = ""
     msj_error = ""
     servicio = service_gmail.obtener_servicio()
-    if 'parts' in email['payload' ]:        
+    if 'parts' in email['payload' ]:
         for adjunto in email['payload']['parts']:
             mime_type = adjunto['mimeType']
             nombre_archivo = adjunto['filename']
@@ -450,19 +450,17 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
                     #creamos el archivo en local 
                     with open("./evaluacion/"+nombre_archivo, 'wb') as f:
                         f.write(archivo)
-                    validar = descomprimir_archivo(titulo,email_alumno)
+                    print("obtener_adjunto",nombre_archivo)
+                    validar = descomprimir_archivo(nombre_archivo,email_alumno,titulo)
                 except:
                     validar = False
                     msj_email = "OCURRIO UN PROBLEMA AL DESCARGAR EL ZIP"
                     msj_error = "OCURRIO UN PROBLEMA AL DESCARGAR EL ZIP: " + email_alumno    
-            else:
-                validar = False
-                msj_email = 'FALTA ADJUNTO'
-                msj_error = "FALTA ADJUNTO: " + email_alumno
     else:
         validar = False
         msj_email = 'OCURRIO UN PROBLEMA CON EL CORREO'
         msj_error = "OCURRIO UN PROBLEMA CON EL CORREO : " + email_alumno   
+    print(msj_error)
     enviar_email(email_alumno,msj_email)    
     return validar        
 
@@ -492,7 +490,7 @@ def obtener_fecha():
     fecha_inicial = datetime.strptime(fecha, formato_fecha)
     fecha_antes = fecha_inicial + timedelta(days=1)
     fecha_despues = fecha_inicial - timedelta(days=1)
-    return "after:2021/"+str(fecha_despues.month)+SEP+str(fecha_despues.day)+" before:2021/"+str(fecha_antes.month)+SEP+str(fecha_antes.day)
+    return "after:2021/"+str(fecha_despues.month)+"/"+str(fecha_despues.day)+" before:2021/"+str(fecha_antes.month)+"/"+str(fecha_antes.day)
 
 def obtener_evaluaciones():
     '''
@@ -510,7 +508,7 @@ def obtener_evaluaciones():
         msj_detalles = obtener_email(msj_id)
         if 'payload' in msj_detalles:
             for msj_detalle in msj_detalles["payload"]["headers"]: 
-                if msj_detalle["name"].lower() == 'to':
+                if msj_detalle["name"].lower() == 'from':
                     email = msj_detalle["value"]
                 if msj_detalle["name"].lower() == 'subject':   
                     titulo = msj_detalle["value"]
@@ -518,6 +516,7 @@ def obtener_evaluaciones():
             if validar_nombre(titulo):    
                 validar = obtener_adjunto(msj_detalles,msj_id,titulo,email)
                 if validar:
+                    print("ENTREGA OK " + email)        
                     enviar_email(email,'ENTREGA OK')  
             else:
                 print("FORMATO DE NOMBRE INVALIDO: " + email)        
@@ -535,7 +534,7 @@ def validar_nombre(text:str) -> str :
     for nombre in alumno: 
         if not nombre.isalpha():     
             validar = False
-    return validar
+    return validar    
 
 def main()-> None:
     ruta_actual = RUTA
