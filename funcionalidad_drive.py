@@ -320,7 +320,7 @@ def consultar_elementos():
     return id_elemento, nombre_elemento, id_parents, mime_type
 
 
-def validar_elemento(elemento) -> tuple:
+def validar_elemento(elemento:str) -> tuple:
     """
     PRE:Recibe el str "elemento" con el tipo de elemento a validar. Este puede ser
     "carpeta" o "archivo"
@@ -347,23 +347,29 @@ def validar_elemento(elemento) -> tuple:
 
 ##---------- DESCARGAR CARPETAS O ARCHIVOS ---------------
 
-def descargar_archivo_binario(id_elemento, nombre_elemento):
+def descargar_archivo_binario(id_elemento:str):
     """
     PRE: Recibe el str "id_elemento" con el id del archivo a descargar
-    
-    REEEMPLAZAR POR DESCARGAR_ARCHIVO()!!!!!!!!!!!!
-    
+        
     POST: Descarga el archivo cuyo id es el indicado y
     devuelve el objeto "arch" con el archivo q se descargo
     """
-     
-    request = service().files().get_media(fileId = id_elemento)
-    arch = io.BytesIO()
-    
-    return arch
+
+    file_id = id_elemento
+    request = service().files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
+        print(f"Descarga progres {status.progress() * 100}")
+
+    fh.seek(0)
+
+    return fh
 
 
-def descargar_carpeta(id_elemento, nombre_elemento, ruta_actual) ->None:
+def descargar_carpeta(id_elemento:str, nombre_elemento:str, ruta_actual:str) ->None:
     """
     Recibe los str "id_elemento" , "nombre_elemento"  y "ruta_actual"
 
@@ -390,15 +396,17 @@ def descargar_carpeta(id_elemento, nombre_elemento, ruta_actual) ->None:
             if mimeType == 'application/vnd.google-apps.folder':
                 descargar_carpeta(id_elemento,nombre_elemento, ruta_actual)
             else:
+                fh = descargar_archivo_binario(id_elemento)
                 with open(os.path.join(ruta_actual,nombre_elemento), 'wb') as arch:
                     arch.write(fh.read())
+                    arch.close()
 
         page_token = resultados.get('nextPageToken')
         if page_token is None:
             cortar = True
 
 
-def menu_descargar_elementos(ruta_local) -> None:
+def menu_descargar_elementos(ruta_local:str) -> None:
     """
     PRE: recibe el str "ruta_local" con la ruta local en la que esta paardo el usuario
 
@@ -423,16 +431,16 @@ def menu_descargar_elementos(ruta_local) -> None:
         
         id_archivo, nombre_elemento, id_parents = validar_elemento('archivo')
 
-        #OJO REEMPLAZARRRR!!!
-        arch = descargar_archivo_binario(id_archivo, nombre_elemento)
-        
+        fh = descargar_archivo_binario(id_archivo)
+        with open(os.path.join(ruta_local,nombre_elemento), 'wb') as arch:
+                    arch.write(fh.read())
         print(f'se descargo correctamente "{nombre_elemento}"\n')              
 
 
 ##---------- SUBIR CARPETAS O ARCHIVOS ---------------
 
 ## -----> SUBIR ARCHIVOS AL DRIVE 
-def subir_archivos(nombre_archivo, ruta_archivo: str, carpeta_id: str) -> None:
+def subir_archivos(nombre_archivo:str, ruta_archivo: str, carpeta_id: str) -> None:
     """
     PRE:Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_id"
     
@@ -544,7 +552,7 @@ def recorrer_carpeta(ruta_actual: str, parent: str = "")->None:
 
 
 # --------> MENU PARA SUBIR CARPETAS/ARCHIVOS
-def menu_subir_archivos(ruta_archivo, nombre_archivo, carpeta_contenedora, elemento) -> None:
+def menu_subir_archivos(ruta_archivo:str, nombre_archivo:str, carpeta_contenedora:str, elemento:str) -> None:
     """
     PRE: Recibe los str "nombre_archivo", "ruta_archivo" y "carpeta_contenedora"
 
@@ -590,7 +598,7 @@ def mover_archivos() -> None:
     print(f'Se movio exitosamente {nombre_arch} a {nombre_carpeta}')  
 
 ## ---------- SINCRONIZAR ---------------
-def remplazar_archivos(ruta_archivo, id_archivo) -> None:
+def remplazar_archivos(ruta_archivo:str, id_archivo:str) -> None:
     """
     PRE: Recibe los str "ruta_arch" y "id_arch"
     
