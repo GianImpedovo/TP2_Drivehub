@@ -406,13 +406,13 @@ def descomprimir_archivo(name:str,email:str):
     POST: descomprime un archivo zip para luego ponerle el nombre en los parametros 
     '''
     validar = True
-    archivo = "./evaluaciones/"+name+".zip"
+    archivo = "./evaluacion/"+name+".zip"
     try:
         with ZipFile(archivo, 'r') as evaluacion:
             nombres_archivo = evaluacion.namelist()
             for nombre_archivo in nombres_archivo: 
                 if nombre_archivo.endswith('.py'):
-                    evaluacion.extract(nombre_archivo, 'evaluaciones/'+name)
+                    evaluacion.extract(nombre_archivo, 'evaluacion/'+name)
                     print("ARCHIVO DESCOMPRIMIDO")
                 else:
                     validar = False
@@ -447,7 +447,7 @@ def obtener_adjunto(email,msj_id,titulo,email_alumno):
                     archivo = base64.urlsafe_b64decode(adjunto_data.encode('UTF-8'))
 
                     #creamos el archivo en local 
-                    with open("./evaluaciones/"+nombre_archivo, 'wb') as f:
+                    with open("./evaluacion/"+nombre_archivo, 'wb') as f:
                         f.write(archivo)
                     validar = descomprimir_archivo(titulo,email_alumno)
                 except:
